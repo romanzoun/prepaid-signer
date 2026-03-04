@@ -102,6 +102,7 @@ public class SigningController {
         data.setSignatories(req.getSignatories());
         data.setSignatureLevel(normalizedDocumentLevel);
         data.setPlacements(List.of());
+        data.setInitiator(ensureInitiatorConsistency(data.getInitiator(), req.getSignatories()));
         data.setPrice(price);
         data.setStep("PLACEMENT");
         save(session, data);
@@ -146,10 +147,60 @@ public class SigningController {
         }
 
         data.setPlacements(req.getPlacements());
-        data.setStep("PRICING");
+        data.setStep("INITIATOR");
         save(session, data);
 
         return ResponseEntity.ok(Map.of("placements", req.getPlacements()));
+    }
+
+    /** Select process initiator (signer or third person). */
+    @PostMapping("/initiator")
+    public ResponseEntity<?> setInitiator(@RequestBody SetInitiatorRequest req,
+                                          HttpSession session) {
+        SigningSessionData data = getOrCreate(session);
+        if (data.getSignatories() == null || data.getSignatories().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Configure signatories first"));
+        }
+
+        String mode = normalizeInitiatorMode(req.getMode());
+        if (mode == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "initiator.mode must be SIGNER or THIRD_PERSON"));
+        }
+
+        InitiatorSelection initiator = new InitiatorSelection();
+        initiator.setMode(mode);
+
+        if (InitiatorSelection.MODE_SIGNER.equals(mode)) {
+            if (req.getSignerId() == null || req.getSignerId().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "initiator.signerId is required"));
+            }
+            Signatory selected = data.getSignatories().stream()
+                .filter(s -> req.getSignerId().equals(s.getId()))
+                .findFirst()
+                .orElse(null);
+            if (selected == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Unknown initiator signerId: " + req.getSignerId()));
+            }
+            if (selected.getEmail() == null || selected.getEmail().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Selected initiator signer must have an email"));
+            }
+            initiator.setSignerId(selected.getId());
+        } else {
+            if (req.getEmail() == null || req.getEmail().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "initiator.email is required for third person"));
+            }
+            if (!isLikelyEmail(req.getEmail())) {
+                return ResponseEntity.badRequest().body(Map.of("error", "initiator.email is invalid"));
+            }
+            initiator.setFirstName(req.getFirstName() == null ? null : req.getFirstName().trim());
+            initiator.setLastName(req.getLastName() == null ? null : req.getLastName().trim());
+            initiator.setEmail(req.getEmail().trim());
+        }
+
+        data.setInitiator(initiator);
+        data.setStep("PRICING");
+        save(session, data);
+        return ResponseEntity.ok(Map.of("initiator", initiator));
     }
 
     /** Process payment (mock or real Stripe depending on stripe.mock). */
@@ -161,6 +212,10 @@ public class SigningController {
         }
         if (data.getPlacements() == null || data.getPlacements().size() != data.getSignatories().size()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Place all signatories first"));
+        }
+        String initiatorError = validateStoredInitiator(data);
+        if (initiatorError != null) {
+            return ResponseEntity.badRequest().body(Map.of("error", initiatorError));
         }
         if (data.getPrice() == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "Price not calculated"));
@@ -333,10 +388,96 @@ public class SigningController {
             data.getDocumentName(),
             data.getPaymentSessionId(),
             data.getSignatories(),
-            data.getPlacements()
+            data.getPlacements(),
+            data.getInitiator()
         );
         data.setInvitations(invitations);
         data.setStep("DONE");
+    }
+
+    private InitiatorSelection ensureInitiatorConsistency(InitiatorSelection current, List<Signatory> signatories) {
+        if (signatories == null || signatories.isEmpty()) {
+            return null;
+        }
+        if (current == null) {
+            InitiatorSelection created = new InitiatorSelection();
+            created.setMode(InitiatorSelection.MODE_SIGNER);
+            created.setSignerId(signatories.getFirst().getId());
+            return created;
+        }
+
+        String mode = normalizeInitiatorMode(current.getMode());
+        if (InitiatorSelection.MODE_SIGNER.equals(mode)) {
+            boolean exists = signatories.stream().anyMatch(s -> s.getId().equals(current.getSignerId()));
+            if (!exists) {
+                current.setSignerId(signatories.getFirst().getId());
+            }
+            current.setMode(InitiatorSelection.MODE_SIGNER);
+            return current;
+        }
+
+        if (InitiatorSelection.MODE_THIRD_PERSON.equals(mode)) {
+            current.setMode(InitiatorSelection.MODE_THIRD_PERSON);
+            return current;
+        }
+
+        InitiatorSelection fallback = new InitiatorSelection();
+        fallback.setMode(InitiatorSelection.MODE_SIGNER);
+        fallback.setSignerId(signatories.getFirst().getId());
+        return fallback;
+    }
+
+    private String validateStoredInitiator(SigningSessionData data) {
+        if (data.getInitiator() == null) {
+            return "Initiator fehlt. Bitte waehle einen Initiator.";
+        }
+        String mode = normalizeInitiatorMode(data.getInitiator().getMode());
+        if (mode == null) {
+            return "Initiator-Modus ungueltig.";
+        }
+
+        if (InitiatorSelection.MODE_SIGNER.equals(mode)) {
+            if (data.getInitiator().getSignerId() == null || data.getInitiator().getSignerId().isBlank()) {
+                return "Initiator signerId fehlt.";
+            }
+            Signatory signer = data.getSignatories().stream()
+                .filter(s -> data.getInitiator().getSignerId().equals(s.getId()))
+                .findFirst()
+                .orElse(null);
+            if (signer == null) {
+                return "Ausgewaehlter Initiator-Signer existiert nicht mehr.";
+            }
+            if (signer.getEmail() == null || signer.getEmail().isBlank()) {
+                return "Der ausgewaehlte Initiator-Signer braucht eine E-Mail-Adresse.";
+            }
+            return null;
+        }
+
+        if (data.getInitiator().getEmail() == null || data.getInitiator().getEmail().isBlank()) {
+            return "Initiator-E-Mail fehlt.";
+        }
+        if (!isLikelyEmail(data.getInitiator().getEmail())) {
+            return "Initiator-E-Mail ist ungueltig.";
+        }
+        return null;
+    }
+
+    private String normalizeInitiatorMode(String mode) {
+        if (mode == null || mode.isBlank()) {
+            return null;
+        }
+        String normalized = mode.trim().toUpperCase(Locale.ROOT);
+        if (InitiatorSelection.MODE_SIGNER.equals(normalized)) {
+            return InitiatorSelection.MODE_SIGNER;
+        }
+        if (InitiatorSelection.MODE_THIRD_PERSON.equals(normalized)) {
+            return InitiatorSelection.MODE_THIRD_PERSON;
+        }
+        return null;
+    }
+
+    private boolean isLikelyEmail(String value) {
+        return value != null && value.contains("@") && value.indexOf('@') > 0 && value.indexOf('@') < value.length() - 1;
     }
 
     private Map<String, Object> inviteResponse(SigningSessionData data) {
@@ -387,5 +528,24 @@ public class SigningController {
         private List<SignatoryPlacement> placements;
         public List<SignatoryPlacement> getPlacements() { return placements; }
         public void setPlacements(List<SignatoryPlacement> placements) { this.placements = placements; }
+    }
+
+    public static class SetInitiatorRequest {
+        private String mode;
+        private String signerId;
+        private String firstName;
+        private String lastName;
+        private String email;
+
+        public String getMode() { return mode; }
+        public void setMode(String mode) { this.mode = mode; }
+        public String getSignerId() { return signerId; }
+        public void setSignerId(String signerId) { this.signerId = signerId; }
+        public String getFirstName() { return firstName; }
+        public void setFirstName(String firstName) { this.firstName = firstName; }
+        public String getLastName() { return lastName; }
+        public void setLastName(String lastName) { this.lastName = lastName; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
     }
 }

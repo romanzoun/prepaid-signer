@@ -1,6 +1,7 @@
 package com.swisssigner.service;
 
 import com.swisssigner.model.InvitationResult;
+import com.swisssigner.model.InitiatorSelection;
 import com.swisssigner.model.Signatory;
 import com.swisssigner.model.SignatoryPlacement;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,7 +23,8 @@ public class MockSwisscomSignService implements SignInviteService {
                                                    String documentName,
                                                    String paymentRef,
                                                    List<Signatory> signatories,
-                                                   List<SignatoryPlacement> placements) {
+                                                   List<SignatoryPlacement> placements,
+                                                   InitiatorSelection initiator) {
         return signatories.stream()
             .map(s -> new InvitationResult(
                 s,

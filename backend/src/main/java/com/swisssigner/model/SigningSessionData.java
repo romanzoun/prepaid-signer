@@ -9,12 +9,13 @@ public class SigningSessionData implements Serializable {
     private String documentRef;   // UUID reference to stored file
     private List<Signatory> signatories = new ArrayList<>();
     private List<SignatoryPlacement> placements = new ArrayList<>();
+    private InitiatorSelection initiator;
     private String signatureLevel = Signatory.LEVEL_QES;
     private PriceBreakdown price;
     private String paymentSessionId;
     private String paymentStatus;   // PENDING, COMPLETED, FAILED
     private List<InvitationResult> invitations = new ArrayList<>();
-    private String step = "UPLOAD"; // UPLOAD, SIGNATORIES, PLACEMENT, PRICING, PAYMENT, DONE
+    private String step = "UPLOAD"; // UPLOAD, SIGNATORIES, PLACEMENT, INITIATOR, PRICING, PAYMENT, DONE
 
     public String getDocumentName() { return documentName; }
     public void setDocumentName(String documentName) { this.documentName = documentName; }
@@ -24,6 +25,8 @@ public class SigningSessionData implements Serializable {
     public void setSignatories(List<Signatory> signatories) { this.signatories = signatories; }
     public List<SignatoryPlacement> getPlacements() { return placements; }
     public void setPlacements(List<SignatoryPlacement> placements) { this.placements = placements; }
+    public InitiatorSelection getInitiator() { return initiator; }
+    public void setInitiator(InitiatorSelection initiator) { this.initiator = initiator; }
     public String getSignatureLevel() { return signatureLevel; }
     public void setSignatureLevel(String signatureLevel) { this.signatureLevel = signatureLevel; }
     public PriceBreakdown getPrice() { return price; }

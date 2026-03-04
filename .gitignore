@@ -11,3 +11,6 @@
 
 # Build artifacts
 backend/target/
+
+# Runtime logs
+logs/

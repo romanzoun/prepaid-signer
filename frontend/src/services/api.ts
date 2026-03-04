@@ -23,6 +23,16 @@ export interface SignatoryPlacement {
   height: number
 }
 
+export type InitiatorMode = 'SIGNER' | 'THIRD_PERSON'
+
+export interface InitiatorSelection {
+  mode: InitiatorMode
+  signerId?: string
+  firstName?: string
+  lastName?: string
+  email?: string
+}
+
 export interface PriceBreakdown {
   perSignature: number
   count: number
@@ -57,6 +67,7 @@ export interface SigningState {
   documentName?: string
   signatories: Signatory[]
   placements: SignatoryPlacement[]
+  initiator?: InitiatorSelection
   signatureLevel?: SignatureLevel
   price?: PriceBreakdown
   paymentSessionId?: string
@@ -95,6 +106,16 @@ export async function savePlacements(placements: SignatoryPlacement[]): Promise<
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ placements }),
+  })
+  return handleResponse(res)
+}
+
+export async function setInitiator(initiator: InitiatorSelection): Promise<{ initiator: InitiatorSelection }> {
+  const res = await fetch(`${BASE}/initiator`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(initiator),
   })
   return handleResponse(res)
 }

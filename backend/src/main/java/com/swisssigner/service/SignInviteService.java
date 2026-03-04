@@ -1,6 +1,7 @@
 package com.swisssigner.service;
 
 import com.swisssigner.model.InvitationResult;
+import com.swisssigner.model.InitiatorSelection;
 import com.swisssigner.model.Signatory;
 import com.swisssigner.model.SignatoryPlacement;
 
@@ -23,11 +24,13 @@ public interface SignInviteService {
      * @param paymentRef     reference from the payment step (for audit)
      * @param signatories    list of people who must sign
      * @param placements     visual signature coordinates per signatory
+     * @param initiator      selected process initiator (signer or third person)
      * @return one InvitationResult per signatory with a signing URL and timestamp
      */
     List<InvitationResult> sendInvitations(String documentRef,
                                            String documentName,
                                            String paymentRef,
                                            List<Signatory> signatories,
-                                           List<SignatoryPlacement> placements);
+                                           List<SignatoryPlacement> placements,
+                                           InitiatorSelection initiator);
 }

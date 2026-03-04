@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { calculatePrice } from '../services/mockStripe'
 import * as api from '../services/api'
-import type { InviteResponse, Signatory, SignatoryPlacement, SignatureLevel } from '../services/api'
+import type { InitiatorSelection, InviteResponse, Signatory, SignatoryPlacement, SignatureLevel } from '../services/api'
 import PdfSignaturePlacer from './PdfSignaturePlacer'
 import './SignPage.css'
 
-type Step = 'upload' | 'signatories' | 'placement' | 'pricing' | 'payment' | 'done'
+type Step = 'upload' | 'signatories' | 'placement' | 'initiator' | 'pricing' | 'payment' | 'done'
 
 let signatoryCounter = 0
 
@@ -19,12 +19,20 @@ function createSignatory(): Signatory {
   return { id: `sig_${signatoryCounter}`, firstName: '', lastName: '', email: '', phone: '' }
 }
 
+function createDefaultInitiator(signatories: Signatory[]): InitiatorSelection {
+  return {
+    mode: 'SIGNER',
+    signerId: signatories[0]?.id ?? '',
+  }
+}
+
 export default function SignPage() {
   const [step,        setStep]        = useState<Step>('upload')
   const [file,        setFile]        = useState<File | null>(null)
-  const [signatories, setSignatories] = useState<Signatory[]>([createSignatory()])
+  const [signatories, setSignatories] = useState<Signatory[]>(() => [createSignatory()])
   const [documentSignatureLevel, setDocumentSignatureLevel] = useState<SignatureLevel>('QES')
   const [placements,  setPlacements]  = useState<SignatoryPlacement[]>([])
+  const [initiator,   setInitiator]   = useState<InitiatorSelection>({ mode: 'SIGNER', signerId: '' })
   const [loading,     setLoading]     = useState(false)
   const [session,     setSession]     = useState<InviteResponse | null>(null)
   const [error,       setError]       = useState<string | null>(null)
@@ -77,6 +85,7 @@ export default function SignPage() {
       await api.setSignatories(signatories, documentSignatureLevel)
       // Reset placements when signatories change
       setPlacements([])
+      setInitiator(createDefaultInitiator(signatories))
       setStep('placement')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Fehler beim Speichern der Unterzeichner.')
@@ -90,9 +99,22 @@ export default function SignPage() {
     setError(null)
     try {
       await api.savePlacements(placements)
-      setStep('pricing')
+      setStep('initiator')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Fehler beim Speichern der Platzierungen.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleInitiatorNext() {
+    setLoading(true)
+    setError(null)
+    try {
+      await api.setInitiator(initiator)
+      setStep('pricing')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Fehler beim Speichern des Initiators.')
     } finally {
       setLoading(false)
     }
@@ -121,6 +143,22 @@ export default function SignPage() {
   const placedCount = signatories.filter((s) => placedIds.has(s.id)).length
   const allPlaced = signatories.length > 0 && placedCount === signatories.length
   const placedPrice = calculatePrice(placedCount)
+  const selectedInitiatorSigner = signatories.find((s) => s.id === initiator.signerId)
+  const thirdPersonEmail = (initiator.email ?? '').trim()
+  const thirdPersonEmailValid = !!thirdPersonEmail && thirdPersonEmail.includes('@')
+  const initiatorValid =
+    initiator.mode === 'SIGNER'
+      ? !!selectedInitiatorSigner && !!selectedInitiatorSigner.email?.trim()
+      : thirdPersonEmailValid
+
+  useEffect(() => {
+    setInitiator((prev) => {
+      if (prev.mode === 'THIRD_PERSON') return prev
+      const signerExists = prev.signerId && signatories.some((s) => s.id === prev.signerId)
+      if (signerExists) return prev
+      return createDefaultInitiator(signatories)
+    })
+  }, [signatories])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -160,6 +198,9 @@ export default function SignPage() {
         }
         if (currentState?.placements) {
           setPlacements(currentState.placements)
+        }
+        if (currentState?.initiator) {
+          setInitiator(currentState.initiator)
         }
         if (currentState?.signatureLevel) {
           setDocumentSignatureLevel(normalizeSignatureLevel(currentState.signatureLevel))
@@ -253,7 +294,7 @@ export default function SignPage() {
         </div>
 
         <div className="sign-stepper">
-          {(['upload', 'signatories', 'placement', 'pricing', 'payment', 'done'] as Step[]).map((s, i) => (
+          {(['upload', 'signatories', 'placement', 'initiator', 'pricing', 'payment', 'done'] as Step[]).map((s, i) => (
             <div key={s} className={`stepper-item ${step === s ? 'active' : ''} ${isStepDone(step, s) ? 'done' : ''}`}>
               <div className="stepper-dot">{isStepDone(step, s) ? '✓' : i + 1}</div>
               <span>{stepLabel(s)}</span>
@@ -510,7 +551,116 @@ export default function SignPage() {
           </div>
         )}
 
-        {/* ── Step 4: Pricing ── */}
+        {/* ── Step 4: Initiator ── */}
+        {step === 'initiator' && (
+          <div className="sign-step card">
+            <h2>Initiator festlegen</h2>
+            <p className="step-desc">
+              Der Initiator ist die Person, die den Signaturprozess startet und alle E-Mail-Benachrichtigungen
+              (Einladung, Abschluss, Status) zum Prozess erhaelt.
+            </p>
+
+            <div className="signature-level-help">
+              <strong>Hinweis:</strong> Der Initiator kann einer der Unterzeichner sein oder eine dritte Person.
+            </div>
+
+            <div className="document-level-select" role="radiogroup" aria-label="Initiator-Typ">
+              <label className="document-level-option">
+                <input
+                  type="radio"
+                  name="initiator-mode"
+                  checked={initiator.mode === 'SIGNER'}
+                  onChange={() => setInitiator((prev) => ({ ...prev, mode: 'SIGNER', signerId: prev.signerId || signatories[0]?.id || '' }))}
+                />
+                <span>
+                  <strong>Unterzeichner als Initiator</strong>
+                  <small>Eine bereits eingetragene Signer-Person wird Initiator.</small>
+                </span>
+              </label>
+              <label className="document-level-option">
+                <input
+                  type="radio"
+                  name="initiator-mode"
+                  checked={initiator.mode === 'THIRD_PERSON'}
+                  onChange={() => setInitiator((prev) => ({ ...prev, mode: 'THIRD_PERSON' }))}
+                />
+                <span>
+                  <strong>Dritte Person</strong>
+                  <small>Jemand ausserhalb der Signer-Liste erhaelt die Prozess-E-Mails.</small>
+                </span>
+              </label>
+            </div>
+
+            {initiator.mode === 'SIGNER' ? (
+              <div className="signatories-list">
+                <div className="signatory-row">
+                  <div className="signatory-num">i</div>
+                  <div className="signatory-fields">
+                    <select
+                      value={initiator.signerId ?? ''}
+                      onChange={(e) => setInitiator((prev) => ({ ...prev, signerId: e.target.value }))}
+                      aria-label="Initiator Signer"
+                    >
+                      {signatories.map((s, index) => (
+                        <option key={s.id} value={s.id}>
+                          {signatoryLabel(s, index)}{s.email ? ` (${s.email})` : ' (keine E-Mail)'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                {selectedInitiatorSigner && !selectedInitiatorSigner.email?.trim() && (
+                  <div className="sign-error" role="alert">
+                    Der ausgewaehlte Initiator hat keine E-Mail-Adresse. Bitte beim Unterzeichner eine E-Mail eintragen
+                    oder "Dritte Person" waehlen.
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="signatories-list">
+                <div className="signatory-row">
+                  <div className="signatory-num">i</div>
+                  <div className="signatory-fields">
+                    <input
+                      type="text"
+                      placeholder="Vorname (optional)"
+                      value={initiator.firstName ?? ''}
+                      onChange={(e) => setInitiator((prev) => ({ ...prev, firstName: e.target.value }))}
+                      aria-label="Initiator Vorname"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Nachname (optional)"
+                      value={initiator.lastName ?? ''}
+                      onChange={(e) => setInitiator((prev) => ({ ...prev, lastName: e.target.value }))}
+                      aria-label="Initiator Nachname"
+                    />
+                    <input
+                      type="email"
+                      placeholder="E-Mail (erforderlich)"
+                      value={initiator.email ?? ''}
+                      onChange={(e) => setInitiator((prev) => ({ ...prev, email: e.target.value }))}
+                      aria-label="Initiator E-Mail"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="step-actions">
+              <button className="btn btn-ghost" onClick={() => setStep('placement')}>← Zurück</button>
+              <button
+                className="btn btn-primary"
+                disabled={!initiatorValid || loading}
+                onClick={handleInitiatorNext}
+              >
+                {loading ? 'Speichern…' : 'Weiter: Preis prüfen →'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 5: Pricing ── */}
         {step === 'pricing' && (
           <div className="sign-step card">
             <h2>Preisübersicht</h2>
@@ -543,7 +693,7 @@ export default function SignPage() {
               <span>Signaturlevel: <strong>{documentSignatureLevel}</strong></span>
             </div>
             <div className="step-actions">
-              <button className="btn btn-ghost" onClick={() => setStep('placement')}>← Zurück</button>
+              <button className="btn btn-ghost" onClick={() => setStep('initiator')}>← Zurück</button>
               <button className="btn btn-primary" onClick={() => setStep('payment')}>
                 Weiter: Bezahlen →
               </button>
@@ -551,7 +701,7 @@ export default function SignPage() {
           </div>
         )}
 
-        {/* ── Step 5: Payment ── */}
+        {/* ── Step 6: Payment ── */}
         {step === 'payment' && (
           <div className="sign-step card">
             <h2>Bezahlung</h2>
@@ -579,7 +729,7 @@ export default function SignPage() {
           </div>
         )}
 
-        {/* ── Step 6: Done ── */}
+        {/* ── Step 7: Done ── */}
         {step === 'done' && session && (
           <div className="sign-step card sign-done">
             <div className="done-icon">✅</div>
@@ -601,11 +751,13 @@ export default function SignPage() {
             <button
               className="btn btn-outline"
               onClick={() => {
+                const initialSignatories = [createSignatory()]
                 setStep('upload')
                 setFile(null)
-                setSignatories([createSignatory()])
+                setSignatories(initialSignatories)
                 setDocumentSignatureLevel('QES')
                 setPlacements([])
+                setInitiator(createDefaultInitiator(initialSignatories))
                 setSession(null)
               }}
             >
@@ -619,7 +771,7 @@ export default function SignPage() {
 }
 
 function isStepDone(current: Step, check: Step): boolean {
-  const order: Step[] = ['upload', 'signatories', 'placement', 'pricing', 'payment', 'done']
+  const order: Step[] = ['upload', 'signatories', 'placement', 'initiator', 'pricing', 'payment', 'done']
   return order.indexOf(current) > order.indexOf(check)
 }
 
@@ -628,6 +780,7 @@ function stepLabel(s: Step): string {
     upload:      'Upload',
     signatories: 'Unterzeichner',
     placement:   'Platzierung',
+    initiator:   'Initiator',
     pricing:     'Preis',
     payment:     'Zahlung',
     done:        'Fertig',

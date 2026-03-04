@@ -376,7 +376,8 @@
   flex: 1;
 }
 
-.signatory-fields input {
+.signatory-fields input,
+.signatory-fields select {
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
@@ -387,7 +388,8 @@
   width: 100%;
 }
 
-.signatory-fields input:focus {
+.signatory-fields input:focus,
+.signatory-fields select:focus {
   border-color: var(--color-red);
 }
 

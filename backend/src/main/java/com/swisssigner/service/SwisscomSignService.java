@@ -6,8 +6,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.swisssigner.config.SwisscomSignProperties;
 import com.swisssigner.model.InvitationResult;
+import com.swisssigner.model.InitiatorSelection;
 import com.swisssigner.model.Signatory;
 import com.swisssigner.model.SignatoryPlacement;
+import jakarta.annotation.PostConstruct;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +31,13 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.zip.CRC32;
 
 /**
  * Real Swisscom Sign integration – active when swisscom.sign.mock=false.
@@ -50,6 +56,7 @@ public class SwisscomSignService implements SignInviteService {
     private static final Logger log = LoggerFactory.getLogger(SwisscomSignService.class);
     private static final Logger swisscomLog = LoggerFactory.getLogger("com.swisssigner.swisscom");
     private static final String DEFAULT_LANGUAGE = "de-CH";
+    private static final int SIGNER_EXTERNAL_IDENTIFIER_MAX = 50;
 
     private final SwisscomSignProperties props;
     private final ObjectMapper mapper = new ObjectMapper();
@@ -70,12 +77,27 @@ public class SwisscomSignService implements SignInviteService {
         this.props = props;
     }
 
+    @PostConstruct
+    void logInitialization() {
+        if (swisscomSignDebugEnabled) {
+            ensureSwisscomDebugFileExists();
+        }
+        swisscomLog.info(
+            "SWISSCOM_TRACE event=service_initialized debugEnabled={} debugFile={} apiUrl={} tokenUrl={}",
+            swisscomSignDebugEnabled,
+            resolveSwisscomDebugFilePath(),
+            props.getApiUrl(),
+            props.getTokenUrl()
+        );
+    }
+
     @Override
     public List<InvitationResult> sendInvitations(String documentRef,
                                                    String documentName,
                                                    String paymentRef,
                                                    List<Signatory> signatories,
-                                                   List<SignatoryPlacement> placements) {
+                                                   List<SignatoryPlacement> placements,
+                                                   InitiatorSelection initiatorSelection) {
         try {
             swisscomLog.info(
                 "SWISSCOM_TRACE event=flow_started paymentRef={} signatoryCount={} placementCount={}",
@@ -87,26 +109,39 @@ public class SwisscomSignService implements SignInviteService {
             Path pdfPath = resolveDocumentPath(documentRef);
             swisscomLog.info("SWISSCOM_TRACE event=pdf_resolved paymentRef={} path={}", safeRef(paymentRef), pdfPath);
             Map<Integer, Integer> pageHeights = readPageHeights(pdfPath);
+            Map<String, String> signerExternalIds = buildSignerExternalIdentifiers(signatories);
+            InitiatorPayload initiator = resolveInitiator(initiatorSelection, signatories, signerExternalIds, paymentRef);
 
             // 1. Create process
-            String processId = createProcess(token, documentName, paymentRef, signatories);
+            String processId = createProcess(token, documentName, paymentRef, signatories, signerExternalIds, initiator);
             swisscomLog.info("SWISSCOM_TRACE event=create_process_ok paymentRef={} processId={}", safeRef(paymentRef), processId);
             log.info("Swisscom: process created – id={}", processId);
 
             // 2. Attach PDF
-            attachDocument(token, processId, pdfPath, documentName, placements, pageHeights);
+            attachDocument(token, processId, pdfPath, documentName, placements, pageHeights, signerExternalIds);
             swisscomLog.info("SWISSCOM_TRACE event=attach_ok paymentRef={} processId={}", safeRef(paymentRef), processId);
             log.info("Swisscom: PDF attached – processId={}", processId);
 
-            // 3. Release (start signing + send email notifications if all signers have email)
-            Map<String, String> releaseUrls = releaseProcess(token, processId, hasEmailsForAllSigners(signatories));
+            // 3. Release (start signing + send email notifications when at least one participant has email)
+            Map<String, String> releaseUrls = releaseProcess(
+                token,
+                processId,
+                shouldSendNotifications(signatories, initiator),
+                signatories,
+                signerExternalIds,
+                initiator
+            );
             swisscomLog.info("SWISSCOM_TRACE event=release_ok paymentRef={} processId={}", safeRef(paymentRef), processId);
             log.info("Swisscom: process released – processId={}", processId);
 
             // 4. Build invitation URLs per signatory (from release response; fallback /open)
             List<InvitationResult> results = new ArrayList<>();
             for (Signatory s : signatories) {
-                String inviteUrl = releaseUrls.get(s.getId());
+                String signerExternalId = signerExternalIds.getOrDefault(s.getId(), normalizeSignerIdentifier(s.getId()));
+                String inviteUrl = releaseUrls.get(signerExternalId);
+                if (inviteUrl == null || inviteUrl.isBlank()) {
+                    inviteUrl = releaseUrls.get(s.getId());
+                }
                 if (inviteUrl == null || inviteUrl.isBlank()) {
                     inviteUrl = openForPerson(token, processId, s.getId());
                 }
@@ -167,7 +202,9 @@ public class SwisscomSignService implements SignInviteService {
     private String createProcess(String token,
                                  String title,
                                  String paymentRef,
-                                 List<Signatory> signatories)
+                                 List<Signatory> signatories,
+                                 Map<String, String> signerExternalIds,
+                                 InitiatorPayload initiatorPayload)
             throws IOException, InterruptedException {
 
         ObjectNode body = mapper.createObjectNode();
@@ -182,18 +219,48 @@ public class SwisscomSignService implements SignInviteService {
         }
 
         ObjectNode initiator = body.putObject("initiator");
-        initiator.put("type", "NON_PERSON");
-        initiator.put("name", "justSign");
-        initiator.put("externalIdentifier", normalizeIdentifier("justsign-" + safeRef(paymentRef), 50));
+        if (InitiatorPayload.TYPE_SIGNER.equals(initiatorPayload.type)) {
+            initiator.put("type", "SIGNER");
+            initiator.put("externalIdentifier", initiatorPayload.externalIdentifier);
+            initiator.put("firstName", truncate(initiatorPayload.firstName, 64));
+            initiator.put("lastName", truncate(initiatorPayload.lastName, 64));
+            if (initiatorPayload.email != null && !initiatorPayload.email.isBlank()) {
+                initiator.put("email", initiatorPayload.email.trim());
+            }
+            if (initiatorPayload.mobile != null && !initiatorPayload.mobile.isBlank()) {
+                initiator.put("mobile", initiatorPayload.mobile.trim());
+            }
+        } else if (InitiatorPayload.TYPE_PERSON.equals(initiatorPayload.type)) {
+            initiator.put("type", "PERSON");
+            initiator.put("externalIdentifier", initiatorPayload.externalIdentifier);
+            if (initiatorPayload.firstName != null && !initiatorPayload.firstName.isBlank()) {
+                initiator.put("firstName", truncate(initiatorPayload.firstName, 64));
+            }
+            if (initiatorPayload.lastName != null && !initiatorPayload.lastName.isBlank()) {
+                initiator.put("lastName", truncate(initiatorPayload.lastName, 64));
+            }
+            if (initiatorPayload.email != null && !initiatorPayload.email.isBlank()) {
+                initiator.put("email", initiatorPayload.email.trim());
+            }
+        } else {
+            initiator.put("type", "NON_PERSON");
+            initiator.put("name", "justSign");
+            initiator.put("externalIdentifier", normalizeIdentifier("justsign-" + safeRef(paymentRef), SIGNER_EXTERNAL_IDENTIFIER_MAX));
+        }
 
         ObjectNode invitees = body.putObject("invitees");
         invitees.put("personalMessage", "Bitte pruefen und signieren Sie das Dokument.");
         ArrayNode signers = invitees.putArray("signers");
 
         for (Signatory s : signatories) {
+            if (InitiatorPayload.TYPE_SIGNER.equals(initiatorPayload.type)
+                && initiatorPayload.signerId != null
+                && initiatorPayload.signerId.equals(s.getId())) {
+                continue;
+            }
             ObjectNode signer = signers.addObject();
             signer.put("type", "SIGNER");
-            signer.put("externalIdentifier", normalizeIdentifier(s.getId(), 50));
+            signer.put("externalIdentifier", signerExternalIds.getOrDefault(s.getId(), normalizeSignerIdentifier(s.getId())));
             signer.put("firstName", truncate(s.getFirstName(), 64));
             signer.put("lastName", truncate(s.getLastName(), 64));
 
@@ -234,7 +301,8 @@ public class SwisscomSignService implements SignInviteService {
                                 Path pdfPath,
                                 String documentName,
                                 List<SignatoryPlacement> placements,
-                                Map<Integer, Integer> pageHeights)
+                                Map<Integer, Integer> pageHeights,
+                                Map<String, String> signerExternalIds)
             throws IOException, InterruptedException {
 
         byte[] pdfBytes = Files.readAllBytes(pdfPath);
@@ -244,7 +312,7 @@ public class SwisscomSignService implements SignInviteService {
         body.put("name", fileName);
         body.put("contentType", "application/pdf");
         body.put("content", Base64.getEncoder().encodeToString(pdfBytes));
-        body.put("externalIdentifier", normalizeIdentifier("file-" + fileName, 50));
+        body.put("externalIdentifier", normalizeIdentifier("file-" + fileName, SIGNER_EXTERNAL_IDENTIFIER_MAX));
 
         ArrayNode signaturePositions = body.putArray("signaturePositions");
         for (SignatoryPlacement p : placements == null ? List.<SignatoryPlacement>of() : placements) {
@@ -257,7 +325,8 @@ public class SwisscomSignService implements SignInviteService {
                 : Math.max(0, p.getY());
 
             ObjectNode pos = signaturePositions.addObject();
-            pos.put("signer", normalizeIdentifier(p.getSignatoryId(), 128));
+            String signerExternalId = signerExternalIds.getOrDefault(p.getSignatoryId(), normalizeSignerIdentifier(p.getSignatoryId()));
+            pos.put("signer", signerExternalId);
             pos.put("pageNumber", pageNumber);
             pos.put("positionX", Math.max(0, p.getX()));
             pos.put("positionY", topLeftY);
@@ -277,7 +346,12 @@ public class SwisscomSignService implements SignInviteService {
         }
     }
 
-    private Map<String, String> releaseProcess(String token, String processId, boolean notifyByEmail)
+    private Map<String, String> releaseProcess(String token,
+                                               String processId,
+                                               boolean notifyByEmail,
+                                               List<Signatory> signatories,
+                                               Map<String, String> signerExternalIds,
+                                               InitiatorPayload initiatorPayload)
             throws IOException, InterruptedException {
 
         HttpRequest.Builder builder = HttpRequest.newBuilder()
@@ -287,8 +361,7 @@ public class SwisscomSignService implements SignInviteService {
 
         String requestBody = "";
         if (notifyByEmail) {
-            ObjectNode notifications = mapper.createObjectNode();
-            notifications.put("language", resolveLanguage());
+            ObjectNode notifications = buildReleaseNotifications(signatories, signerExternalIds, initiatorPayload);
             requestBody = notifications.toString();
             builder.POST(HttpRequest.BodyPublishers.ofString(requestBody));
         } else {
@@ -321,6 +394,7 @@ public class SwisscomSignService implements SignInviteService {
             String externalIdentifier = textAt(participant, "externalIdentifier");
             if (externalIdentifier != null && !externalIdentifier.isBlank()) {
                 urls.put(externalIdentifier, url);
+                urls.put(normalizeSignerIdentifier(externalIdentifier), url);
             }
             String id = textAt(participant, "id");
             if (id != null && !id.isBlank()) {
@@ -328,6 +402,59 @@ public class SwisscomSignService implements SignInviteService {
             }
         }
         return urls;
+    }
+
+    private ObjectNode buildReleaseNotifications(List<Signatory> signatories,
+                                                 Map<String, String> signerExternalIds,
+                                                 InitiatorPayload initiatorPayload) {
+        ObjectNode body = mapper.createObjectNode();
+        body.put("language", resolveLanguage());
+
+        // Swisscom docs: if notifications[] is present, all participants must be listed.
+        // We only add notifications[] when we can build a complete, email-capable list.
+        if (!canBuildExplicitNotificationOverride(signatories, initiatorPayload)) {
+            return body;
+        }
+
+        Set<String> participants = new LinkedHashSet<>();
+
+        if (InitiatorPayload.TYPE_SIGNER.equals(initiatorPayload.type)
+            || InitiatorPayload.TYPE_PERSON.equals(initiatorPayload.type)) {
+            participants.add(initiatorPayload.externalIdentifier);
+        }
+
+        for (Signatory signatory : signatories) {
+            participants.add(
+                signerExternalIds.getOrDefault(signatory.getId(), normalizeSignerIdentifier(signatory.getId()))
+            );
+        }
+
+        ArrayNode notifications = body.putArray("notifications");
+        for (String participant : participants) {
+            ObjectNode entry = notifications.addObject();
+            entry.put("participant", participant);
+            ArrayNode types = entry.putArray("notificationType");
+            types.add("INVITE");
+            types.add("COMPLETION");
+        }
+
+        return body;
+    }
+
+    private boolean canBuildExplicitNotificationOverride(List<Signatory> signatories, InitiatorPayload initiatorPayload) {
+        if (signatories == null || signatories.isEmpty()) {
+            return false;
+        }
+        if (initiatorPayload == null) {
+            return false;
+        }
+        if (InitiatorPayload.TYPE_NON_PERSON.equals(initiatorPayload.type)) {
+            return false;
+        }
+        if (initiatorPayload.email == null || initiatorPayload.email.isBlank()) {
+            return false;
+        }
+        return signatories.stream().allMatch(s -> s.getEmail() != null && !s.getEmail().isBlank());
     }
 
     private String openForPerson(String token, String processId, String personId)
@@ -408,11 +535,14 @@ public class SwisscomSignService implements SignInviteService {
         }
     }
 
-    private boolean hasEmailsForAllSigners(List<Signatory> signatories) {
+    private boolean shouldSendNotifications(List<Signatory> signatories, InitiatorPayload initiator) {
+        if (initiator != null && initiator.email != null && !initiator.email.isBlank()) {
+            return true;
+        }
         if (signatories == null || signatories.isEmpty()) {
             return false;
         }
-        return signatories.stream().allMatch(s -> s.getEmail() != null && !s.getEmail().isBlank());
+        return signatories.stream().anyMatch(s -> s.getEmail() != null && !s.getEmail().isBlank());
     }
 
     private String resolveLanguage() {
@@ -427,29 +557,33 @@ public class SwisscomSignService implements SignInviteService {
                                                       String requestBody)
             throws IOException, InterruptedException {
         if (swisscomSignDebugEnabled) {
-            writeSwisscomDebugFile(
+            String requestEntry =
                 "REQUEST op=" + operation
                     + " method=" + request.method()
                     + " uri=" + request.uri()
                     + " headers=" + request.headers().map()
-                    + " body=" + requestBody
-            );
+                    + " body=" + requestBody;
+            writeSwisscomDebugFile(requestEntry);
+            swisscomLog.info("SWISSCOM_HTTP {}", requestEntry);
         }
 
         try {
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
             if (swisscomSignDebugEnabled) {
-                writeSwisscomDebugFile(
+                String responseEntry =
                     "RESPONSE op=" + operation
                         + " status=" + response.statusCode()
                         + " headers=" + response.headers().map()
-                        + " body=" + (response.body() == null ? "" : response.body())
-                );
+                        + " body=" + (response.body() == null ? "" : response.body());
+                writeSwisscomDebugFile(responseEntry);
+                swisscomLog.info("SWISSCOM_HTTP {}", responseEntry);
             }
             return response;
         } catch (IOException | InterruptedException ex) {
             if (swisscomSignDebugEnabled) {
-                writeSwisscomDebugFile("ERROR op=" + operation + " reason=" + ex.getMessage());
+                String errorEntry = "ERROR op=" + operation + " reason=" + ex.getMessage();
+                writeSwisscomDebugFile(errorEntry);
+                swisscomLog.error("SWISSCOM_HTTP {}", errorEntry, ex);
             }
             throw ex;
         }
@@ -467,6 +601,23 @@ public class SwisscomSignService implements SignInviteService {
                 Files.writeString(logPath, line, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
             } catch (IOException ex) {
                 swisscomLog.warn("SWISSCOM_TRACE event=debug_file_write_failed path={} reason={}", logPath, ex.getMessage());
+            }
+        }
+    }
+
+    private void ensureSwisscomDebugFileExists() {
+        Path logPath = resolveSwisscomDebugFilePath();
+        synchronized (swisscomDebugFileLock) {
+            try {
+                Path parent = logPath.getParent();
+                if (parent != null) {
+                    Files.createDirectories(parent);
+                }
+                if (!Files.exists(logPath)) {
+                    Files.createFile(logPath);
+                }
+            } catch (IOException ex) {
+                swisscomLog.warn("SWISSCOM_TRACE event=debug_file_init_failed path={} reason={}", logPath, ex.getMessage());
             }
         }
     }
@@ -519,9 +670,76 @@ public class SwisscomSignService implements SignInviteService {
         return value.asText();
     }
 
+    private Map<String, String> buildSignerExternalIdentifiers(List<Signatory> signatories) {
+        Map<String, String> signerExternalIds = new LinkedHashMap<>();
+        if (signatories == null) {
+            return signerExternalIds;
+        }
+        for (Signatory signatory : signatories) {
+            String signatoryId = signatory.getId();
+            signerExternalIds.put(signatoryId, normalizeSignerIdentifier(signatoryId));
+        }
+        return signerExternalIds;
+    }
+
+    private InitiatorPayload resolveInitiator(InitiatorSelection initiatorSelection,
+                                              List<Signatory> signatories,
+                                              Map<String, String> signerExternalIds,
+                                              String paymentRef) {
+        if (initiatorSelection != null && InitiatorSelection.MODE_SIGNER.equalsIgnoreCase(initiatorSelection.getMode())) {
+            String selectedSignerId = initiatorSelection.getSignerId();
+            if (selectedSignerId != null && !selectedSignerId.isBlank()) {
+                Signatory signer = signatories == null ? null : signatories.stream()
+                    .filter(s -> selectedSignerId.equals(s.getId()))
+                    .findFirst()
+                    .orElse(null);
+                if (signer != null) {
+                    return InitiatorPayload.signer(
+                        signer.getId(),
+                        signerExternalIds.getOrDefault(signer.getId(), normalizeSignerIdentifier(signer.getId())),
+                        signer.getFirstName(),
+                        signer.getLastName(),
+                        signer.getEmail(),
+                        signer.getPhone()
+                    );
+                }
+            }
+        }
+
+        if (initiatorSelection != null && InitiatorSelection.MODE_THIRD_PERSON.equalsIgnoreCase(initiatorSelection.getMode())) {
+            if (initiatorSelection.getEmail() != null && !initiatorSelection.getEmail().isBlank()) {
+                return InitiatorPayload.person(
+                    normalizeIdentifier("init-" + safeRef(paymentRef), SIGNER_EXTERNAL_IDENTIFIER_MAX),
+                    initiatorSelection.getFirstName(),
+                    initiatorSelection.getLastName(),
+                    initiatorSelection.getEmail()
+                );
+            }
+        }
+
+        return InitiatorPayload.nonPerson(
+            normalizeIdentifier("justsign-" + safeRef(paymentRef), SIGNER_EXTERNAL_IDENTIFIER_MAX)
+        );
+    }
+
+    private String normalizeSignerIdentifier(String value) {
+        return normalizeIdentifier(value, SIGNER_EXTERNAL_IDENTIFIER_MAX);
+    }
+
     private String normalizeIdentifier(String value, int maxLen) {
         String safe = safeRef(value).replaceAll("[^a-zA-Z0-9._~-]", "_");
-        return truncate(safe, maxLen);
+        if (safe.length() <= maxLen) {
+            return safe;
+        }
+        String hash = shortHash(safe);
+        int prefixLen = Math.max(1, maxLen - hash.length() - 1);
+        return safe.substring(0, prefixLen) + "-" + hash;
+    }
+
+    private String shortHash(String value) {
+        CRC32 crc = new CRC32();
+        crc.update(value.getBytes(StandardCharsets.UTF_8));
+        return Long.toHexString(crc.getValue());
     }
 
     private String safeRef(String value) {
@@ -539,6 +757,53 @@ public class SwisscomSignService implements SignInviteService {
             return value;
         }
         return value.substring(0, maxLen);
+    }
+
+    private static final class InitiatorPayload {
+        private static final String TYPE_NON_PERSON = "NON_PERSON";
+        private static final String TYPE_PERSON = "PERSON";
+        private static final String TYPE_SIGNER = "SIGNER";
+
+        private final String type;
+        private final String signerId;
+        private final String externalIdentifier;
+        private final String firstName;
+        private final String lastName;
+        private final String email;
+        private final String mobile;
+
+        private InitiatorPayload(String type,
+                                 String signerId,
+                                 String externalIdentifier,
+                                 String firstName,
+                                 String lastName,
+                                 String email,
+                                 String mobile) {
+            this.type = type;
+            this.signerId = signerId;
+            this.externalIdentifier = externalIdentifier;
+            this.firstName = firstName;
+            this.lastName = lastName;
+            this.email = email;
+            this.mobile = mobile;
+        }
+
+        private static InitiatorPayload nonPerson(String externalIdentifier) {
+            return new InitiatorPayload(TYPE_NON_PERSON, null, externalIdentifier, null, null, null, null);
+        }
+
+        private static InitiatorPayload person(String externalIdentifier, String firstName, String lastName, String email) {
+            return new InitiatorPayload(TYPE_PERSON, null, externalIdentifier, firstName, lastName, email, null);
+        }
+
+        private static InitiatorPayload signer(String signerId,
+                                               String externalIdentifier,
+                                               String firstName,
+                                               String lastName,
+                                               String email,
+                                               String mobile) {
+            return new InitiatorPayload(TYPE_SIGNER, signerId, externalIdentifier, firstName, lastName, email, mobile);
+        }
     }
 
 }
