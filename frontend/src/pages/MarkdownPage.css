@@ -1,0 +1,226 @@
+.md-page {
+  padding: 2rem 0 5rem;
+}
+
+.md-loading {
+  text-align: center;
+  padding: 4rem;
+  color: var(--color-text-muted);
+}
+
+.md-not-found {
+  text-align: center;
+  padding: 4rem;
+}
+
+.md-not-found h1 { margin-bottom: 0.5rem; }
+.md-not-found p { color: var(--color-text-muted); margin-bottom: 1.5rem; }
+
+/* --- Breadcrumbs --- */
+.md-breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  max-width: 780px;
+  margin: 0 auto 1.25rem;
+  font-size: 0.85rem;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.breadcrumb-sep {
+  color: var(--color-border);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.md-breadcrumbs a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.md-breadcrumbs a:hover {
+  color: var(--color-red);
+  text-decoration: none;
+}
+
+.breadcrumb-current {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* --- Article --- */
+.md-article {
+  max-width: 780px;
+  margin: 0 auto;
+  background: var(--color-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2.5rem 3rem;
+}
+
+.md-article h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--color-text);
+  border-bottom: 3px solid var(--color-red);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.md-article h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 2rem 0 0.75rem;
+}
+
+.md-article h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.md-article p {
+  margin-bottom: 1rem;
+  color: var(--color-text);
+  line-height: 1.75;
+}
+
+.md-article ul, .md-article ol {
+  margin: 0.5rem 0 1rem 1.5rem;
+}
+
+.md-article li {
+  margin-bottom: 0.4rem;
+  line-height: 1.7;
+}
+
+.md-article blockquote {
+  border-left: 4px solid var(--color-red);
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  background: #fff5f5;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.md-article blockquote p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.md-article code {
+  background: #f3f4f6;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.875em;
+  font-family: monospace;
+}
+
+.md-article pre {
+  background: #1a1a2e;
+  color: #e2e8f0;
+  padding: 1rem 1.2rem;
+  border-radius: var(--radius);
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.md-article pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.md-article table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+}
+
+.md-article th {
+  background: var(--color-red);
+  color: white;
+  padding: 0.6rem 1rem;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.md-article td {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.md-article tr:nth-child(even) td {
+  background: #f8f9fa;
+}
+
+.md-article a {
+  color: var(--color-red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.md-article a:hover {
+  color: var(--color-red-dark);
+}
+
+.md-article hr {
+  border: none;
+  border-top: 2px solid var(--color-border);
+  margin: 2rem 0;
+}
+
+/* --- Related articles --- */
+.md-related {
+  max-width: 780px;
+  margin: 2rem auto 0;
+}
+
+.md-related h3 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.md-related-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.6rem;
+}
+
+.md-related-link {
+  display: block;
+  padding: 0.75rem 1rem;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none !important;
+  transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.md-related-link:hover {
+  border-color: var(--color-red);
+  color: var(--color-red);
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(209, 0, 0, 0.08);
+}
+
+@media (max-width: 640px) {
+  .md-article { padding: 1.5rem 1.2rem; }
+  .md-breadcrumbs { font-size: 0.8rem; }
+  .md-related-grid { grid-template-columns: 1fr; }
+}

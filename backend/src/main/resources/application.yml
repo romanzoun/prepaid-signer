@@ -1,0 +1,44 @@
+spring:
+  session:
+    store-type: redis
+    timeout: 30m
+    redis:
+      namespace: justsign:session:v2
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 21MB
+
+server:
+  port: 8080
+  servlet:
+    session:
+      cookie:
+        name: SIGNER_SESSION
+        http-only: true
+        same-site: lax
+
+app:
+  upload-dir: ${UPLOAD_DIR:/tmp/swisssigner}
+  swisscom-sign-debug:
+    enabled: ${LOG_DEBUG_SWISSCOM_SIGN:false}
+    file: ${LOG_DEBUG_SWISSCOM_SIGN_FILE:${UPLOAD_DIR:/tmp/swisssigner}/swisscom-sign-debug.log}
+
+swisscom:
+  sign:
+    mock: ${SWISSCOM_SIGN_MOCK:true}
+    api-url: ${SWISSCOM_SIGN_API_URL:https://sign.swisscom.ch/api}
+    token-url: ${SWISSCOM_SIGN_TOKEN_URL:https://sign.swisscom.ch/oauth/token}
+    client-id: ${SWISSCOM_SIGN_CLIENT_ID:}
+    client-secret: ${SWISSCOM_SIGN_CLIENT_SECRET:}
+    notification-language: ${SWISSCOM_SIGN_NOTIFICATION_LANGUAGE:de-CH}
+
+stripe:
+  mock: ${STRIPE_MOCK:true}
+  secret-key: ${STRIPE_SECRET_KEY:}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  publishable-key: ${STRIPE_PUBLISHABLE_KEY:}

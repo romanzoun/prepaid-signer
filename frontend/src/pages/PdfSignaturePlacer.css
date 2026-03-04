@@ -1,0 +1,427 @@
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+
+.placer-layout {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+
+.placer-sidebar {
+  flex: 0 0 220px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1rem;
+  position: sticky;
+  top: 1rem;
+}
+
+.placer-sidebar-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--color-text-muted);
+  margin: 0 0 0.25rem;
+}
+
+.placer-sidebar-hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin: 0 0 1rem;
+}
+
+.placer-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* Signatory chip */
+.signer-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid var(--chip-color, var(--color-border));
+  border-radius: 8px;
+  cursor: grab;
+  background: color-mix(in srgb, var(--chip-color, transparent) 6%, white);
+  transition: transform 0.1s, box-shadow 0.1s, opacity 0.15s;
+  user-select: none;
+}
+
+.signer-chip:active {
+  cursor: grabbing;
+}
+
+.signer-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--chip-color, #000) 20%, transparent);
+}
+
+.chip-placed {
+  opacity: 1;
+}
+
+.chip-unplaced {
+  opacity: 0.75;
+  border-style: dashed;
+}
+
+.chip-avatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.chip-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.chip-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip-status {
+  font-size: 0.72rem;
+  color: var(--chip-color, var(--color-text-muted));
+}
+
+.chip-coords {
+  font-size: 0.68rem;
+  color: color-mix(in srgb, var(--chip-color, #222) 75%, #000);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip-remove {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--chip-color, var(--color-text-muted));
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.chip-remove:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--chip-color, #000) 12%, transparent);
+}
+
+.placer-warning {
+  margin-top: 1rem;
+  font-size: 0.78rem;
+  color: #e65100;
+  background: #fff3e0;
+  border: 1px solid #ffcc80;
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+}
+
+.placer-ok {
+  margin-top: 1rem;
+  font-size: 0.78rem;
+  color: #2e7d32;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+}
+
+/* ── PDF Viewer ───────────────────────────────────────────────────────────── */
+
+.placer-viewer {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Page nav */
+.placer-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.nav-btn:not(:disabled):hover {
+  background: var(--color-bg);
+}
+
+.nav-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.zoom-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.zoom-btn {
+  width: 30px;
+  height: 30px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.zoom-slider {
+  width: 120px;
+  accent-color: var(--color-red);
+}
+
+.zoom-reset {
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-text-muted);
+  border-radius: 6px;
+  padding: 0.24rem 0.45rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.zoom-reset:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.zoom-value {
+  min-width: 46px;
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scroll container */
+.placer-scroll {
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: #4a4a4a;
+  max-height: 72vh;
+}
+
+/* Canvas wrapper – must be position:relative for overlay */
+.placer-canvas-wrapper {
+  position: relative;
+  display: inline-block;
+  line-height: 0;    /* remove gap below canvas */
+  min-width: 100%;
+  transition: outline 0.1s;
+}
+
+.placer-canvas-wrapper.drop-active {
+  outline: 3px dashed var(--color-red);
+  outline-offset: -3px;
+}
+
+.placer-canvas {
+  display: block;
+}
+
+/* Overlay – sits exactly on top of canvas */
+.placer-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;  /* pass through unless child needs events */
+}
+
+/* ── Loading indicator ───────────────────────────────────────────────────── */
+
+.placer-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  z-index: 5;
+}
+
+.placer-load-error {
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  top: 0.75rem;
+  background: #fff1f1;
+  border: 1px solid #ef9a9a;
+  color: #b71c1c;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  z-index: 6;
+}
+
+/* ── Drop hint ────────────────────────────────────────────────────────────── */
+
+.drop-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(209, 0, 0, 0.06);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.drop-hint span {
+  background: var(--color-red);
+  color: #fff;
+  padding: 0.5rem 1.2rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(209, 0, 0, 0.3);
+}
+
+/* ── Placed signature box ────────────────────────────────────────────────── */
+
+.placed-box {
+  position: absolute;
+  border: 2px solid;
+  border-radius: 4px;
+  cursor: move;
+  pointer-events: all;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3px 6px;
+  gap: 1px;
+  box-sizing: border-box;
+  transition: box-shadow 0.1s;
+  touch-action: none;  /* needed for pointer capture */
+}
+
+.placed-box:hover,
+.placed-box.box-dragging {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  z-index: 10;
+}
+
+.box-label {
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  line-height: 1.2;
+}
+
+.box-hint {
+  font-size: 9px;
+  color: rgba(0,0,0,0.45);
+  line-height: 1;
+}
+
+.box-remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.2);
+  background: #fff;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.placed-box:hover .box-remove {
+  opacity: 1;
+}
+
+/* ── Tip text ─────────────────────────────────────────────────────────────── */
+
+.placer-tip {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+
+@media (max-width: 700px) {
+  .placer-layout {
+    flex-direction: column;
+  }
+  .placer-sidebar {
+    flex: none;
+    width: 100%;
+    position: static;
+  }
+  .placer-chips {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .signer-chip {
+    flex: 1 1 140px;
+  }
+  .zoom-controls {
+    width: 100%;
+    margin-left: 0;
+  }
+  .zoom-slider {
+    flex: 1;
+    min-width: 90px;
+  }
+}

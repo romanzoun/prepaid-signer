@@ -1,0 +1,20 @@
+# Disable Redis for tests - use in-memory HTTP session
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+  session:
+    store-type: none
+
+app:
+  upload-dir: ${java.io.tmpdir}/swisssigner-test
+
+# Use mocks in tests (no real API calls)
+swisscom:
+  sign:
+    mock: true
+
+stripe:
+  mock: true

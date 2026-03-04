@@ -1,0 +1,575 @@
+.sign-page {
+  padding: 3rem 0 5rem;
+}
+
+.sign-page .container {
+  max-width: 1380px;
+}
+
+.sign-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.sign-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.sign-header p {
+  color: var(--color-text-muted);
+}
+
+/* Stepper */
+.sign-stepper {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 2.5rem;
+  overflow-x: auto;
+}
+
+.stepper-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 80px;
+  position: relative;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.stepper-item::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--color-border);
+  z-index: 0;
+}
+
+.stepper-item:last-child::after { display: none; }
+
+.stepper-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-border);
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+  transition: background 0.2s, color 0.2s;
+}
+
+.stepper-item.active .stepper-dot {
+  background: var(--color-red);
+  color: white;
+}
+
+.stepper-item.active {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.stepper-item.done .stepper-dot {
+  background: var(--color-success);
+  color: white;
+}
+
+.stepper-item.done::after {
+  background: var(--color-success);
+}
+
+/* Error */
+.sign-error {
+  background: #fff0f0;
+  border: 1px solid #fcc;
+  color: var(--color-red-dark);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+/* Steps */
+.sign-step {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.placement-card {
+  max-width: 1180px;
+}
+
+.sign-step h2 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.step-desc {
+  color: var(--color-text-muted);
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.placement-summary {
+  margin-top: 1rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+}
+
+.placement-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.placement-workspace {
+  min-width: 0;
+}
+
+.placement-price-panel {
+  position: sticky;
+  top: 1rem;
+  padding: 1rem;
+}
+
+.placement-price-panel h3 {
+  font-size: 1.05rem;
+  margin-bottom: 0.2rem;
+}
+
+.placement-price-hint {
+  color: var(--color-text-muted);
+  font-size: 0.84rem;
+  margin-bottom: 0.8rem;
+}
+
+.placement-price-breakdown {
+  margin-bottom: 0.85rem;
+}
+
+.placement-price-meta {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.85rem;
+  background: var(--color-bg);
+}
+
+.placement-price-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.86rem;
+  padding: 0.2rem 0;
+}
+
+.placement-price-meta-row strong {
+  max-width: 65%;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.placement-review-list {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.45rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.placement-review-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.placement-review-row:last-child {
+  border-bottom: none;
+}
+
+.placement-actions {
+  margin-top: 0;
+}
+
+.placement-actions .btn {
+  flex: 1;
+  text-align: center;
+}
+
+.placement-summary h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+}
+
+.placement-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed var(--color-border);
+}
+
+.placement-row:last-child {
+  border-bottom: none;
+}
+
+.placement-name {
+  font-weight: 600;
+}
+
+.placement-values {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dropzone */
+.dropzone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  margin-bottom: 1.5rem;
+}
+
+.dropzone:hover, .dropzone:focus {
+  border-color: var(--color-red);
+  background: #fff5f5;
+  outline: none;
+}
+
+.dropzone-filled {
+  border-color: var(--color-success);
+  background: #f0fff4;
+}
+
+.dropzone-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.dropzone p {
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.dropzone-filename {
+  color: var(--color-text) !important;
+  font-weight: 600;
+}
+
+.dropzone-hint {
+  font-size: 0.8rem !important;
+}
+
+/* Signatories */
+.signatories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.signature-level-help {
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.signature-level-help strong {
+  color: var(--color-text);
+}
+
+.document-level-select {
+  display: flex;
+  gap: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.55rem 0.6rem;
+  background: var(--color-bg);
+  margin-bottom: 1rem;
+}
+
+.document-level-option {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  flex: 1;
+}
+
+.document-level-option input {
+  margin: 0;
+}
+
+.document-level-option span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.document-level-option small {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.signatory-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.signatory-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--color-red);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.signatory-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.4fr 1fr;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.signatory-fields input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+
+.signatory-fields input:focus {
+  border-color: var(--color-red);
+}
+
+.signatory-remove {
+  padding: 0.4rem 0.6rem !important;
+  font-size: 0.8rem !important;
+}
+
+.add-signatory {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Pricing */
+.price-breakdown {
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.95rem;
+}
+
+.price-row:last-child { border-bottom: none; }
+
+.price-total {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-text);
+}
+
+.price-doc {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.price-signatories {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.price-signatory {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+/* Payment */
+.payment-mock-notice {
+  display: flex;
+  gap: 1rem;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.payment-mock-notice span {
+  font-size: 1.5rem;
+}
+
+.payment-mock-notice p {
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+.payment-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.payment-total {
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: var(--color-red);
+}
+
+/* Done */
+.sign-done {
+  text-align: center;
+}
+
+.done-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.sign-done h2 { margin-bottom: 0.5rem; }
+.sign-done > p { color: var(--color-text-muted); margin-bottom: 1.5rem; }
+
+.done-invitations {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+.done-invite {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+}
+
+.done-invite div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.done-invite span {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.invite-link {
+  font-size: 0.85rem;
+  color: var(--color-red);
+}
+
+@media (max-width: 1180px) {
+  .placement-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .placement-price-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .signatory-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .signatory-row {
+    flex-wrap: wrap;
+  }
+
+  .document-level-select {
+    flex-direction: column;
+  }
+
+  .document-level-option {
+    width: 100%;
+  }
+
+  .placement-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .placement-price-panel {
+    position: static;
+  }
+
+  .placement-row {
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .placement-review-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+  }
+}
