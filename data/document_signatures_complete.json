@@ -1,0 +1,2994 @@
+[
+  {
+    "document_type": "NDA / Geheimhaltungsvereinbarung",
+    "search_terms": [
+      "NDA",
+      "Non Disclosure",
+      "Geheimhaltung",
+      "Confidentiality"
+    ],
+    "description": "Vertrag zum Schutz vertraulicher Informationen zwischen Parteien",
+    "recommended_signature_level": "AES",
+    "id": "doc_001_nda-geheimhaltungsvereinbarung",
+    "translations": {
+      "de": {
+        "document_type": "NDA / Geheimhaltungsvereinbarung",
+        "description": "Vertrag zum Schutz vertraulicher Informationen zwischen Parteien",
+        "search_terms": [
+          "NDA / Geheimhaltungsvereinbarung",
+          "NDA",
+          "Non Disclosure",
+          "Geheimhaltung",
+          "Confidentiality"
+        ]
+      },
+      "en": {
+        "document_type": "NDA / Geheimhaltungsvereinbarung",
+        "description": "Vertrag zum Schutz vertraulicher Informationen zwischen Parteien",
+        "search_terms": [
+          "NDA / Geheimhaltungsvereinbarung",
+          "NDA",
+          "Non Disclosure",
+          "Geheimhaltung",
+          "Confidentiality"
+        ]
+      },
+      "fr": {
+        "document_type": "NDA / Geheimhaltungsvereinbarung",
+        "description": "Vertrag zum Schutz vertraulicher Informationen zwischen Parteien",
+        "search_terms": [
+          "NDA / Geheimhaltungsvereinbarung",
+          "NDA",
+          "Non Disclosure",
+          "Geheimhaltung",
+          "Confidentiality"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Mutual NDA",
+    "search_terms": [
+      "Mutual NDA",
+      "beidseitige Geheimhaltung"
+    ],
+    "description": "Beide Parteien verpflichten sich zur Geheimhaltung",
+    "recommended_signature_level": "AES",
+    "id": "doc_002_mutual-nda",
+    "translations": {
+      "de": {
+        "document_type": "Mutual NDA",
+        "description": "Beide Parteien verpflichten sich zur Geheimhaltung",
+        "search_terms": [
+          "Mutual NDA",
+          "beidseitige Geheimhaltung"
+        ]
+      },
+      "en": {
+        "document_type": "Mutual NDA",
+        "description": "Beide Parteien verpflichten sich zur Geheimhaltung",
+        "search_terms": [
+          "Mutual NDA",
+          "beidseitige Geheimhaltung"
+        ]
+      },
+      "fr": {
+        "document_type": "Mutual NDA",
+        "description": "Beide Parteien verpflichten sich zur Geheimhaltung",
+        "search_terms": [
+          "Mutual NDA",
+          "beidseitige Geheimhaltung"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Kooperationsvertrag",
+    "search_terms": [
+      "Kooperation",
+      "Partnership",
+      "Zusammenarbeit"
+    ],
+    "description": "Regelt Zusammenarbeit zwischen Organisationen",
+    "recommended_signature_level": "AES",
+    "id": "doc_003_kooperationsvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Kooperationsvertrag",
+        "description": "Regelt Zusammenarbeit zwischen Organisationen",
+        "search_terms": [
+          "Kooperationsvertrag",
+          "Kooperation",
+          "Partnership",
+          "Zusammenarbeit"
+        ]
+      },
+      "en": {
+        "document_type": "Kooperationsvertrag",
+        "description": "Regelt Zusammenarbeit zwischen Organisationen",
+        "search_terms": [
+          "Kooperationsvertrag",
+          "Kooperation",
+          "Partnership",
+          "Zusammenarbeit"
+        ]
+      },
+      "fr": {
+        "document_type": "Kooperationsvertrag",
+        "description": "Regelt Zusammenarbeit zwischen Organisationen",
+        "search_terms": [
+          "Kooperationsvertrag",
+          "Kooperation",
+          "Partnership",
+          "Zusammenarbeit"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Rahmenvertrag",
+    "search_terms": [
+      "Framework Agreement",
+      "Master Agreement"
+    ],
+    "description": "Übergeordneter Vertrag für zukünftige Einzelverträge",
+    "recommended_signature_level": "AES",
+    "id": "doc_004_rahmenvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Rahmenvertrag",
+        "description": "Übergeordneter Vertrag für zukünftige Einzelverträge",
+        "search_terms": [
+          "Rahmenvertrag",
+          "Framework Agreement",
+          "Master Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Framework Agreement",
+        "description": "Übergeordneter Vertrag für zukünftige Einzelverträge",
+        "search_terms": [
+          "Framework Agreement",
+          "Rahmenvertrag",
+          "Master Agreement"
+        ]
+      },
+      "fr": {
+        "document_type": "Framework Agreement",
+        "description": "Übergeordneter Vertrag für zukünftige Einzelverträge",
+        "search_terms": [
+          "Framework Agreement",
+          "Rahmenvertrag",
+          "Master Agreement"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Dienstleistungsvertrag",
+    "search_terms": [
+      "Service Agreement",
+      "Consulting Vertrag"
+    ],
+    "description": "Vertrag über Dienstleistungen und Vergütung",
+    "recommended_signature_level": "AES",
+    "id": "doc_005_dienstleistungsvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Dienstleistungsvertrag",
+        "description": "Vertrag über Dienstleistungen und Vergütung",
+        "search_terms": [
+          "Dienstleistungsvertrag",
+          "Service Agreement",
+          "Consulting Vertrag"
+        ]
+      },
+      "en": {
+        "document_type": "Service Agreement",
+        "description": "Vertrag über Dienstleistungen und Vergütung",
+        "search_terms": [
+          "Service Agreement",
+          "Dienstleistungsvertrag",
+          "Consulting Vertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Service Agreement",
+        "description": "Vertrag über Dienstleistungen und Vergütung",
+        "search_terms": [
+          "Service Agreement",
+          "Dienstleistungsvertrag",
+          "Consulting Vertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Werkvertrag",
+    "search_terms": [
+      "Werkvertrag",
+      "Deliverable"
+    ],
+    "description": "Vertrag über Erstellung eines Werkes mit Abnahme",
+    "recommended_signature_level": "AES",
+    "id": "doc_006_werkvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Werkvertrag",
+        "description": "Vertrag über Erstellung eines Werkes mit Abnahme",
+        "search_terms": [
+          "Werkvertrag",
+          "Deliverable"
+        ]
+      },
+      "en": {
+        "document_type": "Werkvertrag",
+        "description": "Vertrag über Erstellung eines Werkes mit Abnahme",
+        "search_terms": [
+          "Werkvertrag",
+          "Deliverable"
+        ]
+      },
+      "fr": {
+        "document_type": "Werkvertrag",
+        "description": "Vertrag über Erstellung eines Werkes mit Abnahme",
+        "search_terms": [
+          "Werkvertrag",
+          "Deliverable"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Beratungsvertrag",
+    "search_terms": [
+      "Consulting Agreement",
+      "Beratung"
+    ],
+    "description": "Regelt Beratungsleistungen und Honorare",
+    "recommended_signature_level": "AES",
+    "id": "doc_007_beratungsvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Beratungsvertrag",
+        "description": "Regelt Beratungsleistungen und Honorare",
+        "search_terms": [
+          "Beratungsvertrag",
+          "Consulting Agreement",
+          "Beratung"
+        ]
+      },
+      "en": {
+        "document_type": "Consulting Agreement",
+        "description": "Regelt Beratungsleistungen und Honorare",
+        "search_terms": [
+          "Consulting Agreement",
+          "Beratungsvertrag",
+          "Beratung"
+        ]
+      },
+      "fr": {
+        "document_type": "Consulting Agreement",
+        "description": "Regelt Beratungsleistungen und Honorare",
+        "search_terms": [
+          "Consulting Agreement",
+          "Beratungsvertrag",
+          "Beratung"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Projektvertrag",
+    "search_terms": [
+      "Project Agreement",
+      "Projektumfang"
+    ],
+    "description": "Vertrag für Projektumsetzung mit Meilensteinen",
+    "recommended_signature_level": "AES",
+    "id": "doc_008_projektvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Projektvertrag",
+        "description": "Vertrag für Projektumsetzung mit Meilensteinen",
+        "search_terms": [
+          "Projektvertrag",
+          "Project Agreement",
+          "Projektumfang"
+        ]
+      },
+      "en": {
+        "document_type": "Project Agreement",
+        "description": "Vertrag für Projektumsetzung mit Meilensteinen",
+        "search_terms": [
+          "Project Agreement",
+          "Projektvertrag",
+          "Projektumfang"
+        ]
+      },
+      "fr": {
+        "document_type": "Project Agreement",
+        "description": "Vertrag für Projektumsetzung mit Meilensteinen",
+        "search_terms": [
+          "Project Agreement",
+          "Projektvertrag",
+          "Projektumfang"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Lizenzvertrag",
+    "search_terms": [
+      "License Agreement",
+      "Nutzungsrechte"
+    ],
+    "description": "Regelt Nutzung geistigen Eigentums",
+    "recommended_signature_level": "AES",
+    "id": "doc_009_lizenzvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Lizenzvertrag",
+        "description": "Regelt Nutzung geistigen Eigentums",
+        "search_terms": [
+          "Lizenzvertrag",
+          "License Agreement",
+          "Nutzungsrechte"
+        ]
+      },
+      "en": {
+        "document_type": "License Agreement",
+        "description": "Regelt Nutzung geistigen Eigentums",
+        "search_terms": [
+          "License Agreement",
+          "Lizenzvertrag",
+          "Nutzungsrechte"
+        ]
+      },
+      "fr": {
+        "document_type": "License Agreement",
+        "description": "Regelt Nutzung geistigen Eigentums",
+        "search_terms": [
+          "License Agreement",
+          "Lizenzvertrag",
+          "Nutzungsrechte"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Software-Nutzungsvertrag",
+    "search_terms": [
+      "SaaS Agreement",
+      "Software License"
+    ],
+    "description": "Regelt Nutzung von Software oder Cloud Services",
+    "recommended_signature_level": "AES",
+    "id": "doc_010_software-nutzungsvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Software-Nutzungsvertrag",
+        "description": "Regelt Nutzung von Software oder Cloud Services",
+        "search_terms": [
+          "Software-Nutzungsvertrag",
+          "SaaS Agreement",
+          "Software License"
+        ]
+      },
+      "en": {
+        "document_type": "SaaS Agreement",
+        "description": "Regelt Nutzung von Software oder Cloud Services",
+        "search_terms": [
+          "SaaS Agreement",
+          "Software-Nutzungsvertrag",
+          "Software License"
+        ]
+      },
+      "fr": {
+        "document_type": "SaaS Agreement",
+        "description": "Regelt Nutzung von Software oder Cloud Services",
+        "search_terms": [
+          "SaaS Agreement",
+          "Software-Nutzungsvertrag",
+          "Software License"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "API Nutzungsvereinbarung",
+    "search_terms": [
+      "API Terms",
+      "API License"
+    ],
+    "description": "Regelt Zugriff auf APIs",
+    "recommended_signature_level": "AES",
+    "id": "doc_011_api-nutzungsvereinbarung",
+    "translations": {
+      "de": {
+        "document_type": "API Nutzungsvereinbarung",
+        "description": "Regelt Zugriff auf APIs",
+        "search_terms": [
+          "API Nutzungsvereinbarung",
+          "API Terms",
+          "API License"
+        ]
+      },
+      "en": {
+        "document_type": "API Nutzungsvereinbarung",
+        "description": "Regelt Zugriff auf APIs",
+        "search_terms": [
+          "API Nutzungsvereinbarung",
+          "API Terms",
+          "API License"
+        ]
+      },
+      "fr": {
+        "document_type": "API Nutzungsvereinbarung",
+        "description": "Regelt Zugriff auf APIs",
+        "search_terms": [
+          "API Nutzungsvereinbarung",
+          "API Terms",
+          "API License"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Open Source Contributor Agreement",
+    "search_terms": [
+      "CLA",
+      "Contributor License Agreement"
+    ],
+    "description": "Übertragung von Rechten an Codebeiträgen",
+    "recommended_signature_level": "AES",
+    "id": "doc_012_open-source-contributor-agreement",
+    "translations": {
+      "de": {
+        "document_type": "Open Source Contributor Agreement",
+        "description": "Übertragung von Rechten an Codebeiträgen",
+        "search_terms": [
+          "Open Source Contributor Agreement",
+          "CLA",
+          "Contributor License Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Open Source Contributor Agreement",
+        "description": "Übertragung von Rechten an Codebeiträgen",
+        "search_terms": [
+          "Open Source Contributor Agreement",
+          "CLA",
+          "Contributor License Agreement"
+        ]
+      },
+      "fr": {
+        "document_type": "Open Source Contributor Agreement",
+        "description": "Übertragung von Rechten an Codebeiträgen",
+        "search_terms": [
+          "Open Source Contributor Agreement",
+          "CLA",
+          "Contributor License Agreement"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Hosting Vertrag",
+    "search_terms": [
+      "Hosting Agreement",
+      "Server Hosting"
+    ],
+    "description": "Regelt Hosting von IT-Systemen",
+    "recommended_signature_level": "AES",
+    "id": "doc_013_hosting-vertrag",
+    "translations": {
+      "de": {
+        "document_type": "Hosting Vertrag",
+        "description": "Regelt Hosting von IT-Systemen",
+        "search_terms": [
+          "Hosting Vertrag",
+          "Hosting Agreement",
+          "Server Hosting"
+        ]
+      },
+      "en": {
+        "document_type": "Hosting Vertrag",
+        "description": "Regelt Hosting von IT-Systemen",
+        "search_terms": [
+          "Hosting Vertrag",
+          "Hosting Agreement",
+          "Server Hosting"
+        ]
+      },
+      "fr": {
+        "document_type": "Hosting Vertrag",
+        "description": "Regelt Hosting von IT-Systemen",
+        "search_terms": [
+          "Hosting Vertrag",
+          "Hosting Agreement",
+          "Server Hosting"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Domainübertragung",
+    "search_terms": [
+      "Domain Transfer",
+      "Domain Verkauf"
+    ],
+    "description": "Übertragung von Domainrechten",
+    "recommended_signature_level": "AES",
+    "id": "doc_014_domainubertragung",
+    "translations": {
+      "de": {
+        "document_type": "Domainübertragung",
+        "description": "Übertragung von Domainrechten",
+        "search_terms": [
+          "Domainübertragung",
+          "Domain Transfer",
+          "Domain Verkauf"
+        ]
+      },
+      "en": {
+        "document_type": "Domainübertragung",
+        "description": "Übertragung von Domainrechten",
+        "search_terms": [
+          "Domainübertragung",
+          "Domain Transfer",
+          "Domain Verkauf"
+        ]
+      },
+      "fr": {
+        "document_type": "Domainübertragung",
+        "description": "Übertragung von Domainrechten",
+        "search_terms": [
+          "Domainübertragung",
+          "Domain Transfer",
+          "Domain Verkauf"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Arbeitsvertrag",
+    "search_terms": [
+      "Employment Contract",
+      "Arbeitsverhältnis"
+    ],
+    "description": "Regelt Arbeitsverhältnis zwischen Arbeitgeber und Arbeitnehmer",
+    "recommended_signature_level": "QES",
+    "id": "doc_015_arbeitsvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Arbeitsvertrag",
+        "description": "Regelt Arbeitsverhältnis zwischen Arbeitgeber und Arbeitnehmer",
+        "search_terms": [
+          "Arbeitsvertrag",
+          "Employment Contract",
+          "Arbeitsverhältnis"
+        ]
+      },
+      "en": {
+        "document_type": "Employment Contract",
+        "description": "Regelt Arbeitsverhältnis zwischen Arbeitgeber und Arbeitnehmer",
+        "search_terms": [
+          "Employment Contract",
+          "Arbeitsvertrag",
+          "Arbeitsverhältnis"
+        ]
+      },
+      "fr": {
+        "document_type": "Employment Contract",
+        "description": "Regelt Arbeitsverhältnis zwischen Arbeitgeber und Arbeitnehmer",
+        "search_terms": [
+          "Employment Contract",
+          "Arbeitsvertrag",
+          "Arbeitsverhältnis"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Zusatzvereinbarung Arbeitsvertrag",
+    "search_terms": [
+      "Employment Amendment"
+    ],
+    "description": "Änderung eines bestehenden Arbeitsvertrags",
+    "recommended_signature_level": "AES",
+    "id": "doc_016_zusatzvereinbarung-arbeitsvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Zusatzvereinbarung Arbeitsvertrag",
+        "description": "Änderung eines bestehenden Arbeitsvertrags",
+        "search_terms": [
+          "Zusatzvereinbarung Arbeitsvertrag",
+          "Employment Amendment"
+        ]
+      },
+      "en": {
+        "document_type": "Employment Amendment",
+        "description": "Änderung eines bestehenden Arbeitsvertrags",
+        "search_terms": [
+          "Employment Amendment",
+          "Zusatzvereinbarung Arbeitsvertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Employment Amendment",
+        "description": "Änderung eines bestehenden Arbeitsvertrags",
+        "search_terms": [
+          "Employment Amendment",
+          "Zusatzvereinbarung Arbeitsvertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Kündigung Arbeitsvertrag",
+    "search_terms": [
+      "Termination Letter",
+      "Kündigung"
+    ],
+    "description": "Beendigung eines Arbeitsverhältnisses",
+    "recommended_signature_level": "QES",
+    "id": "doc_017_kundigung-arbeitsvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Kündigung Arbeitsvertrag",
+        "description": "Beendigung eines Arbeitsverhältnisses",
+        "search_terms": [
+          "Kündigung Arbeitsvertrag",
+          "Termination Letter",
+          "Kündigung"
+        ]
+      },
+      "en": {
+        "document_type": "Termination Letter",
+        "description": "Beendigung eines Arbeitsverhältnisses",
+        "search_terms": [
+          "Termination Letter",
+          "Kündigung Arbeitsvertrag",
+          "Kündigung"
+        ]
+      },
+      "fr": {
+        "document_type": "Termination Letter",
+        "description": "Beendigung eines Arbeitsverhältnisses",
+        "search_terms": [
+          "Termination Letter",
+          "Kündigung Arbeitsvertrag",
+          "Kündigung"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Aufhebungsvereinbarung",
+    "search_terms": [
+      "Mutual Termination",
+      "Severance Agreement"
+    ],
+    "description": "Einvernehmliche Beendigung eines Arbeitsverhältnisses",
+    "recommended_signature_level": "QES",
+    "id": "doc_018_aufhebungsvereinbarung",
+    "translations": {
+      "de": {
+        "document_type": "Aufhebungsvereinbarung",
+        "description": "Einvernehmliche Beendigung eines Arbeitsverhältnisses",
+        "search_terms": [
+          "Aufhebungsvereinbarung",
+          "Mutual Termination",
+          "Severance Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Mutual Termination",
+        "description": "Einvernehmliche Beendigung eines Arbeitsverhältnisses",
+        "search_terms": [
+          "Mutual Termination",
+          "Aufhebungsvereinbarung",
+          "Severance Agreement"
+        ]
+      },
+      "fr": {
+        "document_type": "Mutual Termination",
+        "description": "Einvernehmliche Beendigung eines Arbeitsverhältnisses",
+        "search_terms": [
+          "Mutual Termination",
+          "Aufhebungsvereinbarung",
+          "Severance Agreement"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Freelancer Vertrag",
+    "search_terms": [
+      "Contractor Agreement",
+      "Freelance"
+    ],
+    "description": "Vertrag mit selbstständigen Dienstleistern",
+    "recommended_signature_level": "AES",
+    "id": "doc_019_freelancer-vertrag",
+    "translations": {
+      "de": {
+        "document_type": "Freelancer Vertrag",
+        "description": "Vertrag mit selbstständigen Dienstleistern",
+        "search_terms": [
+          "Freelancer Vertrag",
+          "Contractor Agreement",
+          "Freelance"
+        ]
+      },
+      "en": {
+        "document_type": "Freelancer Vertrag",
+        "description": "Vertrag mit selbstständigen Dienstleistern",
+        "search_terms": [
+          "Freelancer Vertrag",
+          "Contractor Agreement",
+          "Freelance"
+        ]
+      },
+      "fr": {
+        "document_type": "Freelancer Vertrag",
+        "description": "Vertrag mit selbstständigen Dienstleistern",
+        "search_terms": [
+          "Freelancer Vertrag",
+          "Contractor Agreement",
+          "Freelance"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Praktikumsvertrag",
+    "search_terms": [
+      "Internship Agreement"
+    ],
+    "description": "Regelt Praktikum und Ausbildungsbedingungen",
+    "recommended_signature_level": "AES",
+    "id": "doc_020_praktikumsvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Praktikumsvertrag",
+        "description": "Regelt Praktikum und Ausbildungsbedingungen",
+        "search_terms": [
+          "Praktikumsvertrag",
+          "Internship Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Internship Agreement",
+        "description": "Regelt Praktikum und Ausbildungsbedingungen",
+        "search_terms": [
+          "Internship Agreement",
+          "Praktikumsvertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Internship Agreement",
+        "description": "Regelt Praktikum und Ausbildungsbedingungen",
+        "search_terms": [
+          "Internship Agreement",
+          "Praktikumsvertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Bonusvereinbarung",
+    "search_terms": [
+      "Bonus Agreement"
+    ],
+    "description": "Regelt variable Vergütung",
+    "recommended_signature_level": "AES",
+    "id": "doc_021_bonusvereinbarung",
+    "translations": {
+      "de": {
+        "document_type": "Bonusvereinbarung",
+        "description": "Regelt variable Vergütung",
+        "search_terms": [
+          "Bonusvereinbarung",
+          "Bonus Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Bonusvereinbarung",
+        "description": "Regelt variable Vergütung",
+        "search_terms": [
+          "Bonusvereinbarung",
+          "Bonus Agreement"
+        ]
+      },
+      "fr": {
+        "document_type": "Bonusvereinbarung",
+        "description": "Regelt variable Vergütung",
+        "search_terms": [
+          "Bonusvereinbarung",
+          "Bonus Agreement"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Zielvereinbarung",
+    "search_terms": [
+      "KPI Agreement",
+      "Performance Goals"
+    ],
+    "description": "Festlegung von Leistungszielen",
+    "recommended_signature_level": "AES",
+    "id": "doc_022_zielvereinbarung",
+    "translations": {
+      "de": {
+        "document_type": "Zielvereinbarung",
+        "description": "Festlegung von Leistungszielen",
+        "search_terms": [
+          "Zielvereinbarung",
+          "KPI Agreement",
+          "Performance Goals"
+        ]
+      },
+      "en": {
+        "document_type": "KPI Agreement",
+        "description": "Festlegung von Leistungszielen",
+        "search_terms": [
+          "KPI Agreement",
+          "Zielvereinbarung",
+          "Performance Goals"
+        ]
+      },
+      "fr": {
+        "document_type": "KPI Agreement",
+        "description": "Festlegung von Leistungszielen",
+        "search_terms": [
+          "KPI Agreement",
+          "Zielvereinbarung",
+          "Performance Goals"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Homeoffice Vereinbarung",
+    "search_terms": [
+      "Remote Work Agreement"
+    ],
+    "description": "Regelt Arbeit von zuhause",
+    "recommended_signature_level": "AES",
+    "id": "doc_023_homeoffice-vereinbarung",
+    "translations": {
+      "de": {
+        "document_type": "Homeoffice Vereinbarung",
+        "description": "Regelt Arbeit von zuhause",
+        "search_terms": [
+          "Homeoffice Vereinbarung",
+          "Remote Work Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Remote Work Agreement",
+        "description": "Regelt Arbeit von zuhause",
+        "search_terms": [
+          "Remote Work Agreement",
+          "Homeoffice Vereinbarung"
+        ]
+      },
+      "fr": {
+        "document_type": "Remote Work Agreement",
+        "description": "Regelt Arbeit von zuhause",
+        "search_terms": [
+          "Remote Work Agreement",
+          "Homeoffice Vereinbarung"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Equipment Übergabeprotokoll",
+    "search_terms": [
+      "Equipment Handover",
+      "Laptop Übergabe"
+    ],
+    "description": "Dokumentiert Übergabe von Arbeitsmitteln",
+    "recommended_signature_level": "AES",
+    "id": "doc_024_equipment-ubergabeprotokoll",
+    "translations": {
+      "de": {
+        "document_type": "Equipment Übergabeprotokoll",
+        "description": "Dokumentiert Übergabe von Arbeitsmitteln",
+        "search_terms": [
+          "Equipment Übergabeprotokoll",
+          "Equipment Handover",
+          "Laptop Übergabe"
+        ]
+      },
+      "en": {
+        "document_type": "Equipment Übergabeprotokoll",
+        "description": "Dokumentiert Übergabe von Arbeitsmitteln",
+        "search_terms": [
+          "Equipment Übergabeprotokoll",
+          "Equipment Handover",
+          "Laptop Übergabe"
+        ]
+      },
+      "fr": {
+        "document_type": "Equipment Übergabeprotokoll",
+        "description": "Dokumentiert Übergabe von Arbeitsmitteln",
+        "search_terms": [
+          "Equipment Übergabeprotokoll",
+          "Equipment Handover",
+          "Laptop Übergabe"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Mietvertrag",
+    "search_terms": [
+      "Lease Agreement",
+      "Miete Wohnung"
+    ],
+    "description": "Regelt Vermietung von Immobilien",
+    "recommended_signature_level": "AES",
+    "id": "doc_025_mietvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Mietvertrag",
+        "description": "Regelt Vermietung von Immobilien",
+        "search_terms": [
+          "Mietvertrag",
+          "Lease Agreement",
+          "Miete Wohnung"
+        ]
+      },
+      "en": {
+        "document_type": "Lease Agreement",
+        "description": "Regelt Vermietung von Immobilien",
+        "search_terms": [
+          "Lease Agreement",
+          "Mietvertrag",
+          "Miete Wohnung"
+        ]
+      },
+      "fr": {
+        "document_type": "Lease Agreement",
+        "description": "Regelt Vermietung von Immobilien",
+        "search_terms": [
+          "Lease Agreement",
+          "Mietvertrag",
+          "Miete Wohnung"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Untermietvertrag",
+    "search_terms": [
+      "Sublease"
+    ],
+    "description": "Weitervermietung einer gemieteten Immobilie",
+    "recommended_signature_level": "AES",
+    "id": "doc_026_untermietvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Untermietvertrag",
+        "description": "Weitervermietung einer gemieteten Immobilie",
+        "search_terms": [
+          "Untermietvertrag",
+          "Sublease"
+        ]
+      },
+      "en": {
+        "document_type": "Sublease",
+        "description": "Weitervermietung einer gemieteten Immobilie",
+        "search_terms": [
+          "Sublease",
+          "Untermietvertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Sublease",
+        "description": "Weitervermietung einer gemieteten Immobilie",
+        "search_terms": [
+          "Sublease",
+          "Untermietvertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Ferienwohnung Mietvertrag",
+    "search_terms": [
+      "Holiday Rental",
+      "Short Term Rental"
+    ],
+    "description": "Kurzzeitmiete für Ferienwohnungen",
+    "recommended_signature_level": "AES",
+    "id": "doc_027_ferienwohnung-mietvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Ferienwohnung Mietvertrag",
+        "description": "Kurzzeitmiete für Ferienwohnungen",
+        "search_terms": [
+          "Ferienwohnung Mietvertrag",
+          "Holiday Rental",
+          "Short Term Rental"
+        ]
+      },
+      "en": {
+        "document_type": "Ferienwohnung Mietvertrag",
+        "description": "Kurzzeitmiete für Ferienwohnungen",
+        "search_terms": [
+          "Ferienwohnung Mietvertrag",
+          "Holiday Rental",
+          "Short Term Rental"
+        ]
+      },
+      "fr": {
+        "document_type": "Ferienwohnung Mietvertrag",
+        "description": "Kurzzeitmiete für Ferienwohnungen",
+        "search_terms": [
+          "Ferienwohnung Mietvertrag",
+          "Holiday Rental",
+          "Short Term Rental"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Schlüsselübergabe Protokoll",
+    "search_terms": [
+      "Key Handover"
+    ],
+    "description": "Dokumentiert Übergabe von Schlüsseln",
+    "recommended_signature_level": "AES",
+    "id": "doc_028_schlusselubergabe-protokoll",
+    "translations": {
+      "de": {
+        "document_type": "Schlüsselübergabe Protokoll",
+        "description": "Dokumentiert Übergabe von Schlüsseln",
+        "search_terms": [
+          "Schlüsselübergabe Protokoll",
+          "Key Handover"
+        ]
+      },
+      "en": {
+        "document_type": "Schlüsselübergabe Protokoll",
+        "description": "Dokumentiert Übergabe von Schlüsseln",
+        "search_terms": [
+          "Schlüsselübergabe Protokoll",
+          "Key Handover"
+        ]
+      },
+      "fr": {
+        "document_type": "Schlüsselübergabe Protokoll",
+        "description": "Dokumentiert Übergabe von Schlüsseln",
+        "search_terms": [
+          "Schlüsselübergabe Protokoll",
+          "Key Handover"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Übergabeprotokoll Wohnung",
+    "search_terms": [
+      "Handover Protocol",
+      "Wohnungsübergabe"
+    ],
+    "description": "Zustand der Wohnung bei Ein- oder Auszug",
+    "recommended_signature_level": "AES",
+    "id": "doc_029_ubergabeprotokoll-wohnung",
+    "translations": {
+      "de": {
+        "document_type": "Übergabeprotokoll Wohnung",
+        "description": "Zustand der Wohnung bei Ein- oder Auszug",
+        "search_terms": [
+          "Übergabeprotokoll Wohnung",
+          "Handover Protocol",
+          "Wohnungsübergabe"
+        ]
+      },
+      "en": {
+        "document_type": "Handover Protocol",
+        "description": "Zustand der Wohnung bei Ein- oder Auszug",
+        "search_terms": [
+          "Handover Protocol",
+          "Übergabeprotokoll Wohnung",
+          "Wohnungsübergabe"
+        ]
+      },
+      "fr": {
+        "document_type": "Handover Protocol",
+        "description": "Zustand der Wohnung bei Ein- oder Auszug",
+        "search_terms": [
+          "Handover Protocol",
+          "Übergabeprotokoll Wohnung",
+          "Wohnungsübergabe"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Hausordnung Bestätigung",
+    "search_terms": [
+      "House Rules"
+    ],
+    "description": "Bestätigung der Hausregeln",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_030_hausordnung-bestatigung",
+    "translations": {
+      "de": {
+        "document_type": "Hausordnung Bestätigung",
+        "description": "Bestätigung der Hausregeln",
+        "search_terms": [
+          "Hausordnung Bestätigung",
+          "House Rules"
+        ]
+      },
+      "en": {
+        "document_type": "House Rules",
+        "description": "Bestätigung der Hausregeln",
+        "search_terms": [
+          "House Rules",
+          "Hausordnung Bestätigung"
+        ]
+      },
+      "fr": {
+        "document_type": "House Rules",
+        "description": "Bestätigung der Hausregeln",
+        "search_terms": [
+          "House Rules",
+          "Hausordnung Bestätigung"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Parkplatz Mietvertrag",
+    "search_terms": [
+      "Parking Lease"
+    ],
+    "description": "Mietvertrag für Parkplatz",
+    "recommended_signature_level": "AES",
+    "id": "doc_031_parkplatz-mietvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Parkplatz Mietvertrag",
+        "description": "Mietvertrag für Parkplatz",
+        "search_terms": [
+          "Parkplatz Mietvertrag",
+          "Parking Lease"
+        ]
+      },
+      "en": {
+        "document_type": "Parking Lease",
+        "description": "Mietvertrag für Parkplatz",
+        "search_terms": [
+          "Parking Lease",
+          "Parkplatz Mietvertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Parking Lease",
+        "description": "Mietvertrag für Parkplatz",
+        "search_terms": [
+          "Parking Lease",
+          "Parkplatz Mietvertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Garagenmietvertrag",
+    "search_terms": [
+      "Garage Lease"
+    ],
+    "description": "Mietvertrag für Garage",
+    "recommended_signature_level": "AES",
+    "id": "doc_032_garagenmietvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Garagenmietvertrag",
+        "description": "Mietvertrag für Garage",
+        "search_terms": [
+          "Garagenmietvertrag",
+          "Garage Lease"
+        ]
+      },
+      "en": {
+        "document_type": "Garagenmietvertrag",
+        "description": "Mietvertrag für Garage",
+        "search_terms": [
+          "Garagenmietvertrag",
+          "Garage Lease"
+        ]
+      },
+      "fr": {
+        "document_type": "Garagenmietvertrag",
+        "description": "Mietvertrag für Garage",
+        "search_terms": [
+          "Garagenmietvertrag",
+          "Garage Lease"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Kaufvertrag",
+    "search_terms": [
+      "Sale Agreement"
+    ],
+    "description": "Vertrag über Kauf eines Gegenstandes",
+    "recommended_signature_level": "AES",
+    "id": "doc_033_kaufvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Kaufvertrag",
+        "description": "Vertrag über Kauf eines Gegenstandes",
+        "search_terms": [
+          "Kaufvertrag",
+          "Sale Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Sale Agreement",
+        "description": "Vertrag über Kauf eines Gegenstandes",
+        "search_terms": [
+          "Sale Agreement",
+          "Kaufvertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Sale Agreement",
+        "description": "Vertrag über Kauf eines Gegenstandes",
+        "search_terms": [
+          "Sale Agreement",
+          "Kaufvertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Autokaufvertrag",
+    "search_terms": [
+      "Car Sale Agreement"
+    ],
+    "description": "Vertrag über Verkauf eines Fahrzeugs",
+    "recommended_signature_level": "AES",
+    "id": "doc_034_autokaufvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Autokaufvertrag",
+        "description": "Vertrag über Verkauf eines Fahrzeugs",
+        "search_terms": [
+          "Autokaufvertrag",
+          "Car Sale Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Car Sale Agreement",
+        "description": "Vertrag über Verkauf eines Fahrzeugs",
+        "search_terms": [
+          "Car Sale Agreement",
+          "Autokaufvertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Car Sale Agreement",
+        "description": "Vertrag über Verkauf eines Fahrzeugs",
+        "search_terms": [
+          "Car Sale Agreement",
+          "Autokaufvertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Leasingvertrag Auto",
+    "search_terms": [
+      "Car Leasing"
+    ],
+    "description": "Leasingvertrag für Fahrzeug",
+    "recommended_signature_level": "QES",
+    "id": "doc_035_leasingvertrag-auto",
+    "translations": {
+      "de": {
+        "document_type": "Leasingvertrag Auto",
+        "description": "Leasingvertrag für Fahrzeug",
+        "search_terms": [
+          "Leasingvertrag Auto",
+          "Car Leasing"
+        ]
+      },
+      "en": {
+        "document_type": "Leasingvertrag Auto",
+        "description": "Leasingvertrag für Fahrzeug",
+        "search_terms": [
+          "Leasingvertrag Auto",
+          "Car Leasing"
+        ]
+      },
+      "fr": {
+        "document_type": "Leasingvertrag Auto",
+        "description": "Leasingvertrag für Fahrzeug",
+        "search_terms": [
+          "Leasingvertrag Auto",
+          "Car Leasing"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Reparaturauftrag",
+    "search_terms": [
+      "Repair Order"
+    ],
+    "description": "Auftrag für Reparaturarbeiten",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_036_reparaturauftrag",
+    "translations": {
+      "de": {
+        "document_type": "Reparaturauftrag",
+        "description": "Auftrag für Reparaturarbeiten",
+        "search_terms": [
+          "Reparaturauftrag",
+          "Repair Order"
+        ]
+      },
+      "en": {
+        "document_type": "Repair Order",
+        "description": "Auftrag für Reparaturarbeiten",
+        "search_terms": [
+          "Repair Order",
+          "Reparaturauftrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Repair Order",
+        "description": "Auftrag für Reparaturarbeiten",
+        "search_terms": [
+          "Repair Order",
+          "Reparaturauftrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Bauvertrag",
+    "search_terms": [
+      "Construction Contract"
+    ],
+    "description": "Vertrag für Bauleistungen",
+    "recommended_signature_level": "QES",
+    "id": "doc_037_bauvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Bauvertrag",
+        "description": "Vertrag für Bauleistungen",
+        "search_terms": [
+          "Bauvertrag",
+          "Construction Contract"
+        ]
+      },
+      "en": {
+        "document_type": "Construction Contract",
+        "description": "Vertrag für Bauleistungen",
+        "search_terms": [
+          "Construction Contract",
+          "Bauvertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Construction Contract",
+        "description": "Vertrag für Bauleistungen",
+        "search_terms": [
+          "Construction Contract",
+          "Bauvertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Architektenvertrag",
+    "search_terms": [
+      "Architect Agreement"
+    ],
+    "description": "Vertrag mit Architekt für Planung",
+    "recommended_signature_level": "AES",
+    "id": "doc_038_architektenvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Architektenvertrag",
+        "description": "Vertrag mit Architekt für Planung",
+        "search_terms": [
+          "Architektenvertrag",
+          "Architect Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Architect Agreement",
+        "description": "Vertrag mit Architekt für Planung",
+        "search_terms": [
+          "Architect Agreement",
+          "Architektenvertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Architect Agreement",
+        "description": "Vertrag mit Architekt für Planung",
+        "search_terms": [
+          "Architect Agreement",
+          "Architektenvertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Bauabnahmeprotokoll",
+    "search_terms": [
+      "Construction Acceptance"
+    ],
+    "description": "Abnahme der Bauleistung",
+    "recommended_signature_level": "AES",
+    "id": "doc_039_bauabnahmeprotokoll",
+    "translations": {
+      "de": {
+        "document_type": "Bauabnahmeprotokoll",
+        "description": "Abnahme der Bauleistung",
+        "search_terms": [
+          "Bauabnahmeprotokoll",
+          "Construction Acceptance"
+        ]
+      },
+      "en": {
+        "document_type": "Bauabnahmeprotokoll",
+        "description": "Abnahme der Bauleistung",
+        "search_terms": [
+          "Bauabnahmeprotokoll",
+          "Construction Acceptance"
+        ]
+      },
+      "fr": {
+        "document_type": "Bauabnahmeprotokoll",
+        "description": "Abnahme der Bauleistung",
+        "search_terms": [
+          "Bauabnahmeprotokoll",
+          "Construction Acceptance"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Liefervertrag",
+    "search_terms": [
+      "Supply Agreement"
+    ],
+    "description": "Vertrag über Lieferung von Waren",
+    "recommended_signature_level": "AES",
+    "id": "doc_040_liefervertrag",
+    "translations": {
+      "de": {
+        "document_type": "Liefervertrag",
+        "description": "Vertrag über Lieferung von Waren",
+        "search_terms": [
+          "Liefervertrag",
+          "Supply Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Supply Agreement",
+        "description": "Vertrag über Lieferung von Waren",
+        "search_terms": [
+          "Supply Agreement",
+          "Liefervertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Supply Agreement",
+        "description": "Vertrag über Lieferung von Waren",
+        "search_terms": [
+          "Supply Agreement",
+          "Liefervertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Bestellung",
+    "search_terms": [
+      "Purchase Order",
+      "PO"
+    ],
+    "description": "Bestellung von Produkten oder Dienstleistungen",
+    "recommended_signature_level": "AES",
+    "id": "doc_041_bestellung",
+    "translations": {
+      "de": {
+        "document_type": "Bestellung",
+        "description": "Bestellung von Produkten oder Dienstleistungen",
+        "search_terms": [
+          "Bestellung",
+          "Purchase Order",
+          "PO"
+        ]
+      },
+      "en": {
+        "document_type": "Purchase Order",
+        "description": "Bestellung von Produkten oder Dienstleistungen",
+        "search_terms": [
+          "Purchase Order",
+          "Bestellung",
+          "PO"
+        ]
+      },
+      "fr": {
+        "document_type": "Purchase Order",
+        "description": "Bestellung von Produkten oder Dienstleistungen",
+        "search_terms": [
+          "Purchase Order",
+          "Bestellung",
+          "PO"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Angebot",
+    "search_terms": [
+      "Quote",
+      "Offer"
+    ],
+    "description": "Preisangebot für Leistungen",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_042_angebot",
+    "translations": {
+      "de": {
+        "document_type": "Angebot",
+        "description": "Preisangebot für Leistungen",
+        "search_terms": [
+          "Angebot",
+          "Quote",
+          "Offer"
+        ]
+      },
+      "en": {
+        "document_type": "Angebot",
+        "description": "Preisangebot für Leistungen",
+        "search_terms": [
+          "Angebot",
+          "Quote",
+          "Offer"
+        ]
+      },
+      "fr": {
+        "document_type": "Angebot",
+        "description": "Preisangebot für Leistungen",
+        "search_terms": [
+          "Angebot",
+          "Quote",
+          "Offer"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Rechnung",
+    "search_terms": [
+      "Invoice"
+    ],
+    "description": "Abrechnung für Leistungen",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_043_rechnung",
+    "translations": {
+      "de": {
+        "document_type": "Rechnung",
+        "description": "Abrechnung für Leistungen",
+        "search_terms": [
+          "Rechnung",
+          "Invoice"
+        ]
+      },
+      "en": {
+        "document_type": "Invoice",
+        "description": "Abrechnung für Leistungen",
+        "search_terms": [
+          "Invoice",
+          "Rechnung"
+        ]
+      },
+      "fr": {
+        "document_type": "Invoice",
+        "description": "Abrechnung für Leistungen",
+        "search_terms": [
+          "Invoice",
+          "Rechnung"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Gutschrift",
+    "search_terms": [
+      "Credit Note"
+    ],
+    "description": "Korrektur einer Rechnung",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_044_gutschrift",
+    "translations": {
+      "de": {
+        "document_type": "Gutschrift",
+        "description": "Korrektur einer Rechnung",
+        "search_terms": [
+          "Gutschrift",
+          "Credit Note"
+        ]
+      },
+      "en": {
+        "document_type": "Credit Note",
+        "description": "Korrektur einer Rechnung",
+        "search_terms": [
+          "Credit Note",
+          "Gutschrift"
+        ]
+      },
+      "fr": {
+        "document_type": "Credit Note",
+        "description": "Korrektur einer Rechnung",
+        "search_terms": [
+          "Credit Note",
+          "Gutschrift"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Abnahmeprotokoll",
+    "search_terms": [
+      "Acceptance Protocol"
+    ],
+    "description": "Dokumentiert Abnahme von Leistungen",
+    "recommended_signature_level": "AES",
+    "id": "doc_045_abnahmeprotokoll",
+    "translations": {
+      "de": {
+        "document_type": "Abnahmeprotokoll",
+        "description": "Dokumentiert Abnahme von Leistungen",
+        "search_terms": [
+          "Abnahmeprotokoll",
+          "Acceptance Protocol"
+        ]
+      },
+      "en": {
+        "document_type": "Acceptance Protocol",
+        "description": "Dokumentiert Abnahme von Leistungen",
+        "search_terms": [
+          "Acceptance Protocol",
+          "Abnahmeprotokoll"
+        ]
+      },
+      "fr": {
+        "document_type": "Acceptance Protocol",
+        "description": "Dokumentiert Abnahme von Leistungen",
+        "search_terms": [
+          "Acceptance Protocol",
+          "Abnahmeprotokoll"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Vollmacht",
+    "search_terms": [
+      "Power of Attorney"
+    ],
+    "description": "Ermächtigung zur Vertretung",
+    "recommended_signature_level": "QES",
+    "id": "doc_046_vollmacht",
+    "translations": {
+      "de": {
+        "document_type": "Vollmacht",
+        "description": "Ermächtigung zur Vertretung",
+        "search_terms": [
+          "Vollmacht",
+          "Power of Attorney"
+        ]
+      },
+      "en": {
+        "document_type": "Vollmacht",
+        "description": "Ermächtigung zur Vertretung",
+        "search_terms": [
+          "Vollmacht",
+          "Power of Attorney"
+        ]
+      },
+      "fr": {
+        "document_type": "Vollmacht",
+        "description": "Ermächtigung zur Vertretung",
+        "search_terms": [
+          "Vollmacht",
+          "Power of Attorney"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Bankvollmacht",
+    "search_terms": [
+      "Bank Power of Attorney"
+    ],
+    "description": "Vertretungsrecht für Bankgeschäfte",
+    "recommended_signature_level": "QES",
+    "id": "doc_047_bankvollmacht",
+    "translations": {
+      "de": {
+        "document_type": "Bankvollmacht",
+        "description": "Vertretungsrecht für Bankgeschäfte",
+        "search_terms": [
+          "Bankvollmacht",
+          "Bank Power of Attorney"
+        ]
+      },
+      "en": {
+        "document_type": "Bankvollmacht",
+        "description": "Vertretungsrecht für Bankgeschäfte",
+        "search_terms": [
+          "Bankvollmacht",
+          "Bank Power of Attorney"
+        ]
+      },
+      "fr": {
+        "document_type": "Bankvollmacht",
+        "description": "Vertretungsrecht für Bankgeschäfte",
+        "search_terms": [
+          "Bankvollmacht",
+          "Bank Power of Attorney"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Kontoeröffnung",
+    "search_terms": [
+      "Account Opening",
+      "KYC"
+    ],
+    "description": "Eröffnung eines Bankkontos",
+    "recommended_signature_level": "QES",
+    "id": "doc_048_kontoeroffnung",
+    "translations": {
+      "de": {
+        "document_type": "Kontoeröffnung",
+        "description": "Eröffnung eines Bankkontos",
+        "search_terms": [
+          "Kontoeröffnung",
+          "Account Opening",
+          "KYC"
+        ]
+      },
+      "en": {
+        "document_type": "Kontoeröffnung",
+        "description": "Eröffnung eines Bankkontos",
+        "search_terms": [
+          "Kontoeröffnung",
+          "Account Opening",
+          "KYC"
+        ]
+      },
+      "fr": {
+        "document_type": "Kontoeröffnung",
+        "description": "Eröffnung eines Bankkontos",
+        "search_terms": [
+          "Kontoeröffnung",
+          "Account Opening",
+          "KYC"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Kreditvertrag",
+    "search_terms": [
+      "Loan Agreement"
+    ],
+    "description": "Finanzierungsvertrag",
+    "recommended_signature_level": "QES",
+    "id": "doc_049_kreditvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Kreditvertrag",
+        "description": "Finanzierungsvertrag",
+        "search_terms": [
+          "Kreditvertrag",
+          "Loan Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Loan Agreement",
+        "description": "Finanzierungsvertrag",
+        "search_terms": [
+          "Loan Agreement",
+          "Kreditvertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Loan Agreement",
+        "description": "Finanzierungsvertrag",
+        "search_terms": [
+          "Loan Agreement",
+          "Kreditvertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Hypothekenvertrag",
+    "search_terms": [
+      "Mortgage"
+    ],
+    "description": "Immobilienfinanzierung",
+    "recommended_signature_level": "QES",
+    "id": "doc_050_hypothekenvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Hypothekenvertrag",
+        "description": "Immobilienfinanzierung",
+        "search_terms": [
+          "Hypothekenvertrag",
+          "Mortgage"
+        ]
+      },
+      "en": {
+        "document_type": "Hypothekenvertrag",
+        "description": "Immobilienfinanzierung",
+        "search_terms": [
+          "Hypothekenvertrag",
+          "Mortgage"
+        ]
+      },
+      "fr": {
+        "document_type": "Hypothekenvertrag",
+        "description": "Immobilienfinanzierung",
+        "search_terms": [
+          "Hypothekenvertrag",
+          "Mortgage"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Depotvertrag",
+    "search_terms": [
+      "Brokerage Account"
+    ],
+    "description": "Wertpapierdepot Vertrag",
+    "recommended_signature_level": "AES",
+    "id": "doc_051_depotvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Depotvertrag",
+        "description": "Wertpapierdepot Vertrag",
+        "search_terms": [
+          "Depotvertrag",
+          "Brokerage Account"
+        ]
+      },
+      "en": {
+        "document_type": "Depotvertrag",
+        "description": "Wertpapierdepot Vertrag",
+        "search_terms": [
+          "Depotvertrag",
+          "Brokerage Account"
+        ]
+      },
+      "fr": {
+        "document_type": "Depotvertrag",
+        "description": "Wertpapierdepot Vertrag",
+        "search_terms": [
+          "Depotvertrag",
+          "Brokerage Account"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Anlegerprofil",
+    "search_terms": [
+      "Investor Profile"
+    ],
+    "description": "Risikoprofil eines Anlegers",
+    "recommended_signature_level": "AES",
+    "id": "doc_052_anlegerprofil",
+    "translations": {
+      "de": {
+        "document_type": "Anlegerprofil",
+        "description": "Risikoprofil eines Anlegers",
+        "search_terms": [
+          "Anlegerprofil",
+          "Investor Profile"
+        ]
+      },
+      "en": {
+        "document_type": "Investor Profile",
+        "description": "Risikoprofil eines Anlegers",
+        "search_terms": [
+          "Investor Profile",
+          "Anlegerprofil"
+        ]
+      },
+      "fr": {
+        "document_type": "Investor Profile",
+        "description": "Risikoprofil eines Anlegers",
+        "search_terms": [
+          "Investor Profile",
+          "Anlegerprofil"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Risikoaufklärung",
+    "search_terms": [
+      "Risk Disclosure"
+    ],
+    "description": "Information über Risiken von Finanzprodukten",
+    "recommended_signature_level": "AES",
+    "id": "doc_053_risikoaufklarung",
+    "translations": {
+      "de": {
+        "document_type": "Risikoaufklärung",
+        "description": "Information über Risiken von Finanzprodukten",
+        "search_terms": [
+          "Risikoaufklärung",
+          "Risk Disclosure"
+        ]
+      },
+      "en": {
+        "document_type": "Risk Disclosure",
+        "description": "Information über Risiken von Finanzprodukten",
+        "search_terms": [
+          "Risk Disclosure",
+          "Risikoaufklärung"
+        ]
+      },
+      "fr": {
+        "document_type": "Risk Disclosure",
+        "description": "Information über Risiken von Finanzprodukten",
+        "search_terms": [
+          "Risk Disclosure",
+          "Risikoaufklärung"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Wallet Nutzungsbedingungen",
+    "search_terms": [
+      "Wallet Terms",
+      "Crypto Wallet"
+    ],
+    "description": "Bedingungen für Nutzung einer digitalen Wallet",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_054_wallet-nutzungsbedingungen",
+    "translations": {
+      "de": {
+        "document_type": "Wallet Nutzungsbedingungen",
+        "description": "Bedingungen für Nutzung einer digitalen Wallet",
+        "search_terms": [
+          "Wallet Nutzungsbedingungen",
+          "Wallet Terms",
+          "Crypto Wallet"
+        ]
+      },
+      "en": {
+        "document_type": "Wallet Nutzungsbedingungen",
+        "description": "Bedingungen für Nutzung einer digitalen Wallet",
+        "search_terms": [
+          "Wallet Nutzungsbedingungen",
+          "Wallet Terms",
+          "Crypto Wallet"
+        ]
+      },
+      "fr": {
+        "document_type": "Wallet Nutzungsbedingungen",
+        "description": "Bedingungen für Nutzung einer digitalen Wallet",
+        "search_terms": [
+          "Wallet Nutzungsbedingungen",
+          "Wallet Terms",
+          "Crypto Wallet"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Token Kaufvereinbarung",
+    "search_terms": [
+      "Token Purchase Agreement"
+    ],
+    "description": "Kauf von Blockchain Tokens",
+    "recommended_signature_level": "AES",
+    "id": "doc_055_token-kaufvereinbarung",
+    "translations": {
+      "de": {
+        "document_type": "Token Kaufvereinbarung",
+        "description": "Kauf von Blockchain Tokens",
+        "search_terms": [
+          "Token Kaufvereinbarung",
+          "Token Purchase Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Token Kaufvereinbarung",
+        "description": "Kauf von Blockchain Tokens",
+        "search_terms": [
+          "Token Kaufvereinbarung",
+          "Token Purchase Agreement"
+        ]
+      },
+      "fr": {
+        "document_type": "Token Kaufvereinbarung",
+        "description": "Kauf von Blockchain Tokens",
+        "search_terms": [
+          "Token Kaufvereinbarung",
+          "Token Purchase Agreement"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "NFT Kaufvertrag",
+    "search_terms": [
+      "NFT Sale Agreement"
+    ],
+    "description": "Vertrag über Verkauf eines NFTs",
+    "recommended_signature_level": "AES",
+    "id": "doc_056_nft-kaufvertrag",
+    "translations": {
+      "de": {
+        "document_type": "NFT Kaufvertrag",
+        "description": "Vertrag über Verkauf eines NFTs",
+        "search_terms": [
+          "NFT Kaufvertrag",
+          "NFT Sale Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "NFT Kaufvertrag",
+        "description": "Vertrag über Verkauf eines NFTs",
+        "search_terms": [
+          "NFT Kaufvertrag",
+          "NFT Sale Agreement"
+        ]
+      },
+      "fr": {
+        "document_type": "NFT Kaufvertrag",
+        "description": "Vertrag über Verkauf eines NFTs",
+        "search_terms": [
+          "NFT Kaufvertrag",
+          "NFT Sale Agreement"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Staking Vereinbarung",
+    "search_terms": [
+      "Staking Agreement"
+    ],
+    "description": "Teilnahme an Blockchain Staking",
+    "recommended_signature_level": "AES",
+    "id": "doc_057_staking-vereinbarung",
+    "translations": {
+      "de": {
+        "document_type": "Staking Vereinbarung",
+        "description": "Teilnahme an Blockchain Staking",
+        "search_terms": [
+          "Staking Vereinbarung",
+          "Staking Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Staking Vereinbarung",
+        "description": "Teilnahme an Blockchain Staking",
+        "search_terms": [
+          "Staking Vereinbarung",
+          "Staking Agreement"
+        ]
+      },
+      "fr": {
+        "document_type": "Staking Vereinbarung",
+        "description": "Teilnahme an Blockchain Staking",
+        "search_terms": [
+          "Staking Vereinbarung",
+          "Staking Agreement"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Validator Teilnahme Vertrag",
+    "search_terms": [
+      "Validator Agreement"
+    ],
+    "description": "Teilnahme als Validator in Blockchain Netzwerk",
+    "recommended_signature_level": "AES",
+    "id": "doc_058_validator-teilnahme-vertrag",
+    "translations": {
+      "de": {
+        "document_type": "Validator Teilnahme Vertrag",
+        "description": "Teilnahme als Validator in Blockchain Netzwerk",
+        "search_terms": [
+          "Validator Teilnahme Vertrag",
+          "Validator Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Validator Teilnahme Vertrag",
+        "description": "Teilnahme als Validator in Blockchain Netzwerk",
+        "search_terms": [
+          "Validator Teilnahme Vertrag",
+          "Validator Agreement"
+        ]
+      },
+      "fr": {
+        "document_type": "Validator Teilnahme Vertrag",
+        "description": "Teilnahme als Validator in Blockchain Netzwerk",
+        "search_terms": [
+          "Validator Teilnahme Vertrag",
+          "Validator Agreement"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Datenschutzvereinbarung",
+    "search_terms": [
+      "DPA",
+      "AVV"
+    ],
+    "description": "Regelt Auftragsverarbeitung personenbezogener Daten",
+    "recommended_signature_level": "AES",
+    "id": "doc_059_datenschutzvereinbarung",
+    "translations": {
+      "de": {
+        "document_type": "Datenschutzvereinbarung",
+        "description": "Regelt Auftragsverarbeitung personenbezogener Daten",
+        "search_terms": [
+          "Datenschutzvereinbarung",
+          "DPA",
+          "AVV"
+        ]
+      },
+      "en": {
+        "document_type": "Datenschutzvereinbarung",
+        "description": "Regelt Auftragsverarbeitung personenbezogener Daten",
+        "search_terms": [
+          "Datenschutzvereinbarung",
+          "DPA",
+          "AVV"
+        ]
+      },
+      "fr": {
+        "document_type": "Datenschutzvereinbarung",
+        "description": "Regelt Auftragsverarbeitung personenbezogener Daten",
+        "search_terms": [
+          "Datenschutzvereinbarung",
+          "DPA",
+          "AVV"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Datennutzungsfreigabe",
+    "search_terms": [
+      "Data Usage Consent"
+    ],
+    "description": "Einwilligung zur Nutzung von Daten",
+    "recommended_signature_level": "AES",
+    "id": "doc_060_datennutzungsfreigabe",
+    "translations": {
+      "de": {
+        "document_type": "Datennutzungsfreigabe",
+        "description": "Einwilligung zur Nutzung von Daten",
+        "search_terms": [
+          "Datennutzungsfreigabe",
+          "Data Usage Consent"
+        ]
+      },
+      "en": {
+        "document_type": "Data Usage Consent",
+        "description": "Einwilligung zur Nutzung von Daten",
+        "search_terms": [
+          "Data Usage Consent",
+          "Datennutzungsfreigabe"
+        ]
+      },
+      "fr": {
+        "document_type": "Data Usage Consent",
+        "description": "Einwilligung zur Nutzung von Daten",
+        "search_terms": [
+          "Data Usage Consent",
+          "Datennutzungsfreigabe"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Cookie Zustimmung",
+    "search_terms": [
+      "Cookie Consent"
+    ],
+    "description": "Einwilligung zur Speicherung von Cookies",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_061_cookie-zustimmung",
+    "translations": {
+      "de": {
+        "document_type": "Cookie Zustimmung",
+        "description": "Einwilligung zur Speicherung von Cookies",
+        "search_terms": [
+          "Cookie Zustimmung",
+          "Cookie Consent"
+        ]
+      },
+      "en": {
+        "document_type": "Cookie Consent",
+        "description": "Einwilligung zur Speicherung von Cookies",
+        "search_terms": [
+          "Cookie Consent",
+          "Cookie Zustimmung"
+        ]
+      },
+      "fr": {
+        "document_type": "Cookie Consent",
+        "description": "Einwilligung zur Speicherung von Cookies",
+        "search_terms": [
+          "Cookie Consent",
+          "Cookie Zustimmung"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Foto Freigabe",
+    "search_terms": [
+      "Photo Release"
+    ],
+    "description": "Erlaubnis zur Nutzung von Fotos",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_062_foto-freigabe",
+    "translations": {
+      "de": {
+        "document_type": "Foto Freigabe",
+        "description": "Erlaubnis zur Nutzung von Fotos",
+        "search_terms": [
+          "Foto Freigabe",
+          "Photo Release"
+        ]
+      },
+      "en": {
+        "document_type": "Photo Release",
+        "description": "Erlaubnis zur Nutzung von Fotos",
+        "search_terms": [
+          "Photo Release",
+          "Foto Freigabe"
+        ]
+      },
+      "fr": {
+        "document_type": "Photo Release",
+        "description": "Erlaubnis zur Nutzung von Fotos",
+        "search_terms": [
+          "Photo Release",
+          "Foto Freigabe"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Event Teilnahmevereinbarung",
+    "search_terms": [
+      "Event Participation"
+    ],
+    "description": "Teilnahme an Veranstaltung",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_063_event-teilnahmevereinbarung",
+    "translations": {
+      "de": {
+        "document_type": "Event Teilnahmevereinbarung",
+        "description": "Teilnahme an Veranstaltung",
+        "search_terms": [
+          "Event Teilnahmevereinbarung",
+          "Event Participation"
+        ]
+      },
+      "en": {
+        "document_type": "Event Teilnahmevereinbarung",
+        "description": "Teilnahme an Veranstaltung",
+        "search_terms": [
+          "Event Teilnahmevereinbarung",
+          "Event Participation"
+        ]
+      },
+      "fr": {
+        "document_type": "Event Teilnahmevereinbarung",
+        "description": "Teilnahme an Veranstaltung",
+        "search_terms": [
+          "Event Teilnahmevereinbarung",
+          "Event Participation"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Sponsoringvertrag",
+    "search_terms": [
+      "Sponsorship Agreement"
+    ],
+    "description": "Regelt Sponsoring Leistungen",
+    "recommended_signature_level": "AES",
+    "id": "doc_064_sponsoringvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Sponsoringvertrag",
+        "description": "Regelt Sponsoring Leistungen",
+        "search_terms": [
+          "Sponsoringvertrag",
+          "Sponsorship Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Sponsorship Agreement",
+        "description": "Regelt Sponsoring Leistungen",
+        "search_terms": [
+          "Sponsorship Agreement",
+          "Sponsoringvertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Sponsorship Agreement",
+        "description": "Regelt Sponsoring Leistungen",
+        "search_terms": [
+          "Sponsorship Agreement",
+          "Sponsoringvertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Influencer Vertrag",
+    "search_terms": [
+      "Influencer Agreement"
+    ],
+    "description": "Kooperation mit Social Media Influencer",
+    "recommended_signature_level": "AES",
+    "id": "doc_065_influencer-vertrag",
+    "translations": {
+      "de": {
+        "document_type": "Influencer Vertrag",
+        "description": "Kooperation mit Social Media Influencer",
+        "search_terms": [
+          "Influencer Vertrag",
+          "Influencer Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Influencer Vertrag",
+        "description": "Kooperation mit Social Media Influencer",
+        "search_terms": [
+          "Influencer Vertrag",
+          "Influencer Agreement"
+        ]
+      },
+      "fr": {
+        "document_type": "Influencer Vertrag",
+        "description": "Kooperation mit Social Media Influencer",
+        "search_terms": [
+          "Influencer Vertrag",
+          "Influencer Agreement"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Affiliate Vertrag",
+    "search_terms": [
+      "Affiliate Agreement"
+    ],
+    "description": "Provisionsbasierte Marketingpartnerschaft",
+    "recommended_signature_level": "AES",
+    "id": "doc_066_affiliate-vertrag",
+    "translations": {
+      "de": {
+        "document_type": "Affiliate Vertrag",
+        "description": "Provisionsbasierte Marketingpartnerschaft",
+        "search_terms": [
+          "Affiliate Vertrag",
+          "Affiliate Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Affiliate Vertrag",
+        "description": "Provisionsbasierte Marketingpartnerschaft",
+        "search_terms": [
+          "Affiliate Vertrag",
+          "Affiliate Agreement"
+        ]
+      },
+      "fr": {
+        "document_type": "Affiliate Vertrag",
+        "description": "Provisionsbasierte Marketingpartnerschaft",
+        "search_terms": [
+          "Affiliate Vertrag",
+          "Affiliate Agreement"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Eventlocation Vertrag",
+    "search_terms": [
+      "Venue Rental"
+    ],
+    "description": "Miete von Veranstaltungsräumen",
+    "recommended_signature_level": "AES",
+    "id": "doc_067_eventlocation-vertrag",
+    "translations": {
+      "de": {
+        "document_type": "Eventlocation Vertrag",
+        "description": "Miete von Veranstaltungsräumen",
+        "search_terms": [
+          "Eventlocation Vertrag",
+          "Venue Rental"
+        ]
+      },
+      "en": {
+        "document_type": "Eventlocation Vertrag",
+        "description": "Miete von Veranstaltungsräumen",
+        "search_terms": [
+          "Eventlocation Vertrag",
+          "Venue Rental"
+        ]
+      },
+      "fr": {
+        "document_type": "Eventlocation Vertrag",
+        "description": "Miete von Veranstaltungsräumen",
+        "search_terms": [
+          "Eventlocation Vertrag",
+          "Venue Rental"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Catering Vertrag",
+    "search_terms": [
+      "Catering Agreement"
+    ],
+    "description": "Vertrag für Eventverpflegung",
+    "recommended_signature_level": "AES",
+    "id": "doc_068_catering-vertrag",
+    "translations": {
+      "de": {
+        "document_type": "Catering Vertrag",
+        "description": "Vertrag für Eventverpflegung",
+        "search_terms": [
+          "Catering Vertrag",
+          "Catering Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Catering Vertrag",
+        "description": "Vertrag für Eventverpflegung",
+        "search_terms": [
+          "Catering Vertrag",
+          "Catering Agreement"
+        ]
+      },
+      "fr": {
+        "document_type": "Catering Vertrag",
+        "description": "Vertrag für Eventverpflegung",
+        "search_terms": [
+          "Catering Vertrag",
+          "Catering Agreement"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Podcast Gästevereinbarung",
+    "search_terms": [
+      "Podcast Guest Release"
+    ],
+    "description": "Rechte an Podcastaufnahme",
+    "recommended_signature_level": "AES",
+    "id": "doc_069_podcast-gastevereinbarung",
+    "translations": {
+      "de": {
+        "document_type": "Podcast Gästevereinbarung",
+        "description": "Rechte an Podcastaufnahme",
+        "search_terms": [
+          "Podcast Gästevereinbarung",
+          "Podcast Guest Release"
+        ]
+      },
+      "en": {
+        "document_type": "Podcast Gästevereinbarung",
+        "description": "Rechte an Podcastaufnahme",
+        "search_terms": [
+          "Podcast Gästevereinbarung",
+          "Podcast Guest Release"
+        ]
+      },
+      "fr": {
+        "document_type": "Podcast Gästevereinbarung",
+        "description": "Rechte an Podcastaufnahme",
+        "search_terms": [
+          "Podcast Gästevereinbarung",
+          "Podcast Guest Release"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Musiklizenz",
+    "search_terms": [
+      "Music License"
+    ],
+    "description": "Lizenz für Nutzung von Musik",
+    "recommended_signature_level": "AES",
+    "id": "doc_070_musiklizenz",
+    "translations": {
+      "de": {
+        "document_type": "Musiklizenz",
+        "description": "Lizenz für Nutzung von Musik",
+        "search_terms": [
+          "Musiklizenz",
+          "Music License"
+        ]
+      },
+      "en": {
+        "document_type": "Music License",
+        "description": "Lizenz für Nutzung von Musik",
+        "search_terms": [
+          "Music License",
+          "Musiklizenz"
+        ]
+      },
+      "fr": {
+        "document_type": "Music License",
+        "description": "Lizenz für Nutzung von Musik",
+        "search_terms": [
+          "Music License",
+          "Musiklizenz"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Fotografenvertrag",
+    "search_terms": [
+      "Photography Contract"
+    ],
+    "description": "Vertrag mit Fotografen",
+    "recommended_signature_level": "AES",
+    "id": "doc_071_fotografenvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Fotografenvertrag",
+        "description": "Vertrag mit Fotografen",
+        "search_terms": [
+          "Fotografenvertrag",
+          "Photography Contract"
+        ]
+      },
+      "en": {
+        "document_type": "Photography Contract",
+        "description": "Vertrag mit Fotografen",
+        "search_terms": [
+          "Photography Contract",
+          "Fotografenvertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Photography Contract",
+        "description": "Vertrag mit Fotografen",
+        "search_terms": [
+          "Photography Contract",
+          "Fotografenvertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Reisevollmacht Kind",
+    "search_terms": [
+      "Child Travel Authorization"
+    ],
+    "description": "Elterliche Zustimmung für Reise eines Kindes",
+    "recommended_signature_level": "AES",
+    "id": "doc_072_reisevollmacht-kind",
+    "translations": {
+      "de": {
+        "document_type": "Reisevollmacht Kind",
+        "description": "Elterliche Zustimmung für Reise eines Kindes",
+        "search_terms": [
+          "Reisevollmacht Kind",
+          "Child Travel Authorization"
+        ]
+      },
+      "en": {
+        "document_type": "Reisevollmacht Kind",
+        "description": "Elterliche Zustimmung für Reise eines Kindes",
+        "search_terms": [
+          "Reisevollmacht Kind",
+          "Child Travel Authorization"
+        ]
+      },
+      "fr": {
+        "document_type": "Reisevollmacht Kind",
+        "description": "Elterliche Zustimmung für Reise eines Kindes",
+        "search_terms": [
+          "Reisevollmacht Kind",
+          "Child Travel Authorization"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Schulfreigabe Ausflug",
+    "search_terms": [
+      "School Trip Permission"
+    ],
+    "description": "Einverständnis Eltern für Schulreise",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_073_schulfreigabe-ausflug",
+    "translations": {
+      "de": {
+        "document_type": "Schulfreigabe Ausflug",
+        "description": "Einverständnis Eltern für Schulreise",
+        "search_terms": [
+          "Schulfreigabe Ausflug",
+          "School Trip Permission"
+        ]
+      },
+      "en": {
+        "document_type": "Schulfreigabe Ausflug",
+        "description": "Einverständnis Eltern für Schulreise",
+        "search_terms": [
+          "Schulfreigabe Ausflug",
+          "School Trip Permission"
+        ]
+      },
+      "fr": {
+        "document_type": "Schulfreigabe Ausflug",
+        "description": "Einverständnis Eltern für Schulreise",
+        "search_terms": [
+          "Schulfreigabe Ausflug",
+          "School Trip Permission"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Vereinsmitgliedschaft",
+    "search_terms": [
+      "Membership Agreement"
+    ],
+    "description": "Beitritt zu Verein",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_074_vereinsmitgliedschaft",
+    "translations": {
+      "de": {
+        "document_type": "Vereinsmitgliedschaft",
+        "description": "Beitritt zu Verein",
+        "search_terms": [
+          "Vereinsmitgliedschaft",
+          "Membership Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Membership Agreement",
+        "description": "Beitritt zu Verein",
+        "search_terms": [
+          "Membership Agreement",
+          "Vereinsmitgliedschaft"
+        ]
+      },
+      "fr": {
+        "document_type": "Membership Agreement",
+        "description": "Beitritt zu Verein",
+        "search_terms": [
+          "Membership Agreement",
+          "Vereinsmitgliedschaft"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Sportverein Anmeldung",
+    "search_terms": [
+      "Sports Club Membership"
+    ],
+    "description": "Mitgliedschaft in Sportverein",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_075_sportverein-anmeldung",
+    "translations": {
+      "de": {
+        "document_type": "Sportverein Anmeldung",
+        "description": "Mitgliedschaft in Sportverein",
+        "search_terms": [
+          "Sportverein Anmeldung",
+          "Sports Club Membership"
+        ]
+      },
+      "en": {
+        "document_type": "Sportverein Anmeldung",
+        "description": "Mitgliedschaft in Sportverein",
+        "search_terms": [
+          "Sportverein Anmeldung",
+          "Sports Club Membership"
+        ]
+      },
+      "fr": {
+        "document_type": "Sportverein Anmeldung",
+        "description": "Mitgliedschaft in Sportverein",
+        "search_terms": [
+          "Sportverein Anmeldung",
+          "Sports Club Membership"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Kindergarten Anmeldung",
+    "search_terms": [
+      "Kindergarten Registration"
+    ],
+    "description": "Anmeldung eines Kindes",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_076_kindergarten-anmeldung",
+    "translations": {
+      "de": {
+        "document_type": "Kindergarten Anmeldung",
+        "description": "Anmeldung eines Kindes",
+        "search_terms": [
+          "Kindergarten Anmeldung",
+          "Kindergarten Registration"
+        ]
+      },
+      "en": {
+        "document_type": "Kindergarten Anmeldung",
+        "description": "Anmeldung eines Kindes",
+        "search_terms": [
+          "Kindergarten Anmeldung",
+          "Kindergarten Registration"
+        ]
+      },
+      "fr": {
+        "document_type": "Kindergarten Anmeldung",
+        "description": "Anmeldung eines Kindes",
+        "search_terms": [
+          "Kindergarten Anmeldung",
+          "Kindergarten Registration"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Nachhilfevertrag",
+    "search_terms": [
+      "Tutoring Agreement"
+    ],
+    "description": "Vertrag für Nachhilfeunterricht",
+    "recommended_signature_level": "AES",
+    "id": "doc_077_nachhilfevertrag",
+    "translations": {
+      "de": {
+        "document_type": "Nachhilfevertrag",
+        "description": "Vertrag für Nachhilfeunterricht",
+        "search_terms": [
+          "Nachhilfevertrag",
+          "Tutoring Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Tutoring Agreement",
+        "description": "Vertrag für Nachhilfeunterricht",
+        "search_terms": [
+          "Tutoring Agreement",
+          "Nachhilfevertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Tutoring Agreement",
+        "description": "Vertrag für Nachhilfeunterricht",
+        "search_terms": [
+          "Tutoring Agreement",
+          "Nachhilfevertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Haustierbetreuungsvertrag",
+    "search_terms": [
+      "Pet Sitting Agreement"
+    ],
+    "description": "Betreuung von Haustieren",
+    "recommended_signature_level": "AES",
+    "id": "doc_078_haustierbetreuungsvertrag",
+    "translations": {
+      "de": {
+        "document_type": "Haustierbetreuungsvertrag",
+        "description": "Betreuung von Haustieren",
+        "search_terms": [
+          "Haustierbetreuungsvertrag",
+          "Pet Sitting Agreement"
+        ]
+      },
+      "en": {
+        "document_type": "Pet Sitting Agreement",
+        "description": "Betreuung von Haustieren",
+        "search_terms": [
+          "Pet Sitting Agreement",
+          "Haustierbetreuungsvertrag"
+        ]
+      },
+      "fr": {
+        "document_type": "Pet Sitting Agreement",
+        "description": "Betreuung von Haustieren",
+        "search_terms": [
+          "Pet Sitting Agreement",
+          "Haustierbetreuungsvertrag"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Tierarzt Einwilligung",
+    "search_terms": [
+      "Veterinary Consent"
+    ],
+    "description": "Einwilligung für Behandlung eines Tieres",
+    "recommended_signature_level": "AES",
+    "id": "doc_079_tierarzt-einwilligung",
+    "translations": {
+      "de": {
+        "document_type": "Tierarzt Einwilligung",
+        "description": "Einwilligung für Behandlung eines Tieres",
+        "search_terms": [
+          "Tierarzt Einwilligung",
+          "Veterinary Consent"
+        ]
+      },
+      "en": {
+        "document_type": "Veterinary Consent",
+        "description": "Einwilligung für Behandlung eines Tieres",
+        "search_terms": [
+          "Veterinary Consent",
+          "Tierarzt Einwilligung"
+        ]
+      },
+      "fr": {
+        "document_type": "Veterinary Consent",
+        "description": "Einwilligung für Behandlung eines Tieres",
+        "search_terms": [
+          "Veterinary Consent",
+          "Tierarzt Einwilligung"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Gästemeldeschein",
+    "search_terms": [
+      "Guest Registration",
+      "Tourism Registration"
+    ],
+    "description": "Registrierung von Gästen in Unterkunft",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_080_gastemeldeschein",
+    "translations": {
+      "de": {
+        "document_type": "Gästemeldeschein",
+        "description": "Registrierung von Gästen in Unterkunft",
+        "search_terms": [
+          "Gästemeldeschein",
+          "Guest Registration",
+          "Tourism Registration"
+        ]
+      },
+      "en": {
+        "document_type": "Gästemeldeschein",
+        "description": "Registrierung von Gästen in Unterkunft",
+        "search_terms": [
+          "Gästemeldeschein",
+          "Guest Registration",
+          "Tourism Registration"
+        ]
+      },
+      "fr": {
+        "document_type": "Gästemeldeschein",
+        "description": "Registrierung von Gästen in Unterkunft",
+        "search_terms": [
+          "Gästemeldeschein",
+          "Guest Registration",
+          "Tourism Registration"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Kurtaxe Anmeldung",
+    "search_terms": [
+      "Tourist Tax Registration"
+    ],
+    "description": "Registrierung für Kurtaxe im Tourismus",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_081_kurtaxe-anmeldung",
+    "translations": {
+      "de": {
+        "document_type": "Kurtaxe Anmeldung",
+        "description": "Registrierung für Kurtaxe im Tourismus",
+        "search_terms": [
+          "Kurtaxe Anmeldung",
+          "Tourist Tax Registration"
+        ]
+      },
+      "en": {
+        "document_type": "Kurtaxe Anmeldung",
+        "description": "Registrierung für Kurtaxe im Tourismus",
+        "search_terms": [
+          "Kurtaxe Anmeldung",
+          "Tourist Tax Registration"
+        ]
+      },
+      "fr": {
+        "document_type": "Kurtaxe Anmeldung",
+        "description": "Registrierung für Kurtaxe im Tourismus",
+        "search_terms": [
+          "Kurtaxe Anmeldung",
+          "Tourist Tax Registration"
+        ]
+      }
+    }
+  },
+  {
+    "document_type": "Hotel Check-in Formular",
+    "search_terms": [
+      "Hotel Registration"
+    ],
+    "description": "Registrierung beim Check-in im Hotel",
+    "recommended_signature_level": "SIMPLE",
+    "id": "doc_082_hotel-check-in-formular",
+    "translations": {
+      "de": {
+        "document_type": "Hotel Check-in Formular",
+        "description": "Registrierung beim Check-in im Hotel",
+        "search_terms": [
+          "Hotel Check-in Formular",
+          "Hotel Registration"
+        ]
+      },
+      "en": {
+        "document_type": "Hotel Check-in Formular",
+        "description": "Registrierung beim Check-in im Hotel",
+        "search_terms": [
+          "Hotel Check-in Formular",
+          "Hotel Registration"
+        ]
+      },
+      "fr": {
+        "document_type": "Hotel Check-in Formular",
+        "description": "Registrierung beim Check-in im Hotel",
+        "search_terms": [
+          "Hotel Check-in Formular",
+          "Hotel Registration"
+        ]
+      }
+    }
+  }
+]

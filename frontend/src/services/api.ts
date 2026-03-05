@@ -23,19 +23,13 @@ export interface SignatoryPlacement {
   height: number
 }
 
-export type InitiatorMode = 'SIGNER' | 'THIRD_PERSON'
-
-export interface InitiatorSelection {
-  mode: InitiatorMode
-  signerId?: string
-  firstName?: string
-  lastName?: string
-  email?: string
-}
-
 export interface PriceBreakdown {
   perSignature: number
+  perSignatureGross?: number
   count: number
+  analysisRequested?: boolean
+  analysisNet?: number
+  analysisGross?: number
   subtotal: number
   tax: number
   total: number
@@ -51,7 +45,13 @@ export interface InvitationResult {
 export interface InviteResponse {
   sessionId: string
   documentName: string
+  processId?: string
   invitations: InvitationResult[]
+  analysisRequested?: boolean
+  analysisStatus?: string
+  analysisError?: string
+  analyticProcessID?: string
+  analysis?: Record<string, unknown>
 }
 
 export interface PaymentResponse {
@@ -60,19 +60,58 @@ export interface PaymentResponse {
   amountChf?: string
   checkoutUrl?: string
   documentName?: string
+  processId?: string
   invitations?: InvitationResult[]
+  analysisRequested?: boolean
+  analysisStatus?: string
+  analysisError?: string
+  analyticProcessID?: string
+  analysis?: Record<string, unknown>
+}
+
+export interface ProcessStatusResponse {
+  processId: string
+  status: string
+  provider?: string
+  checkedAt?: string
+  updatedAt?: string
 }
 
 export interface SigningState {
   documentName?: string
   signatories: Signatory[]
   placements: SignatoryPlacement[]
-  initiator?: InitiatorSelection
   signatureLevel?: SignatureLevel
+  processId?: string
   price?: PriceBreakdown
   paymentSessionId?: string
   paymentStatus?: string
+  contractAnalysisRequested?: boolean
+  analysisProcessId?: string
+  analysisStatus?: string
+  analysisError?: string
+  contractAnalysisResult?: Record<string, unknown>
   step?: string
+}
+
+export interface AnalysisSelectionResponse {
+  analysisRequested: boolean
+  analysisStatus?: string
+  analysisPriceGross: number
+  analysisPriceCurrency: string
+  analysisIncludedInInvoice: boolean
+  price?: PriceBreakdown
+}
+
+export interface AnalysisStatusResponse {
+  analysisRequested?: boolean
+  analysisStatus: string
+  status?: string
+  analysisError?: string
+  analyticProcessID?: string
+  analysisStartedAt?: string
+  analysisCompletedAt?: string
+  analysis?: Record<string, unknown>
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
@@ -110,16 +149,6 @@ export async function savePlacements(placements: SignatoryPlacement[]): Promise<
   return handleResponse(res)
 }
 
-export async function setInitiator(initiator: InitiatorSelection): Promise<{ initiator: InitiatorSelection }> {
-  const res = await fetch(`${BASE}/initiator`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(initiator),
-  })
-  return handleResponse(res)
-}
-
 export async function processPayment(): Promise<PaymentResponse> {
   const res = await fetch(`${BASE}/pay`, { method: 'POST', credentials: 'include' })
   return handleResponse(res)
@@ -138,5 +167,45 @@ export async function sendInvitations(): Promise<InviteResponse> {
 
 export async function getSigningState(): Promise<SigningState> {
   const res = await fetch(`${BASE}/state`, { method: 'GET', credentials: 'include' })
+  return handleResponse(res)
+}
+
+export async function getProcessStatus(processId: string): Promise<ProcessStatusResponse> {
+  const qs = `?processId=${encodeURIComponent(processId)}`
+  const res = await fetch(`${BASE}/status${qs}`, { method: 'GET', credentials: 'include' })
+  return handleResponse(res)
+}
+
+export async function selectAnalysisAddon(enabled: boolean): Promise<AnalysisSelectionResponse> {
+  const qs = `?enabled=${encodeURIComponent(String(enabled))}`
+  const res = await fetch(`${BASE}/analysis/select${qs}`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+  return handleResponse(res)
+}
+
+export async function startAnalysis(input: {
+  language?: string
+  jurisdictionHint?: string
+  partyRole?: string
+  analysisProfile?: string
+}): Promise<AnalysisStatusResponse> {
+  const params = new URLSearchParams()
+  params.set('language', input.language ?? 'auto')
+  if (input.jurisdictionHint) params.set('jurisdiction_hint', input.jurisdictionHint)
+  if (input.partyRole) params.set('party_role', input.partyRole)
+  params.set('analysis_profile', input.analysisProfile ?? 'standard')
+
+  const res = await fetch(`${BASE}/analysis/start?${params.toString()}`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+  return handleResponse(res)
+}
+
+export async function getAnalysisStatus(analyticProcessID?: string): Promise<AnalysisStatusResponse> {
+  const qs = analyticProcessID ? `?analyticProcessID=${encodeURIComponent(analyticProcessID)}` : ''
+  const res = await fetch(`${BASE}/analysis/status${qs}`, { method: 'GET', credentials: 'include' })
   return handleResponse(res)
 }

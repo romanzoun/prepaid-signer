@@ -1,5 +1,6 @@
 package com.swisssigner.service;
 
+import com.swisssigner.model.PriceBreakdown;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,8 @@ import java.util.UUID;
 public class MockStripeService implements PaymentService {
 
     @Override
-    public Map<String, String> createCheckoutSession(double totalChf,
+    public Map<String, String> createCheckoutSession(PriceBreakdown price,
+                                                     String signatureLevel,
                                                      String successUrl,
                                                      String cancelUrl,
                                                      String reference) {
@@ -23,7 +25,7 @@ public class MockStripeService implements PaymentService {
         return Map.of(
             "sessionId", sessionId,
             "status", "success",
-            "amountChf", String.valueOf(totalChf)
+            "amountChf", String.valueOf(price.getTotal())
         );
     }
 

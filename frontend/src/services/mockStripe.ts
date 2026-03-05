@@ -1,3 +1,5 @@
+import type { PriceBreakdown } from './api'
+
 export interface SignatureOrder {
   documentName: string
   signatories: Signatory[]
@@ -12,33 +14,41 @@ export interface Signatory {
   signatureLevel?: 'SIMPLE' | 'AES' | 'QES'
 }
 
-export interface PriceBreakdown {
-  perSignature: number
-  count: number
-  subtotal: number
-  tax: number
-  total: number
-  currency: string
-}
-
 export interface PaymentResult {
   sessionId: string
   status: 'success' | 'cancelled'
 }
 
-// Cost to us (Swisscom Sign): CHF 2.50 → 20% margin → CHF 3.15 net
-const PRICE_PER_SIGNATURE = 3.15
 const TAX_RATE = 0.081 // Swiss MwSt 8.1% (seit 01.01.2024)
+const GROSS_PRICE_BY_LEVEL = {
+  QES: 3.40,
+  AES: 1.90,
+  SIMPLE: 1.20,
+} as const
+const ANALYSIS_GROSS_ADDON = 1.00
 
-export function calculatePrice(signatoryCount: number): PriceBreakdown {
-  const subtotal = signatoryCount * PRICE_PER_SIGNATURE
-  const tax = subtotal * TAX_RATE
+export function calculatePrice(
+  signatoryCount: number,
+  signatureLevel: 'SIMPLE' | 'AES' | 'QES' = 'QES',
+  includeAnalysis = false,
+): PriceBreakdown {
+  const perSignatureGross = GROSS_PRICE_BY_LEVEL[signatureLevel] ?? GROSS_PRICE_BY_LEVEL.QES
+  const perSignature = Math.round((perSignatureGross / (1 + TAX_RATE)) * 100) / 100
+  const analysisGross = includeAnalysis ? ANALYSIS_GROSS_ADDON : 0
+  const analysisNet = includeAnalysis ? Math.round((analysisGross / (1 + TAX_RATE)) * 100) / 100 : 0
+  const subtotal = Math.round(((signatoryCount * perSignature) + analysisNet) * 100) / 100
+  const total = Math.round(((signatoryCount * perSignatureGross) + analysisGross) * 100) / 100
+  const tax = Math.round((total - subtotal) * 100) / 100
   return {
-    perSignature: PRICE_PER_SIGNATURE,
+    perSignature,
+    perSignatureGross,
     count: signatoryCount,
-    subtotal: Math.round(subtotal * 100) / 100,
-    tax: Math.round(tax * 100) / 100,
-    total: Math.round((subtotal + tax) * 100) / 100,
+    analysisRequested: includeAnalysis,
+    analysisGross,
+    analysisNet,
+    subtotal,
+    tax,
+    total,
     currency: 'CHF',
   }
 }

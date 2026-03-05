@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import SignPage from '../pages/SignPage'
+import { I18nProvider } from '../i18n'
 
 // Mock the backend API – tests run fully offline
 vi.mock('../services/api', () => ({
@@ -55,9 +56,11 @@ vi.mock('../pages/PdfSignaturePlacer', () => ({
 
 function renderSignPage() {
   return render(
-    <MemoryRouter>
-      <SignPage />
-    </MemoryRouter>
+    <I18nProvider initialLocale="de">
+      <MemoryRouter>
+        <SignPage />
+      </MemoryRouter>
+    </I18nProvider>
   )
 }
 
@@ -70,7 +73,7 @@ describe('SignPage', () => {
 
   it('next button is disabled without file', () => {
     renderSignPage()
-    const btn = screen.getByRole('button', { name: /Unterzeichner hinzufügen/i })
+    const btn = screen.getByRole('button', { name: /Signaturlevel prüfen/i })
     expect(btn).toBeDisabled()
   })
 
@@ -83,13 +86,38 @@ describe('SignPage', () => {
     expect(alert).toHaveTextContent(/nur PDF/i)
   })
 
-  it('advances to signatories step after PDF upload', async () => {
+  it('advances to signature level step after PDF upload and document type selection', async () => {
     renderSignPage()
     const input = screen.getByTestId('file-input')
     const file = new File(['%PDF-1.4'], 'test.pdf', { type: 'application/pdf' })
     fireEvent.change(input, { target: { files: [file] } })
-    await userEvent.click(screen.getByRole('button', { name: /Unterzeichner hinzufügen/i }))
-    expect(await screen.findByText('Unterzeichner konfigurieren')).toBeInTheDocument()
+    await userEvent.type(screen.getByRole('textbox', { name: 'Dokumentart suchen' }), 'NDA')
+    await userEvent.click(screen.getByRole('button', { name: /^NDA \/ Geheimhaltungsvereinbarung/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Signaturlevel prüfen/i }))
+    expect(await screen.findByText('Signaturlevel wählen')).toBeInTheDocument()
+  })
+
+  it('allows continuing without selecting document type', async () => {
+    renderSignPage()
+    const input = screen.getByTestId('file-input')
+    const file = new File(['%PDF-1.4'], 'test.pdf', { type: 'application/pdf' })
+    fireEvent.change(input, { target: { files: [file] } })
+    await userEvent.click(screen.getByRole('button', { name: /Signaturlevel prüfen/i }))
+    expect(await screen.findByText('Signaturlevel wählen')).toBeInTheDocument()
+  })
+
+  it('preselects recommended signature level based on selected document type', async () => {
+    renderSignPage()
+    const input = screen.getByTestId('file-input')
+    const file = new File(['%PDF-1.4'], 'test.pdf', { type: 'application/pdf' })
+    fireEvent.change(input, { target: { files: [file] } })
+    await userEvent.type(screen.getByRole('textbox', { name: 'Dokumentart suchen' }), 'Arbeitsvertrag')
+    await userEvent.click(screen.getByRole('button', { name: /^Arbeitsvertrag/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Signaturlevel prüfen/i }))
+
+    await screen.findByText('Signaturlevel wählen')
+    expect(screen.getByText(/empfehlen wir QES/i)).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /QES/i })).toBeChecked()
   })
 
   it('shows signatory form with one row initially', async () => {
@@ -97,7 +125,10 @@ describe('SignPage', () => {
     const input = screen.getByTestId('file-input')
     const file = new File(['%PDF-1.4'], 'test.pdf', { type: 'application/pdf' })
     fireEvent.change(input, { target: { files: [file] } })
-    await userEvent.click(screen.getByRole('button', { name: /Unterzeichner hinzufügen/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^NDA \/ Geheimhaltungsvereinbarung/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Signaturlevel prüfen/i }))
+    await screen.findByText('Signaturlevel wählen')
+    await userEvent.click(screen.getByRole('button', { name: /Unterzeichner/i }))
     await screen.findByText('Unterzeichner konfigurieren')
     expect(screen.getAllByPlaceholderText('Vorname')).toHaveLength(1)
     expect(screen.getAllByPlaceholderText('Nachname')).toHaveLength(1)
@@ -108,16 +139,20 @@ describe('SignPage', () => {
     const input = screen.getByTestId('file-input')
     const file = new File(['%PDF-1.4'], 'test.pdf', { type: 'application/pdf' })
     fireEvent.change(input, { target: { files: [file] } })
-    await userEvent.click(screen.getByRole('button', { name: /Unterzeichner hinzufügen/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^NDA \/ Geheimhaltungsvereinbarung/i }))
+    await userEvent.click(screen.getByRole('button', { name: /Signaturlevel prüfen/i }))
+    await screen.findByText('Signaturlevel wählen')
+    await userEvent.click(screen.getByRole('button', { name: /Unterzeichner/i }))
     await screen.findByText('Unterzeichner konfigurieren')
     await userEvent.click(screen.getByText(/Weiteren Unterzeichner/i))
     expect(screen.getAllByPlaceholderText('Vorname')).toHaveLength(2)
     expect(screen.getAllByPlaceholderText('Nachname')).toHaveLength(2)
   })
 
-  it('shows stepper with all 6 steps', () => {
+  it('shows stepper with all 7 steps', () => {
     renderSignPage()
     expect(screen.getByText('Upload')).toBeInTheDocument()
+    expect(screen.getByText('Signaturlevel')).toBeInTheDocument()
     expect(screen.getByText('Unterzeichner')).toBeInTheDocument()
     expect(screen.getByText('Platzierung')).toBeInTheDocument()
     expect(screen.getByText('Preis')).toBeInTheDocument()
@@ -132,25 +167,30 @@ describe('SignPage', () => {
     const input = screen.getByTestId('file-input')
     const file = new File(['%PDF-1.4'], 'test.pdf', { type: 'application/pdf' })
     fireEvent.change(input, { target: { files: [file] } })
-    fireEvent.click(screen.getByRole('button', { name: /Unterzeichner hinzufügen/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^NDA \/ Geheimhaltungsvereinbarung/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Signaturlevel prüfen/i }))
 
-    // Step 2: fill signatory and advance (calls api.setSignatories)
+    // Step 2: choose signature level
+    await screen.findByText('Signaturlevel wählen')
+    await userEvent.click(screen.getByRole('button', { name: /Unterzeichner/i }))
+
+    // Step 3: fill signatory and advance (calls api.setSignatories)
     await screen.findByText('Unterzeichner konfigurieren')
     await userEvent.type(screen.getByPlaceholderText('Vorname'), 'Alice')
     await userEvent.type(screen.getByPlaceholderText('Nachname'), 'Tester')
     await userEvent.type(screen.getByPlaceholderText('E-Mail'), 'alice@test.com')
     await userEvent.click(screen.getByRole('button', { name: /Signaturfelder platzieren/i }))
 
-    // Step 3: place signatures -> next
+    // Step 4: place signatures -> next
     await screen.findByText('Signaturfelder platzieren')
     await userEvent.click(screen.getByRole('button', { name: /Mock Place All/i }))
     await userEvent.click(screen.getByRole('button', { name: /Überprüfen/i }))
 
-    // Step 4: pricing -> next
+    // Step 5: pricing -> next
     await screen.findByText('Preisübersicht')
     await userEvent.click(screen.getByRole('button', { name: /Bezahlen/i }))
 
-    // Step 5: payment
+    // Step 6: payment
     await screen.findByText('Bezahlung')
     await userEvent.click(screen.getByRole('button', { name: /Jetzt bezahlen/i }))
 

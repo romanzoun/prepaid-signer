@@ -1,6 +1,6 @@
 package com.swisssigner.service;
 
-import com.swisssigner.model.InvitationResult;
+import com.swisssigner.model.InviteDispatchResult;
 import com.swisssigner.model.InitiatorSelection;
 import com.swisssigner.model.Signatory;
 import com.swisssigner.model.SignatoryPlacement;
@@ -25,12 +25,20 @@ public interface SignInviteService {
      * @param signatories    list of people who must sign
      * @param placements     visual signature coordinates per signatory
      * @param initiator      selected process initiator (signer or third person)
-     * @return one InvitationResult per signatory with a signing URL and timestamp
+     * @return processId and one InvitationResult per signatory with a signing URL and timestamp
      */
-    List<InvitationResult> sendInvitations(String documentRef,
-                                           String documentName,
-                                           String paymentRef,
-                                           List<Signatory> signatories,
-                                           List<SignatoryPlacement> placements,
-                                           InitiatorSelection initiator);
+    InviteDispatchResult sendInvitations(String documentRef,
+                                         String documentName,
+                                         String paymentRef,
+                                         List<Signatory> signatories,
+                                         List<SignatoryPlacement> placements,
+                                         InitiatorSelection initiator);
+
+    /**
+     * Reads the current signing process status from provider.
+     *
+     * @param processId provider process id
+     * @return status payload including processId and normalized status string
+     */
+    java.util.Map<String, Object> getProcessStatus(String processId);
 }

@@ -5,6 +5,7 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import com.swisssigner.config.StripeProperties;
+import com.swisssigner.model.PriceBreakdown;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -35,7 +36,8 @@ public class StripePaymentService implements PaymentService {
     }
 
     @Override
-    public Map<String, String> createCheckoutSession(double totalChf,
+    public Map<String, String> createCheckoutSession(PriceBreakdown price,
+                                                     String signatureLevel,
                                                      String successUrl,
                                                      String cancelUrl,
                                                      String reference) {
@@ -44,34 +46,67 @@ public class StripePaymentService implements PaymentService {
         }
 
         try {
-            long amountCents = BigDecimal.valueOf(totalChf)
+            long signatureUnitAmountCents = BigDecimal.valueOf(price.getPerSignatureGross())
                 .multiply(BigDecimal.valueOf(100))
                 .setScale(0, RoundingMode.HALF_UP)
                 .longValueExact();
 
-            SessionCreateParams params = SessionCreateParams.builder()
+            SessionCreateParams.Builder paramsBuilder = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl(successUrl)
                 .setCancelUrl(cancelUrl)
                 .setClientReferenceId(reference)
                 .putMetadata("reference", reference)
+                .putMetadata("signatureLevel", signatureLevel)
+                .putMetadata("signatoryCount", String.valueOf(price.getCount()))
+                .putMetadata("analysisRequested", String.valueOf(price.isAnalysisRequested()))
                 .addLineItem(
                     SessionCreateParams.LineItem.builder()
-                        .setQuantity(1L)
+                        .setQuantity((long) price.getCount())
                         .setPriceData(
                             SessionCreateParams.LineItem.PriceData.builder()
                                 .setCurrency("chf")
-                                .setUnitAmount(amountCents)
+                                .setUnitAmount(signatureUnitAmountCents)
                                 .setProductData(
                                     SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                                        .setName("justSign Dokument-Signatur")
+                                        .setName("justSign document signature (" + signatureLevel + ")")
                                         .build()
                                 )
                                 .build()
                         )
                         .build()
-                )
-                .build();
+                );
+
+            if (price.isAnalysisRequested()) {
+                long analysisUnitAmountCents = BigDecimal.valueOf(price.getAnalysisGross())
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(0, RoundingMode.HALF_UP)
+                    .longValueExact();
+
+                SessionCreateParams.LineItem.PriceData.Builder analysisPriceData =
+                    SessionCreateParams.LineItem.PriceData.builder()
+                        .setCurrency("chf")
+                        .setUnitAmount(analysisUnitAmountCents);
+
+                if (props.getAnalysisProductId() != null && !props.getAnalysisProductId().isBlank()) {
+                    analysisPriceData.setProduct(props.getAnalysisProductId());
+                } else {
+                    analysisPriceData.setProductData(
+                        SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                            .setName("document AI analysis")
+                            .build()
+                    );
+                }
+
+                paramsBuilder.addLineItem(
+                    SessionCreateParams.LineItem.builder()
+                        .setQuantity(1L)
+                        .setPriceData(analysisPriceData.build())
+                        .build()
+                );
+            }
+
+            SessionCreateParams params = paramsBuilder.build();
 
             Session session = Session.create(params);
             return Map.of(

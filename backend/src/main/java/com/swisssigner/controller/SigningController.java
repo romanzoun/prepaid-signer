@@ -6,11 +6,16 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,15 +36,24 @@ public class SigningController {
     private final FileStorageService fileStorageService;
     private final PaymentService paymentService;
     private final SignInviteService signInviteService;
+    private final ContractAnalysisJobService contractAnalysisJobService;
+    private final ConfirmationPdfService confirmationPdfService;
+    private final AnalysisReportPdfService analysisReportPdfService;
 
     public SigningController(PricingService pricingService,
                              FileStorageService fileStorageService,
                              PaymentService paymentService,
-                             SignInviteService signInviteService) {
+                             SignInviteService signInviteService,
+                             ContractAnalysisJobService contractAnalysisJobService,
+                             ConfirmationPdfService confirmationPdfService,
+                             AnalysisReportPdfService analysisReportPdfService) {
         this.pricingService = pricingService;
         this.fileStorageService = fileStorageService;
         this.paymentService = paymentService;
         this.signInviteService = signInviteService;
+        this.contractAnalysisJobService = contractAnalysisJobService;
+        this.confirmationPdfService = confirmationPdfService;
+        this.analysisReportPdfService = analysisReportPdfService;
     }
 
     /** Upload PDF. Stores file and saves reference in session. */
@@ -57,6 +71,14 @@ public class SigningController {
         SigningSessionData data = getOrCreate(session);
         data.setDocumentName(file.getOriginalFilename());
         data.setDocumentRef(ref);
+        data.setSignatories(List.of());
+        data.setPlacements(List.of());
+        data.setSignatureLevel(Signatory.LEVEL_QES);
+        data.setInitiator(null);
+        data.setPrice(null);
+        data.setContractAnalysisRequested(false);
+        resetAnalysisState(data);
+        resetProcessState(data);
         data.setStep("SIGNATORIES");
         save(session, data);
 
@@ -98,11 +120,17 @@ public class SigningController {
             return ResponseEntity.badRequest().body(Map.of("error", "Upload a document first"));
         }
 
-        PriceBreakdown price = pricingService.calculate(req.getSignatories().size());
+        PriceBreakdown price = pricingService.calculate(
+            req.getSignatories().size(),
+            normalizedDocumentLevel,
+            data.isContractAnalysisRequested()
+        );
         data.setSignatories(req.getSignatories());
         data.setSignatureLevel(normalizedDocumentLevel);
         data.setPlacements(List.of());
-        data.setInitiator(ensureInitiatorConsistency(data.getInitiator(), req.getSignatories()));
+        // Initiator is handled by system-side defaults.
+        data.setInitiator(null);
+        resetProcessState(data);
         data.setPrice(price);
         data.setStep("PLACEMENT");
         save(session, data);
@@ -147,60 +175,156 @@ public class SigningController {
         }
 
         data.setPlacements(req.getPlacements());
-        data.setStep("INITIATOR");
+        data.setStep("PRICING");
         save(session, data);
 
         return ResponseEntity.ok(Map.of("placements", req.getPlacements()));
     }
 
-    /** Select process initiator (signer or third person). */
-    @PostMapping("/initiator")
-    public ResponseEntity<?> setInitiator(@RequestBody SetInitiatorRequest req,
-                                          HttpSession session) {
+    /** Enable or disable AI analysis addon (CHF 1.00). */
+    @PostMapping({"/analysis", "/analysis/select"})
+    public ResponseEntity<?> selectAnalysis(@RequestParam(value = "enabled", defaultValue = "true") boolean enabled,
+                                            HttpSession session) {
         SigningSessionData data = getOrCreate(session);
-        if (data.getSignatories() == null || data.getSignatories().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Configure signatories first"));
+        if (enabled && (data.getDocumentRef() == null || data.getDocumentRef().isBlank())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Upload a document first"));
         }
 
-        String mode = normalizeInitiatorMode(req.getMode());
-        if (mode == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "initiator.mode must be SIGNER or THIRD_PERSON"));
-        }
-
-        InitiatorSelection initiator = new InitiatorSelection();
-        initiator.setMode(mode);
-
-        if (InitiatorSelection.MODE_SIGNER.equals(mode)) {
-            if (req.getSignerId() == null || req.getSignerId().isBlank()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "initiator.signerId is required"));
-            }
-            Signatory selected = data.getSignatories().stream()
-                .filter(s -> req.getSignerId().equals(s.getId()))
-                .findFirst()
-                .orElse(null);
-            if (selected == null) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Unknown initiator signerId: " + req.getSignerId()));
-            }
-            if (selected.getEmail() == null || selected.getEmail().isBlank()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Selected initiator signer must have an email"));
-            }
-            initiator.setSignerId(selected.getId());
+        data.setContractAnalysisRequested(enabled);
+        if (!enabled) {
+            resetAnalysisState(data);
         } else {
-            if (req.getEmail() == null || req.getEmail().isBlank()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "initiator.email is required for third person"));
+            data.setAnalysisError(null);
+            if (!"QUEUED".equals(data.getAnalysisStatus())
+                && !"RUNNING".equals(data.getAnalysisStatus())
+                && !"COMPLETED".equals(data.getAnalysisStatus())) {
+                data.setAnalysisStatus("PENDING_PAYMENT");
             }
-            if (!isLikelyEmail(req.getEmail())) {
-                return ResponseEntity.badRequest().body(Map.of("error", "initiator.email is invalid"));
-            }
-            initiator.setFirstName(req.getFirstName() == null ? null : req.getFirstName().trim());
-            initiator.setLastName(req.getLastName() == null ? null : req.getLastName().trim());
-            initiator.setEmail(req.getEmail().trim());
         }
 
-        data.setInitiator(initiator);
-        data.setStep("PRICING");
+        if (data.getSignatories() != null && !data.getSignatories().isEmpty()) {
+            data.setPrice(pricingService.calculate(
+                data.getSignatories().size(),
+                data.getSignatureLevel(),
+                enabled
+            ));
+        }
         save(session, data);
-        return ResponseEntity.ok(Map.of("initiator", initiator));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("analysisRequested", data.isContractAnalysisRequested());
+        response.put("analysisPriceGross", 1.00);
+        response.put("analysisPriceCurrency", "CHF");
+        response.put("analysisIncludedInInvoice", data.isContractAnalysisRequested());
+        response.put("analysisStatus", data.getAnalysisStatus() == null ? "NOT_REQUESTED" : data.getAnalysisStatus());
+        if (data.getPrice() != null) {
+            response.put("price", data.getPrice());
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    /** Starts async AI analysis job (normally triggered automatically after payment). */
+    @PostMapping("/analysis/start")
+    public ResponseEntity<?> startAnalysis(@RequestParam(value = "language", defaultValue = "auto") String language,
+                                           @RequestParam(value = "jurisdiction_hint", required = false) String jurisdictionHint,
+                                           @RequestParam(value = "party_role", required = false) String partyRole,
+                                           @RequestParam(value = "analysis_profile", defaultValue = "standard") String analysisProfile,
+                                           HttpSession session) {
+        SigningSessionData data = getOrCreate(session);
+        if (!"COMPLETED".equals(data.getPaymentStatus())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Payment required first"));
+        }
+        if (!data.isContractAnalysisRequested()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "AI analysis addon not selected"));
+        }
+        if (data.getDocumentRef() == null || data.getDocumentRef().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Upload a document first"));
+        }
+
+        String analysisProcessId = data.getAnalysisProcessId();
+        if (analysisProcessId == null || analysisProcessId.isBlank()) {
+            analysisProcessId = "analysis-" + UUID.randomUUID().toString().replace("-", "");
+            data.setAnalysisProcessId(analysisProcessId);
+        }
+
+        ContractAnalysisJobService.AnalysisJob job = contractAnalysisJobService.startJob(
+            analysisProcessId,
+            fileStorageService.resolve(data.getDocumentRef()),
+            data.getDocumentName(),
+            new ContractAnalyzeOptions(language, jurisdictionHint, partyRole, analysisProfile, "consensus7")
+        );
+        data.setAnalysisStatus(job.getStatus());
+        data.setAnalysisError(job.getError());
+        save(session, data);
+
+        return ResponseEntity.ok(analysisStatusResponse(data, job));
+    }
+
+    /** Returns async AI analysis status and compact result if ready. */
+    @GetMapping("/analysis/status")
+    public ResponseEntity<?> analysisStatus(@RequestParam(value = "analyticProcessID", required = false) String analyticProcessId,
+                                            HttpSession session) {
+        SigningSessionData data = getOrCreate(session);
+        if (!data.isContractAnalysisRequested()) {
+            return ResponseEntity.ok(Map.of(
+                "analysisRequested", false,
+                "status", "NOT_REQUESTED"
+            ));
+        }
+
+        if (analyticProcessId != null && !analyticProcessId.isBlank()
+            && data.getAnalysisProcessId() != null
+            && !data.getAnalysisProcessId().equals(analyticProcessId.trim())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "analyticProcessID mismatch"));
+        }
+
+        syncAnalysisState(data);
+        save(session, data);
+        Map<String, Object> response = analysisStatusResponse(data, contractAnalysisJobService.getJob(data.getAnalysisProcessId()));
+        response.put("status", response.get("analysisStatus"));
+        return ResponseEntity.ok(response);
+    }
+
+    /** Downloads AI analysis report PDF after async job completion. */
+    @GetMapping("/analysis/report")
+    public ResponseEntity<?> analysisReport(@RequestParam(value = "analyticProcessID", required = false) String analyticProcessId,
+                                            @RequestParam(value = "lang", required = false) String lang,
+                                            HttpSession session) {
+        SigningSessionData data = getOrCreate(session);
+        if (!data.isContractAnalysisRequested()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "AI analysis addon not selected"));
+        }
+        if (analyticProcessId != null && !analyticProcessId.isBlank()
+            && data.getAnalysisProcessId() != null
+            && !data.getAnalysisProcessId().equals(analyticProcessId.trim())) {
+            return ResponseEntity.badRequest().body(Map.of("error", "analyticProcessID mismatch"));
+        }
+
+        syncAnalysisState(data);
+        save(session, data);
+
+        if (!"COMPLETED".equals(data.getAnalysisStatus()) || data.getContractAnalysisResult() == null) {
+            return ResponseEntity.status(409).body(Map.of(
+                "error", "Analysis is not ready yet",
+                "status", data.getAnalysisStatus() == null ? "PENDING_PAYMENT" : data.getAnalysisStatus(),
+                "analyticProcessID", data.getAnalysisProcessId()
+            ));
+        }
+
+        try {
+            byte[] pdf = analysisReportPdfService.createReport(
+                data.getAnalysisProcessId(),
+                data.getContractAnalysisResult(),
+                lang
+            );
+            String filename = buildAnalysisFilename(data.getAnalysisProcessId());
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+        } catch (IOException ex) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to generate analysis report PDF"));
+        }
     }
 
     /** Process payment (mock or real Stripe depending on stripe.mock). */
@@ -213,10 +337,6 @@ public class SigningController {
         if (data.getPlacements() == null || data.getPlacements().size() != data.getSignatories().size()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Place all signatories first"));
         }
-        String initiatorError = validateStoredInitiator(data);
-        if (initiatorError != null) {
-            return ResponseEntity.badRequest().body(Map.of("error", initiatorError));
-        }
         if (data.getPrice() == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "Price not calculated"));
         }
@@ -226,17 +346,23 @@ public class SigningController {
         String cancelUrl = origin + "/sign?stripe=cancel";
 
         Map<String, String> result = paymentService.createCheckoutSession(
-            data.getPrice().getTotal(),
+            data.getPrice(),
+            data.getSignatureLevel(),
             successUrl,
             cancelUrl,
             session.getId()
         );
         data.setPaymentSessionId(result.get("sessionId"));
         data.setPaymentStatus("success".equals(result.get("status")) ? "COMPLETED" : "PENDING");
+        if ("COMPLETED".equals(data.getPaymentStatus())) {
+            ensureAnalysisJobStartedIfRequested(data);
+            syncAnalysisState(data);
+        }
         data.setStep("PAYMENT");
         save(session, data);
-
-        return ResponseEntity.ok(result);
+        Map<String, Object> response = new HashMap<>(result);
+        response.putAll(analysisStatusResponse(data, contractAnalysisJobService.getJob(data.getAnalysisProcessId())));
+        return ResponseEntity.ok(response);
     }
 
     /** Confirm payment status after returning from Stripe Checkout. */
@@ -263,8 +389,11 @@ public class SigningController {
         if ("success".equals(status)) {
             data.setPaymentStatus("COMPLETED");
             try {
+                ensureAnalysisJobStartedIfRequested(data);
+                syncAnalysisState(data);
                 triggerInvitationsIfNeeded(data);
                 response.put("documentName", data.getDocumentName());
+                response.put("processId", data.getProcessId());
                 response.put("invitations", data.getInvitations());
             } catch (RuntimeException ex) {
                 String errorRef = UUID.randomUUID().toString();
@@ -291,6 +420,7 @@ public class SigningController {
             data.setStep("PAYMENT");
         }
 
+        response.putAll(analysisStatusResponse(data, contractAnalysisJobService.getJob(data.getAnalysisProcessId())));
         save(session, data);
         return ResponseEntity.ok(response);
     }
@@ -304,6 +434,8 @@ public class SigningController {
         }
 
         try {
+            ensureAnalysisJobStartedIfRequested(data);
+            syncAnalysisState(data);
             triggerInvitationsIfNeeded(data);
             save(session, data);
             return ResponseEntity.ok(inviteResponse(data));
@@ -326,10 +458,76 @@ public class SigningController {
         }
     }
 
+    /** Reads current Swisscom process status for a process id. */
+    @GetMapping("/status")
+    public ResponseEntity<?> processStatus(@RequestParam(value = "processId", required = false) String processId,
+                                           HttpSession session) {
+        SigningSessionData data = getOrCreate(session);
+        String effectiveProcessId = (processId != null && !processId.isBlank())
+            ? processId.trim()
+            : data.getProcessId();
+        if (effectiveProcessId == null || effectiveProcessId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "processId is required"));
+        }
+        try {
+            return ResponseEntity.ok(signInviteService.getProcessStatus(effectiveProcessId));
+        } catch (RuntimeException ex) {
+            String errorRef = UUID.randomUUID().toString();
+            swisscomLog.error(
+                "SWISSCOM_TRACE event=status_failed ref={} processId={} httpSessionId={}",
+                errorRef,
+                effectiveProcessId,
+                session.getId(),
+                ex
+            );
+            return ResponseEntity.status(502).body(Map.of(
+                "error", "Status query failed: " + ex.getMessage(),
+                "errorRef", errorRef
+            ));
+        }
+    }
+
+    /** Returns a branded PDF that confirms the process start. */
+    @GetMapping("/confirmation")
+    public ResponseEntity<?> processConfirmation(@RequestParam(value = "processId", required = false) String processId,
+                                                 @RequestParam(value = "lang", required = false) String lang,
+                                                 HttpSession session,
+                                                 HttpServletRequest request) {
+        SigningSessionData data = getOrCreate(session);
+        String effectiveProcessId = (processId != null && !processId.isBlank())
+            ? processId.trim()
+            : data.getProcessId();
+        if (effectiveProcessId == null || effectiveProcessId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "processId is required"));
+        }
+        try {
+            syncAnalysisState(data);
+            String statusUrl = resolveOrigin(request)
+                + "/status?processId="
+                + URLEncoder.encode(effectiveProcessId, StandardCharsets.UTF_8).replace("+", "%20");
+            byte[] pdf = confirmationPdfService.createProcessStartConfirmation(
+                effectiveProcessId,
+                statusUrl,
+                lang,
+                data.getContractAnalysisResult()
+            );
+            save(session, data);
+            String filename = buildConfirmationFilename(effectiveProcessId);
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+        } catch (IOException ex) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to generate confirmation PDF"));
+        }
+    }
+
     /** Returns current session state. */
     @GetMapping("/state")
     public ResponseEntity<?> state(HttpSession session) {
         SigningSessionData data = getOrCreate(session);
+        syncAnalysisState(data);
+        save(session, data);
         return ResponseEntity.ok(data);
     }
 
@@ -383,109 +581,168 @@ public class SigningController {
             data.setStep("DONE");
             return;
         }
-        List<InvitationResult> invitations = signInviteService.sendInvitations(
+        InviteDispatchResult dispatch = signInviteService.sendInvitations(
             data.getDocumentRef(),
             data.getDocumentName(),
             data.getPaymentSessionId(),
             data.getSignatories(),
             data.getPlacements(),
-            data.getInitiator()
+            null
         );
-        data.setInvitations(invitations);
+        data.setProcessId(dispatch.getProcessId());
+        data.setInvitations(dispatch.getInvitations());
         data.setStep("DONE");
     }
 
-    private InitiatorSelection ensureInitiatorConsistency(InitiatorSelection current, List<Signatory> signatories) {
-        if (signatories == null || signatories.isEmpty()) {
-            return null;
-        }
-        if (current == null) {
-            InitiatorSelection created = new InitiatorSelection();
-            created.setMode(InitiatorSelection.MODE_SIGNER);
-            created.setSignerId(signatories.getFirst().getId());
-            return created;
-        }
-
-        String mode = normalizeInitiatorMode(current.getMode());
-        if (InitiatorSelection.MODE_SIGNER.equals(mode)) {
-            boolean exists = signatories.stream().anyMatch(s -> s.getId().equals(current.getSignerId()));
-            if (!exists) {
-                current.setSignerId(signatories.getFirst().getId());
-            }
-            current.setMode(InitiatorSelection.MODE_SIGNER);
-            return current;
-        }
-
-        if (InitiatorSelection.MODE_THIRD_PERSON.equals(mode)) {
-            current.setMode(InitiatorSelection.MODE_THIRD_PERSON);
-            return current;
-        }
-
-        InitiatorSelection fallback = new InitiatorSelection();
-        fallback.setMode(InitiatorSelection.MODE_SIGNER);
-        fallback.setSignerId(signatories.getFirst().getId());
-        return fallback;
+    private void resetProcessState(SigningSessionData data) {
+        data.setProcessId(null);
+        data.setPaymentSessionId(null);
+        data.setPaymentStatus(null);
+        data.setInvitations(List.of());
     }
 
-    private String validateStoredInitiator(SigningSessionData data) {
-        if (data.getInitiator() == null) {
-            return "Initiator fehlt. Bitte waehle einen Initiator.";
-        }
-        String mode = normalizeInitiatorMode(data.getInitiator().getMode());
-        if (mode == null) {
-            return "Initiator-Modus ungueltig.";
-        }
-
-        if (InitiatorSelection.MODE_SIGNER.equals(mode)) {
-            if (data.getInitiator().getSignerId() == null || data.getInitiator().getSignerId().isBlank()) {
-                return "Initiator signerId fehlt.";
-            }
-            Signatory signer = data.getSignatories().stream()
-                .filter(s -> data.getInitiator().getSignerId().equals(s.getId()))
-                .findFirst()
-                .orElse(null);
-            if (signer == null) {
-                return "Ausgewaehlter Initiator-Signer existiert nicht mehr.";
-            }
-            if (signer.getEmail() == null || signer.getEmail().isBlank()) {
-                return "Der ausgewaehlte Initiator-Signer braucht eine E-Mail-Adresse.";
-            }
-            return null;
-        }
-
-        if (data.getInitiator().getEmail() == null || data.getInitiator().getEmail().isBlank()) {
-            return "Initiator-E-Mail fehlt.";
-        }
-        if (!isLikelyEmail(data.getInitiator().getEmail())) {
-            return "Initiator-E-Mail ist ungueltig.";
-        }
-        return null;
+    private void resetAnalysisState(SigningSessionData data) {
+        data.setAnalysisProcessId(null);
+        data.setAnalysisStatus("NOT_REQUESTED");
+        data.setAnalysisError(null);
+        data.setContractAnalysisResult(null);
     }
 
-    private String normalizeInitiatorMode(String mode) {
-        if (mode == null || mode.isBlank()) {
-            return null;
+    private void ensureAnalysisJobStartedIfRequested(SigningSessionData data) {
+        if (!data.isContractAnalysisRequested()) {
+            if (data.getAnalysisStatus() == null) {
+                data.setAnalysisStatus("NOT_REQUESTED");
+            }
+            return;
         }
-        String normalized = mode.trim().toUpperCase(Locale.ROOT);
-        if (InitiatorSelection.MODE_SIGNER.equals(normalized)) {
-            return InitiatorSelection.MODE_SIGNER;
+        if (data.getDocumentRef() == null || data.getDocumentRef().isBlank()) {
+            data.setAnalysisStatus("FAILED");
+            data.setAnalysisError("Uploaded PDF not found");
+            return;
         }
-        if (InitiatorSelection.MODE_THIRD_PERSON.equals(normalized)) {
-            return InitiatorSelection.MODE_THIRD_PERSON;
+
+        syncAnalysisState(data);
+        if ("QUEUED".equals(data.getAnalysisStatus())
+            || "RUNNING".equals(data.getAnalysisStatus())
+            || "COMPLETED".equals(data.getAnalysisStatus())) {
+            return;
         }
-        return null;
+
+        String analysisProcessId = data.getAnalysisProcessId();
+        if (analysisProcessId == null || analysisProcessId.isBlank()) {
+            analysisProcessId = "analysis-" + UUID.randomUUID().toString().replace("-", "");
+            data.setAnalysisProcessId(analysisProcessId);
+        }
+
+        ContractAnalysisJobService.AnalysisJob job = contractAnalysisJobService.startJob(
+            analysisProcessId,
+            fileStorageService.resolve(data.getDocumentRef()),
+            data.getDocumentName(),
+            new ContractAnalyzeOptions("auto", null, null, "standard", "consensus7")
+        );
+        data.setAnalysisStatus(job.getStatus());
+        data.setAnalysisError(job.getError());
     }
 
-    private boolean isLikelyEmail(String value) {
-        return value != null && value.contains("@") && value.indexOf('@') > 0 && value.indexOf('@') < value.length() - 1;
+    private void syncAnalysisState(SigningSessionData data) {
+        if (data.getAnalysisProcessId() == null || data.getAnalysisProcessId().isBlank()) {
+            if (data.isContractAnalysisRequested() && data.getAnalysisStatus() == null) {
+                data.setAnalysisStatus("PENDING_PAYMENT");
+            }
+            if (!data.isContractAnalysisRequested() && data.getAnalysisStatus() == null) {
+                data.setAnalysisStatus("NOT_REQUESTED");
+            }
+            return;
+        }
+
+        ContractAnalysisJobService.AnalysisJob job = contractAnalysisJobService.getJob(data.getAnalysisProcessId());
+        if (job == null) {
+            if (data.getAnalysisStatus() == null) {
+                data.setAnalysisStatus(data.isContractAnalysisRequested() ? "PENDING_PAYMENT" : "NOT_REQUESTED");
+            }
+            return;
+        }
+
+        data.setAnalysisStatus(job.getStatus());
+        if ("COMPLETED".equals(job.getStatus()) && job.getResult() != null) {
+            data.setContractAnalysisResult(compactAnalysisForSession(job.getResult()));
+            data.setAnalysisError(null);
+        } else if ("FAILED".equals(job.getStatus())) {
+            data.setAnalysisError(job.getError() == null ? "AI analysis failed" : job.getError());
+        }
+    }
+
+    private Map<String, Object> compactAnalysisForSession(Map<String, Object> analysis) {
+        Map<String, Object> compact = new HashMap<>();
+        if (analysis == null) {
+            return compact;
+        }
+        compact.put("summary", analysis.get("summary"));
+        compact.put("key_dates", analysis.get("key_dates"));
+        compact.put("obligations", analysis.get("obligations"));
+        compact.put("risks", analysis.get("risks"));
+        compact.put("opportunities", analysis.get("opportunities"));
+        compact.put("open_questions", analysis.get("open_questions"));
+        compact.put("confidence", analysis.get("confidence"));
+        compact.put("consensus", analysis.get("consensus"));
+        compact.put("generated_at", analysis.get("generated_at"));
+        return compact;
     }
 
     private Map<String, Object> inviteResponse(SigningSessionData data) {
-        return Map.of(
-            "sessionId", data.getPaymentSessionId(),
-            "documentName", data.getDocumentName(),
-            "invitations", data.getInvitations()
-        );
+        Map<String, Object> response = new HashMap<>();
+        response.put("sessionId", data.getPaymentSessionId());
+        response.put("documentName", data.getDocumentName());
+        response.put("invitations", data.getInvitations());
+        response.put("processId", data.getProcessId());
+        response.putAll(analysisStatusResponse(data, contractAnalysisJobService.getJob(data.getAnalysisProcessId())));
+        return response;
+    }
+
+    private Map<String, Object> analysisStatusResponse(SigningSessionData data, ContractAnalysisJobService.AnalysisJob job) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("analysisRequested", data.isContractAnalysisRequested());
+
+        String status = data.getAnalysisStatus();
+        if (status == null || status.isBlank()) {
+            status = data.isContractAnalysisRequested() ? "PENDING_PAYMENT" : "NOT_REQUESTED";
+        }
+        response.put("analysisStatus", status);
+
+        if (data.getAnalysisProcessId() != null && !data.getAnalysisProcessId().isBlank()) {
+            response.put("analyticProcessID", data.getAnalysisProcessId());
+        }
+        if (data.getAnalysisError() != null && !data.getAnalysisError().isBlank()) {
+            response.put("analysisError", data.getAnalysisError());
+        }
+        if ("COMPLETED".equals(status) && data.getContractAnalysisResult() != null) {
+            response.put("analysis", data.getContractAnalysisResult());
+        }
+        if (job != null && job.getStartedAt() != null) {
+            response.put("analysisStartedAt", job.getStartedAt().toString());
+        }
+        if (job != null && job.getCompletedAt() != null) {
+            response.put("analysisCompletedAt", job.getCompletedAt().toString());
+        }
+        return response;
+    }
+
+    private String buildConfirmationFilename(String processId) {
+        String date = LocalDate.now().toString();
+        String safeProcessId = processId.replaceAll("[^a-zA-Z0-9._-]", "_");
+        if (safeProcessId.length() > 64) {
+            safeProcessId = safeProcessId.substring(0, 64);
+        }
+        return "justSign-confirmation-" + date + "-" + safeProcessId + ".pdf";
+    }
+
+    private String buildAnalysisFilename(String analysisProcessId) {
+        String date = LocalDate.now().toString();
+        String safeId = analysisProcessId.replaceAll("[^a-zA-Z0-9._-]", "_");
+        if (safeId.length() > 64) {
+            safeId = safeId.substring(0, 64);
+        }
+        return "justSign-analysis-" + date + "-" + safeId + ".pdf";
     }
 
     private String resolveOrigin(HttpServletRequest request) {
@@ -530,22 +787,4 @@ public class SigningController {
         public void setPlacements(List<SignatoryPlacement> placements) { this.placements = placements; }
     }
 
-    public static class SetInitiatorRequest {
-        private String mode;
-        private String signerId;
-        private String firstName;
-        private String lastName;
-        private String email;
-
-        public String getMode() { return mode; }
-        public void setMode(String mode) { this.mode = mode; }
-        public String getSignerId() { return signerId; }
-        public void setSignerId(String signerId) { this.signerId = signerId; }
-        public String getFirstName() { return firstName; }
-        public void setFirstName(String firstName) { this.firstName = firstName; }
-        public String getLastName() { return lastName; }
-        public void setLastName(String lastName) { this.lastName = lastName; }
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-    }
 }

@@ -27,6 +27,12 @@ app:
   swisscom-sign-debug:
     enabled: ${LOG_DEBUG_SWISSCOM_SIGN:false}
     file: ${LOG_DEBUG_SWISSCOM_SIGN_FILE:${UPLOAD_DIR:/tmp/swisssigner}/swisscom-sign-debug.log}
+  contract-analysis:
+    openai-api-key: ${OPENAI_API_KEY:}
+    openai-model: ${OPENAI_MODEL:gpt-4.1-mini}
+    openai-base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+    timeout-seconds: ${OPENAI_TIMEOUT_SECONDS:120}
+    max-input-chars: ${CONTRACT_ANALYSIS_MAX_INPUT_CHARS:120000}
 
 swisscom:
   sign:
@@ -42,3 +48,4 @@ stripe:
   secret-key: ${STRIPE_SECRET_KEY:}
   webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
   publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
+  analysis-product-id: ${STRIPE_ANALYSIS_PRODUCT_ID:prod_U5mjbEJpbf9Wzs}

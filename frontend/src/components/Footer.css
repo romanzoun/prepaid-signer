@@ -1,64 +1,80 @@
 .footer {
-  background: var(--color-text);
-  color: var(--color-white);
-  margin-top: 4rem;
+  background: var(--sdx-color-text-heading);
+  color: var(--sdx-color-text-inverse);
+  margin-top: var(--sdx-spacing-6);
 }
 
 .footer-inner {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 2rem;
-  padding: 3rem 1.5rem 2rem;
+  gap: var(--sdx-spacing-4);
+  grid-template-columns: 1fr;
+  padding-bottom: var(--sdx-spacing-5);
+  padding-top: var(--sdx-spacing-5);
 }
 
 .footer-brand .brand-cross {
-  color: var(--color-red);
-  font-size: 1.4rem;
-  margin-right: 0.4rem;
+  color: var(--sdx-color-surface-interaction-default);
+  font-size: 20px;
+  margin-right: var(--sdx-spacing-1);
+}
+
+.footer-brand strong {
+  font-size: 20px;
 }
 
 .footer-brand p {
-  color: rgba(255,255,255,0.6);
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
+  color: var(--sdx-color-text-inverse-72);
+  font-size: 14px;
+  margin-top: var(--sdx-spacing-2);
 }
 
 .footer-links h4 {
-  font-size: 0.85rem;
+  color: var(--sdx-color-text-inverse-76);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--sdx-spacing-2);
   text-transform: uppercase;
-  letter-spacing: 1px;
-  color: rgba(255,255,255,0.5);
-  margin-bottom: 0.75rem;
 }
 
 .footer-links ul {
-  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--sdx-spacing-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .footer-links a {
-  color: rgba(255,255,255,0.75);
-  font-size: 0.9rem;
+  color: var(--sdx-color-text-inverse-86);
+  font-size: 14px;
   text-decoration: none;
+  transition: color 200ms ease-in-out;
 }
 
 .footer-links a:hover {
-  color: var(--color-white);
-  text-decoration: none;
+  color: var(--sdx-color-text-inverse);
+  text-decoration: underline;
 }
 
 .footer-bottom {
-  border-top: 1px solid rgba(255,255,255,0.1);
-  padding: 1rem 1.5rem;
+  border-top: var(--sdx-border-width-thin) solid var(--sdx-color-border-inverse-20);
+  color: var(--sdx-color-text-inverse-75);
+  font-size: 12px;
+  padding-bottom: var(--sdx-spacing-3);
+  padding-top: var(--sdx-spacing-3);
   text-align: center;
-  color: rgba(255,255,255,0.4);
-  font-size: 0.85rem;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) {
   .footer-inner {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+}
+
+@media (min-width: 1024px) {
+  .footer-inner {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
   }
 }

@@ -32,4 +32,8 @@ public class FileStorageService {
             Files.deleteIfExists(Paths.get(uploadDir, ref + ".pdf"));
         } catch (IOException ignored) {}
     }
+
+    public Path resolve(String ref) {
+        return Paths.get(uploadDir, ref + ".pdf");
+    }
 }

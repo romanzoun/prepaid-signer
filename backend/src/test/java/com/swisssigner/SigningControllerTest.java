@@ -110,6 +110,7 @@ class SigningControllerTest {
         // Step 5: Send invitations (mock Swisscom Sign)
         mockMvc.perform(post("/api/sign/invite").session(session))
             .andExpect(status().isOk())
+            .andExpect(jsonPath("$.processId", startsWith("mock-process-")))
             .andExpect(jsonPath("$.invitations", hasSize(2)))
             .andExpect(jsonPath("$.invitations[0].signatory.firstName").value("Alice"))
             .andExpect(jsonPath("$.invitations[1].signatory.firstName").value("Bob"))
@@ -238,8 +239,155 @@ class SigningControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("success"))
             .andExpect(jsonPath("$.sessionId", startsWith("mock_stripe_")))
+            .andExpect(jsonPath("$.processId", startsWith("mock-process-")))
             .andExpect(jsonPath("$.invitations", hasSize(1)))
             .andExpect(jsonPath("$.invitations[0].signatory.firstName").value("Alice"));
+    }
+
+    @Test
+    void status_endpoint_returns_status_for_process_id() throws Exception {
+        mockMvc.perform(get("/api/sign/status").param("processId", "mock-process-xyz"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.processId").value("mock-process-xyz"))
+            .andExpect(jsonPath("$.status", not(blankOrNullString())));
+    }
+
+    @Test
+    void status_endpoint_without_process_id_returns_400() throws Exception {
+        mockMvc.perform(get("/api/sign/status"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("processId is required"));
+    }
+
+    @Test
+    void confirmation_endpoint_returns_pdf_for_process_id() throws Exception {
+        mockMvc.perform(get("/api/sign/confirmation")
+                .param("processId", "mock-process-xyz")
+                .param("lang", "de"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Content-Type", containsString("application/pdf")))
+            .andExpect(header().string("Content-Disposition", containsString("justSign-confirmation-")));
+    }
+
+    @Test
+    void confirmation_endpoint_without_process_id_returns_400() throws Exception {
+        mockMvc.perform(get("/api/sign/confirmation"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("processId is required"));
+    }
+
+    @Test
+    void analysis_endpoint_without_uploaded_document_returns_400() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        mockMvc.perform(post("/api/sign/analysis").session(session))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("Upload a document first"));
+    }
+
+    @Test
+    void analysis_select_enables_addon_and_recalculates_price() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        MockMultipartFile pdf = new MockMultipartFile(
+            "file", "doc.pdf", "application/pdf", "%PDF-1.4".getBytes()
+        );
+        mockMvc.perform(multipart("/api/sign/upload").file(pdf).session(session))
+            .andExpect(status().isOk());
+
+        Map<String, Object> sigRequest = Map.of("signatories", List.of(
+            Map.of("id", "s1", "firstName", "Alice", "lastName", "Tester", "email", "alice@test.com", "phone", "")
+        ));
+        mockMvc.perform(post("/api/sign/signatories")
+                .session(session)
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(sigRequest)))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/sign/analysis/select")
+                .param("enabled", "true")
+                .session(session))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.analysisRequested").value(true))
+            .andExpect(jsonPath("$.price.analysisRequested").value(true))
+            .andExpect(jsonPath("$.price.analysisGross").value(1.0))
+            .andExpect(jsonPath("$.price.total").value(4.4));
+    }
+
+    @Test
+    void analysis_status_without_selection_returns_not_requested() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        mockMvc.perform(get("/api/sign/analysis/status").session(session))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.analysisRequested").value(false))
+            .andExpect(jsonPath("$.status").value("NOT_REQUESTED"));
+    }
+
+    @Test
+    void second_flow_in_same_session_uses_new_signatory_data() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+
+        MockMultipartFile pdf1 = new MockMultipartFile(
+            "file", "first.pdf", "application/pdf", "%PDF-1.4".getBytes()
+        );
+        mockMvc.perform(multipart("/api/sign/upload").file(pdf1).session(session))
+            .andExpect(status().isOk());
+
+        Map<String, Object> sigRequest1 = Map.of("signatories", List.of(
+            Map.of("id", "s1", "firstName", "Roman", "lastName", "Zoun", "email", "roman.zoun@swisscom.com", "phone", "")
+        ));
+        mockMvc.perform(post("/api/sign/signatories")
+                .session(session)
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(sigRequest1)))
+            .andExpect(status().isOk());
+
+        Map<String, Object> placementRequest1 = Map.of("placements", List.of(
+            Map.of("signatoryId", "s1", "page", 1, "x", 100, "y", 120, "width", 150, "height", 45)
+        ));
+        mockMvc.perform(post("/api/sign/placements")
+                .session(session)
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(placementRequest1)))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/sign/pay").session(session))
+            .andExpect(status().isOk());
+        mockMvc.perform(post("/api/sign/invite").session(session))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.invitations[0].signatory.email").value("roman.zoun@swisscom.com"));
+
+        MockMultipartFile pdf2 = new MockMultipartFile(
+            "file", "second.pdf", "application/pdf", "%PDF-1.4".getBytes()
+        );
+        mockMvc.perform(multipart("/api/sign/upload").file(pdf2).session(session))
+            .andExpect(status().isOk());
+
+        Map<String, Object> sigRequest2 = Map.of("signatories", List.of(
+            Map.of("id", "s2", "firstName", "Alice", "lastName", "Tester", "email", "alice@test.com", "phone", "")
+        ));
+        mockMvc.perform(post("/api/sign/signatories")
+                .session(session)
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(sigRequest2)))
+            .andExpect(status().isOk());
+
+        Map<String, Object> placementRequest2 = Map.of("placements", List.of(
+            Map.of("signatoryId", "s2", "page", 1, "x", 140, "y", 140, "width", 150, "height", 45)
+        ));
+        mockMvc.perform(post("/api/sign/placements")
+                .session(session)
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(placementRequest2)))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/sign/pay").session(session))
+            .andExpect(status().isOk());
+        mockMvc.perform(post("/api/sign/invite").session(session))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.documentName").value("second.pdf"))
+            .andExpect(jsonPath("$.invitations", hasSize(1)))
+            .andExpect(jsonPath("$.invitations[0].signatory.firstName").value("Alice"))
+            .andExpect(jsonPath("$.invitations[0].signatory.email").value("alice@test.com"))
+            .andExpect(jsonPath("$.invitations[0].signatory.email", not("roman.zoun@swisscom.com")));
     }
 
     @Test

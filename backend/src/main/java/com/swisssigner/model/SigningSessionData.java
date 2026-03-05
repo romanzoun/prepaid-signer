@@ -3,6 +3,7 @@ package com.swisssigner.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class SigningSessionData implements Serializable {
     private String documentName;
@@ -12,10 +13,16 @@ public class SigningSessionData implements Serializable {
     private InitiatorSelection initiator;
     private String signatureLevel = Signatory.LEVEL_QES;
     private PriceBreakdown price;
+    private String processId;
     private String paymentSessionId;
     private String paymentStatus;   // PENDING, COMPLETED, FAILED
     private List<InvitationResult> invitations = new ArrayList<>();
-    private String step = "UPLOAD"; // UPLOAD, SIGNATORIES, PLACEMENT, INITIATOR, PRICING, PAYMENT, DONE
+    private boolean contractAnalysisRequested;
+    private String analysisProcessId;
+    private String analysisStatus; // NOT_REQUESTED, QUEUED, RUNNING, COMPLETED, FAILED
+    private String analysisError;
+    private Map<String, Object> contractAnalysisResult;
+    private String step = "UPLOAD"; // UPLOAD, SIGNATORIES, PLACEMENT, PRICING, PAYMENT, DONE
 
     public String getDocumentName() { return documentName; }
     public void setDocumentName(String documentName) { this.documentName = documentName; }
@@ -31,12 +38,24 @@ public class SigningSessionData implements Serializable {
     public void setSignatureLevel(String signatureLevel) { this.signatureLevel = signatureLevel; }
     public PriceBreakdown getPrice() { return price; }
     public void setPrice(PriceBreakdown price) { this.price = price; }
+    public String getProcessId() { return processId; }
+    public void setProcessId(String processId) { this.processId = processId; }
     public String getPaymentSessionId() { return paymentSessionId; }
     public void setPaymentSessionId(String paymentSessionId) { this.paymentSessionId = paymentSessionId; }
     public String getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
     public List<InvitationResult> getInvitations() { return invitations; }
     public void setInvitations(List<InvitationResult> invitations) { this.invitations = invitations; }
+    public boolean isContractAnalysisRequested() { return contractAnalysisRequested; }
+    public void setContractAnalysisRequested(boolean contractAnalysisRequested) { this.contractAnalysisRequested = contractAnalysisRequested; }
+    public String getAnalysisProcessId() { return analysisProcessId; }
+    public void setAnalysisProcessId(String analysisProcessId) { this.analysisProcessId = analysisProcessId; }
+    public String getAnalysisStatus() { return analysisStatus; }
+    public void setAnalysisStatus(String analysisStatus) { this.analysisStatus = analysisStatus; }
+    public String getAnalysisError() { return analysisError; }
+    public void setAnalysisError(String analysisError) { this.analysisError = analysisError; }
+    public Map<String, Object> getContractAnalysisResult() { return contractAnalysisResult; }
+    public void setContractAnalysisResult(Map<String, Object> contractAnalysisResult) { this.contractAnalysisResult = contractAnalysisResult; }
     public String getStep() { return step; }
     public void setStep(String step) { this.step = step; }
 }

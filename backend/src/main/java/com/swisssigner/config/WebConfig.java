@@ -16,5 +16,11 @@ public class WebConfig implements WebMvcConfigurer {
             .allowedHeaders("*")
             // Required for session cookies to be sent cross-origin
             .allowCredentials(true);
+
+        registry.addMapping("/v1/**")
+            .allowedOrigins("http://localhost:5173", "http://localhost:3000")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true);
     }
 }

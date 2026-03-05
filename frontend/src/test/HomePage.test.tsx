@@ -2,12 +2,15 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import HomePage from '../pages/HomePage'
+import { I18nProvider } from '../i18n'
 
 function renderHomePage() {
   return render(
-    <MemoryRouter>
-      <HomePage />
-    </MemoryRouter>
+    <I18nProvider initialLocale="de">
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>
+    </I18nProvider>
   )
 }
 
@@ -44,7 +47,7 @@ describe('HomePage', () => {
 
   it('renders trust section', () => {
     renderHomePage()
-    expect(screen.getByText('DSGVO-konform')).toBeInTheDocument()
+    expect(screen.getByText('DSGVO-konform & nDSG-konform')).toBeInTheDocument()
     expect(screen.getByText('Rechtsgültig')).toBeInTheDocument()
   })
 })

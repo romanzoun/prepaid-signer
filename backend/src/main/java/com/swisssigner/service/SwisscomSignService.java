@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.swisssigner.config.SwisscomSignProperties;
+import com.swisssigner.model.InviteDispatchResult;
 import com.swisssigner.model.InvitationResult;
 import com.swisssigner.model.InitiatorSelection;
 import com.swisssigner.model.Signatory;
@@ -57,6 +58,7 @@ public class SwisscomSignService implements SignInviteService {
     private static final Logger swisscomLog = LoggerFactory.getLogger("com.swisssigner.swisscom");
     private static final String DEFAULT_LANGUAGE = "de-CH";
     private static final int SIGNER_EXTERNAL_IDENTIFIER_MAX = 50;
+    private static final int PROCESS_PROPERTY_VALUE_MAX = 64;
 
     private final SwisscomSignProperties props;
     private final ObjectMapper mapper = new ObjectMapper();
@@ -92,12 +94,12 @@ public class SwisscomSignService implements SignInviteService {
     }
 
     @Override
-    public List<InvitationResult> sendInvitations(String documentRef,
-                                                   String documentName,
-                                                   String paymentRef,
-                                                   List<Signatory> signatories,
-                                                   List<SignatoryPlacement> placements,
-                                                   InitiatorSelection initiatorSelection) {
+    public InviteDispatchResult sendInvitations(String documentRef,
+                                                String documentName,
+                                                String paymentRef,
+                                                List<Signatory> signatories,
+                                                List<SignatoryPlacement> placements,
+                                                InitiatorSelection initiatorSelection) {
         try {
             swisscomLog.info(
                 "SWISSCOM_TRACE event=flow_started paymentRef={} signatoryCount={} placementCount={}",
@@ -152,7 +154,7 @@ public class SwisscomSignService implements SignInviteService {
             // After successful Swisscom release/invitation flow, local source PDF is no longer needed.
             deleteLocalPdfQuietly(pdfPath, processId, paymentRef);
             swisscomLog.info("SWISSCOM_TRACE event=flow_done paymentRef={} processId={} invitationCount={}", safeRef(paymentRef), processId, results.size());
-            return results;
+            return new InviteDispatchResult(processId, results);
 
         } catch (Exception e) {
             swisscomLog.error(
@@ -163,6 +165,56 @@ public class SwisscomSignService implements SignInviteService {
                 e
             );
             throw new RuntimeException("Swisscom Sign API call failed: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public Map<String, Object> getProcessStatus(String processId) {
+        if (processId == null || processId.isBlank()) {
+            throw new RuntimeException("processId is required");
+        }
+        try {
+            String token = getAccessToken();
+            String encodedProcessId = URLEncoder.encode(processId.trim(), StandardCharsets.UTF_8).replace("+", "%20");
+            HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(props.getApiUrl() + "/process/" + encodedProcessId))
+                .header("Authorization", "Bearer " + token)
+                .header("Accept", "application/json")
+                .GET()
+                .build();
+
+            HttpResponse<String> res = sendRequestWithDebug("get_process_status processId=" + processId, req, "");
+            if (res.statusCode() != 200) {
+                throw new RuntimeException("getProcessStatus failed: HTTP " + res.statusCode() + " – " + res.body());
+            }
+
+            JsonNode json = mapper.readTree(res.body());
+            String normalizedStatus = firstNonBlank(
+                textAt(json, "status"),
+                textAt(json, "state"),
+                textAt(json, "processStatus"),
+                textAt(json.path("process"), "status"),
+                textAt(json.path("process"), "state"),
+                textAt(json.path("lifecycle"), "status")
+            );
+            String updatedAt = firstNonBlank(
+                textAt(json, "updatedAt"),
+                textAt(json, "lastModifiedAt"),
+                textAt(json, "modifiedAt"),
+                textAt(json.path("process"), "updatedAt")
+            );
+
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("processId", processId.trim());
+            response.put("status", normalizedStatus == null ? "UNKNOWN" : normalizedStatus);
+            response.put("provider", "swisscom");
+            response.put("checkedAt", Instant.now().toString());
+            if (updatedAt != null) {
+                response.put("updatedAt", updatedAt);
+            }
+            return response;
+        } catch (Exception e) {
+            throw new RuntimeException("Swisscom process status query failed: " + e.getMessage(), e);
         }
     }
 
@@ -214,8 +266,16 @@ public class SwisscomSignService implements SignInviteService {
         if (title != null && !title.isBlank()) {
             ArrayNode properties = body.putArray("properties");
             ObjectNode prop = properties.addObject();
+            String safeTitle = truncate(title, PROCESS_PROPERTY_VALUE_MAX);
+            if (!safeTitle.equals(title)) {
+                swisscomLog.info(
+                    "SWISSCOM_TRACE event=document_name_truncated originalLength={} truncatedLength={}",
+                    title.length(),
+                    safeTitle.length()
+                );
+            }
             prop.put("key", "documentName");
-            prop.put("value", truncate(title, 255));
+            prop.put("value", safeTitle);
         }
 
         ObjectNode initiator = body.putObject("initiator");
@@ -668,6 +728,15 @@ public class SwisscomSignService implements SignInviteService {
             return null;
         }
         return value.asText();
+    }
+
+    private String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
     }
 
     private Map<String, String> buildSignerExternalIdentifiers(List<Signatory> signatories) {
