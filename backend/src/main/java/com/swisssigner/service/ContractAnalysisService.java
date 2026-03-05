@@ -41,6 +41,8 @@ public class ContractAnalysisService {
     private static final Logger log = LoggerFactory.getLogger(ContractAnalysisService.class);
     private static final Pattern ISO_DATE_PATTERN = Pattern.compile("\\b\\d{4}-\\d{2}-\\d{2}\\b");
     private static final Pattern DOTTED_DATE_PATTERN = Pattern.compile("\\b\\d{1,2}\\.\\d{1,2}\\.\\d{2,4}\\b");
+    private static final Pattern FIRST_INTEGER_PATTERN = Pattern.compile("-?\\d+");
+    public static final int TOTAL_ANALYSIS_STEPS = 6;
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final HttpClient httpClient = HttpClient.newBuilder()
@@ -63,18 +65,31 @@ public class ContractAnalysisService {
     private int maxInputChars;
 
     public Map<String, Object> analyze(MultipartFile file, ContractAnalyzeOptions options) {
+        return analyze(file, options, ProgressListener.NO_OP);
+    }
+
+    public Map<String, Object> analyze(MultipartFile file,
+                                       ContractAnalyzeOptions options,
+                                       ProgressListener progressListener) {
         validateFile(file);
         ensureOpenAiConfigured();
         try {
             String fileName = file.getOriginalFilename() == null ? "document.pdf" : file.getOriginalFilename();
             byte[] pdfBytes = file.getBytes();
-            return analyzePdf(fileName, pdfBytes, options);
+            return analyzePdf(fileName, pdfBytes, options, progressListener == null ? ProgressListener.NO_OP : progressListener);
         } catch (IOException ex) {
             throw new IllegalArgumentException("Could not read PDF bytes: " + ex.getMessage());
         }
     }
 
     public Map<String, Object> analyzeStoredDocument(Path pdfPath, String fileName, ContractAnalyzeOptions options) {
+        return analyzeStoredDocument(pdfPath, fileName, options, ProgressListener.NO_OP);
+    }
+
+    public Map<String, Object> analyzeStoredDocument(Path pdfPath,
+                                                     String fileName,
+                                                     ContractAnalyzeOptions options,
+                                                     ProgressListener progressListener) {
         ensureOpenAiConfigured();
         try {
             if (pdfPath == null || !Files.exists(pdfPath)) {
@@ -82,14 +97,18 @@ public class ContractAnalysisService {
             }
             String safeName = (fileName == null || fileName.isBlank()) ? "document.pdf" : fileName;
             byte[] pdfBytes = Files.readAllBytes(pdfPath);
-            return analyzePdf(safeName, pdfBytes, options);
+            return analyzePdf(safeName, pdfBytes, options, progressListener == null ? ProgressListener.NO_OP : progressListener);
         } catch (IOException ex) {
             throw new IllegalArgumentException("Could not read uploaded PDF: " + ex.getMessage());
         }
     }
 
-    private Map<String, Object> analyzePdf(String fileName, byte[] pdfBytes, ContractAnalyzeOptions options) {
+    private Map<String, Object> analyzePdf(String fileName,
+                                           byte[] pdfBytes,
+                                           ContractAnalyzeOptions options,
+                                           ProgressListener progressListener) {
         String docId = UUID.randomUUID().toString();
+        progressListener.onProgress(1, TOTAL_ANALYSIS_STEPS, "PREPARE_INPUT");
         List<Map<String, Object>> chunks = extractChunks(pdfBytes);
         if (chunks.isEmpty()) {
             throw new IllegalArgumentException("Could not extract text from PDF");
@@ -102,87 +121,122 @@ public class ContractAnalysisService {
         docMeta.put("jurisdiction_hint", normalize(options.jurisdictionHint(), null));
         docMeta.put("party_role", normalize(options.partyRole(), null));
         docMeta.put("analysis_profile", normalize(options.analysisProfile(), "standard"));
-        docMeta.put("confidence_mode", normalize(options.confidenceMode(), "consensus7"));
+        docMeta.put("confidence_mode", normalize(options.confidenceMode(), "consensus3"));
 
         Map<String, Object> preExtractHints = buildPreExtractHints(chunks);
+        List<Map<String, Object>> trimmedChunks = trimChunks(chunks);
 
-        JsonNode run1 = runPrompt("run1_doc_map", Map.of(
+        progressListener.onProgress(2, TOTAL_ANALYSIS_STEPS, "CONSENSUS_CASE_1");
+        JsonNode case1 = runPrompt("consensus_case", Map.of(
             "doc_meta", docMeta,
-            "chunks", trimChunks(chunks),
-            "preextract_hints", preExtractHints
-        ));
-
-        List<Map<String, Object>> terminationChunks = focusChunks(chunks, Set.of("terminate", "termination", "notice", "renew", "kuendig", "duree", "resiliation"));
-        List<Map<String, Object>> obligationsChunks = focusChunks(chunks, Set.of("obligation", "service", "sla", "support", "deadline", "liefer", "pflicht"));
-        List<Map<String, Object>> commercialsChunks = focusChunks(chunks, Set.of("price", "payment", "fee", "invoice", "tax", "vat", "chf", "eur"));
-        List<Map<String, Object>> liabilityChunks = focusChunks(chunks, Set.of("liability", "indemn", "warranty", "damages", "haftung", "garantie"));
-        List<Map<String, Object>> privacyChunks = focusChunks(chunks, Set.of("privacy", "data", "gdpr", "dsg", "ndsg", "security", "confidential"));
-        List<Map<String, Object>> miscChunks = focusChunks(chunks, Set.of("assignment", "subcontract", "dispute", "governing law", "ip", "license", "notice"));
-
-        JsonNode run2 = runPrompt("run2_termination", Map.of(
-            "doc_meta", docMeta,
-            "focus_chunks", trimChunks(terminationChunks),
-            "run1_section_map", run1.path("section_map")
-        ));
-        JsonNode run3 = runPrompt("run3_obligations_sla", Map.of(
-            "doc_meta", docMeta,
-            "focus_chunks", trimChunks(obligationsChunks),
-            "run1_section_map", run1.path("section_map")
-        ));
-        JsonNode run4 = runPrompt("run4_commercials", Map.of(
-            "doc_meta", docMeta,
-            "focus_chunks", trimChunks(commercialsChunks),
-            "run1_section_map", run1.path("section_map")
-        ));
-        JsonNode run5 = runPrompt("run5_liability", Map.of(
-            "doc_meta", docMeta,
-            "focus_chunks", trimChunks(liabilityChunks),
-            "run1_section_map", run1.path("section_map")
-        ));
-        JsonNode run6 = runPrompt("run6_privacy_security", Map.of(
-            "doc_meta", docMeta,
-            "focus_chunks", trimChunks(privacyChunks),
-            "run1_section_map", run1.path("section_map")
-        ));
-        JsonNode run7 = runPrompt("run7_misc", Map.of(
-            "doc_meta", docMeta,
-            "focus_chunks", trimChunks(miscChunks),
-            "run1_section_map", run1.path("section_map")
+            "case_config", Map.of(
+                "case_id", "case_1",
+                "name", "strict_legal_risk",
+                "perspective", "Strict legal reviewer focused on termination, liability, payment risk, and compliance gaps.",
+                "focus", "Surface hidden risks, penalties, missing clauses, and high-impact legal ambiguities.",
+                "style", "Conservative and evidence-first"
+            ),
+            "chunks", trimmedChunks,
+            "preextract_hints", preExtractHints,
+            "all_cases_count", 3
         ));
 
-        List<JsonNode> runOutputs = List.of(run1, run2, run3, run4, run5, run6, run7);
-
-        JsonNode consensus = runPrompt("consensus_judge", Map.of(
+        progressListener.onProgress(3, TOTAL_ANALYSIS_STEPS, "CONSENSUS_CASE_2");
+        JsonNode case2 = runPrompt("consensus_case", Map.of(
             "doc_meta", docMeta,
-            "run_outputs", runOutputs
+            "case_config", Map.of(
+                "case_id", "case_2",
+                "name", "operational_execution",
+                "perspective", "Operational reviewer focused on obligations, deadlines, deliverables, and practical execution.",
+                "focus", "Extract who must do what by when, and what happens if obligations are missed.",
+                "style", "Action-oriented and implementation-focused"
+            ),
+            "chunks", trimmedChunks,
+            "preextract_hints", preExtractHints,
+            "all_cases_count", 3
         ));
 
-        JsonNode confidence = runPrompt("confidence_scorer", Map.of(
-            "consensus_output", consensus
-        ));
-
-        JsonNode finalSummary = runPrompt("final_synthesizer", Map.of(
+        progressListener.onProgress(4, TOTAL_ANALYSIS_STEPS, "CONSENSUS_CASE_3");
+        JsonNode case3 = runPrompt("consensus_case", Map.of(
             "doc_meta", docMeta,
-            "consensus_output", consensus,
-            "confidence_output", confidence
+            "case_config", Map.of(
+                "case_id", "case_3",
+                "name", "executive_business",
+                "perspective", "Executive reviewer focused on business impact, negotiation levers, and decision readiness.",
+                "focus", "Produce management-ready findings with key dates, duties, risks, and opportunities.",
+                "style", "Business concise and plain language"
+            ),
+            "chunks", trimmedChunks,
+            "preextract_hints", preExtractHints,
+            "all_cases_count", 3
         ));
 
+        List<Map<String, Object>> cases = new ArrayList<>();
+        Map<String, Object> casePayload1 = new LinkedHashMap<>();
+        casePayload1.put("case_id", "case_1");
+        casePayload1.put("result", toJava(case1));
+        cases.add(casePayload1);
+
+        Map<String, Object> casePayload2 = new LinkedHashMap<>();
+        casePayload2.put("case_id", "case_2");
+        casePayload2.put("result", toJava(case2));
+        cases.add(casePayload2);
+
+        Map<String, Object> casePayload3 = new LinkedHashMap<>();
+        casePayload3.put("case_id", "case_3");
+        casePayload3.put("result", toJava(case3));
+        cases.add(casePayload3);
+
+        progressListener.onProgress(5, TOTAL_ANALYSIS_STEPS, "SEMANTIC_CONSENSUS");
+        JsonNode semanticConsensus = runPrompt("semantic_consensus_summary", Map.of(
+            "doc_meta", docMeta,
+            "cases", cases
+        ));
+
+        String summary = semanticConsensus.path("summary").asText("");
+        if (summary.isBlank()) {
+            summary = semanticConsensus.path("final_report").path("executive_summary").asText("");
+        }
+
+        JsonNode rawConfidenceNode = semanticConsensus.path("confidence");
+        if (rawConfidenceNode.isMissingNode() || rawConfidenceNode.isNull()) {
+            ObjectNode fallbackConfidence = mapper.createObjectNode();
+            fallbackConfidence.put("score", 0);
+            fallbackConfidence.put("overall_score", 0);
+            fallbackConfidence.put("explanation", "No confidence score returned by semantic consensus.");
+            rawConfidenceNode = fallbackConfidence;
+        }
+        ObjectNode confidenceNode = normalizeConfidenceNode(rawConfidenceNode);
+
+        JsonNode finalReportNode = semanticConsensus.path("final_report");
+        if (finalReportNode.isMissingNode() || finalReportNode.isNull() || !finalReportNode.isObject()) {
+            finalReportNode = buildFinalReportFallback(summary, semanticConsensus, confidenceNode);
+        } else {
+            normalizeFinalReportConfidence((ObjectNode) finalReportNode, confidenceNode);
+        }
+
+        progressListener.onProgress(6, TOTAL_ANALYSIS_STEPS, "BUILD_RESULT");
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("doc_id", docId);
-        response.put("summary", finalSummary.path("executive_summary").asText(""));
-        response.put("key_dates", toJava(finalSummary.path("key_dates")));
-        response.put("termination", toJava(consensus.path("canonical").path("termination")));
-        response.put("obligations", toJava(finalSummary.path("top_obligations")));
-        response.put("risks", toJava(finalSummary.path("top_risks")));
-        response.put("opportunities", toJava(finalSummary.path("top_opportunities")));
-        response.put("open_questions", toJava(finalSummary.path("open_questions")));
-        response.put("evidence", toJava(consensus.path("critical_claims")));
-        response.put("consensus", toJava(consensus.path("agreement_metrics")));
-        response.put("confidence", toJava(confidence));
-        response.put("final_report", toJava(finalSummary));
+        response.put("summary", summary);
+        response.put("key_dates", toJava(arrayOrEmpty(semanticConsensus.path("key_dates"))));
+        response.put("termination", toJava(objectOrEmpty(semanticConsensus.path("termination"))));
+        response.put("obligations", toJava(arrayOrEmpty(semanticConsensus.path("obligations"))));
+        response.put("risks", toJava(arrayOrEmpty(semanticConsensus.path("risks"))));
+        response.put("opportunities", toJava(arrayOrEmpty(semanticConsensus.path("opportunities"))));
+        response.put("open_questions", toJava(arrayOrEmpty(semanticConsensus.path("open_questions"))));
+        response.put("evidence", toJava(arrayOrEmpty(semanticConsensus.path("evidence"))));
+        response.put("consensus", toJava(objectOrEmpty(semanticConsensus.path("consensus"))));
+        response.put("confidence", toJava(confidenceNode));
+        response.put("final_report", toJava(finalReportNode));
         response.put("generated_at", Instant.now().toString());
 
         return response;
+    }
+
+    public interface ProgressListener {
+        ProgressListener NO_OP = (step, totalSteps, stepKey) -> { };
+        void onProgress(int step, int totalSteps, String stepKey);
     }
 
     private void validateFile(MultipartFile file) {
@@ -419,6 +473,107 @@ public class ContractAnalysisService {
             }
             throw new RuntimeException("Model output was not valid JSON", first);
         }
+    }
+
+    private JsonNode arrayOrEmpty(JsonNode node) {
+        return node != null && node.isArray() ? node : mapper.createArrayNode();
+    }
+
+    private JsonNode objectOrEmpty(JsonNode node) {
+        return node != null && node.isObject() ? node : mapper.createObjectNode();
+    }
+
+    private JsonNode buildFinalReportFallback(String summary, JsonNode semanticConsensus, JsonNode confidenceNode) {
+        ObjectNode out = mapper.createObjectNode();
+        out.put("executive_summary", summary == null ? "" : summary);
+        out.set("key_dates", arrayOrEmpty(semanticConsensus.path("key_dates")));
+        out.set("top_obligations", arrayOrEmpty(semanticConsensus.path("obligations")));
+        out.set("top_risks", arrayOrEmpty(semanticConsensus.path("risks")));
+        out.set("top_opportunities", arrayOrEmpty(semanticConsensus.path("opportunities")));
+        out.set("open_questions", arrayOrEmpty(semanticConsensus.path("open_questions")));
+        out.set("confidence", objectOrEmpty(confidenceNode));
+        return out;
+    }
+
+    private ObjectNode normalizeConfidenceNode(JsonNode rawConfidenceNode) {
+        ObjectNode out = rawConfidenceNode != null && rawConfidenceNode.isObject()
+            ? ((ObjectNode) rawConfidenceNode).deepCopy()
+            : mapper.createObjectNode();
+
+        Integer rawScore = readIntegerField(rawConfidenceNode, "score");
+        Integer rawOverall = readIntegerField(rawConfidenceNode, "overall_score");
+
+        int score = clampConfidenceScore(rawScore == null ? (rawOverall == null ? 0 : rawOverall) : rawScore);
+        int overall = clampConfidenceScore(rawOverall == null ? score : rawOverall);
+
+        out.put("score", score);
+        out.put("overall_score", overall);
+        return out;
+    }
+
+    private void normalizeFinalReportConfidence(ObjectNode finalReportNode, ObjectNode normalizedConfidence) {
+        JsonNode existing = finalReportNode.path("confidence");
+        ObjectNode reportConfidence = existing.isObject()
+            ? ((ObjectNode) existing).deepCopy()
+            : mapper.createObjectNode();
+
+        Integer reportScore = readIntegerField(existing, "score");
+        Integer reportOverall = readIntegerField(existing, "overall_score");
+        int fallbackScore = normalizedConfidence.path("score").asInt(0);
+        int fallbackOverall = normalizedConfidence.path("overall_score").asInt(0);
+
+        reportConfidence.put("score", clampConfidenceScore(reportScore == null ? fallbackScore : reportScore));
+        reportConfidence.put("overall_score", clampConfidenceScore(reportOverall == null ? fallbackOverall : reportOverall));
+
+        if ((!reportConfidence.has("explanation") || reportConfidence.path("explanation").asText("").isBlank())
+            && normalizedConfidence.has("explanation")) {
+            reportConfidence.put("explanation", normalizedConfidence.path("explanation").asText(""));
+        }
+
+        finalReportNode.set("confidence", reportConfidence);
+    }
+
+    private Integer readIntegerField(JsonNode node, String field) {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+        JsonNode candidate = node.path(field);
+        if (!candidate.isMissingNode() && !candidate.isNull()) {
+            if (candidate.isNumber()) {
+                return candidate.asInt();
+            }
+            if (candidate.isTextual()) {
+                Matcher matcher = FIRST_INTEGER_PATTERN.matcher(candidate.asText(""));
+                if (matcher.find()) {
+                    try {
+                        return Integer.parseInt(matcher.group());
+                    } catch (NumberFormatException ignored) {
+                        return null;
+                    }
+                }
+            }
+        }
+        if (node.isNumber()) {
+            return node.asInt();
+        }
+        if (node.isTextual()) {
+            Matcher matcher = FIRST_INTEGER_PATTERN.matcher(node.asText(""));
+            if (matcher.find()) {
+                try {
+                    return Integer.parseInt(matcher.group());
+                } catch (NumberFormatException ignored) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    private int clampConfidenceScore(int value) {
+        if (value < 0) {
+            return 0;
+        }
+        return Math.min(value, 99);
     }
 
     private String loadPrompt(String path) throws IOException {

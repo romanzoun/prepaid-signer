@@ -28,7 +28,7 @@ public class ContractAnalysisController {
                                      @RequestParam(value = "jurisdiction_hint", required = false) String jurisdictionHint,
                                      @RequestParam(value = "party_role", required = false) String partyRole,
                                      @RequestParam(value = "analysis_profile", defaultValue = "standard") String analysisProfile,
-                                     @RequestParam(value = "confidence_mode", defaultValue = "consensus7") String confidenceMode) {
+                                     @RequestParam(value = "confidence_mode", defaultValue = "consensus3") String confidenceMode) {
         try {
             ContractAnalyzeOptions options = new ContractAnalyzeOptions(
                 language,

@@ -716,6 +716,19 @@
   margin-top: var(--sdx-spacing-1);
 }
 
+.analysis-progress-meta {
+  color: var(--sdx-color-text-body);
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.analysis-progress-label {
+  color: var(--sdx-color-text-secondary);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
 .done-process-link a:hover {
   text-decoration: underline;
 }

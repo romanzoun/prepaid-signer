@@ -39,6 +39,7 @@ public class SigningController {
     private final ContractAnalysisJobService contractAnalysisJobService;
     private final ConfirmationPdfService confirmationPdfService;
     private final AnalysisReportPdfService analysisReportPdfService;
+    private final AnalysisConfirmationPdfService analysisConfirmationPdfService;
 
     public SigningController(PricingService pricingService,
                              FileStorageService fileStorageService,
@@ -46,7 +47,8 @@ public class SigningController {
                              SignInviteService signInviteService,
                              ContractAnalysisJobService contractAnalysisJobService,
                              ConfirmationPdfService confirmationPdfService,
-                             AnalysisReportPdfService analysisReportPdfService) {
+                             AnalysisReportPdfService analysisReportPdfService,
+                             AnalysisConfirmationPdfService analysisConfirmationPdfService) {
         this.pricingService = pricingService;
         this.fileStorageService = fileStorageService;
         this.paymentService = paymentService;
@@ -54,6 +56,7 @@ public class SigningController {
         this.contractAnalysisJobService = contractAnalysisJobService;
         this.confirmationPdfService = confirmationPdfService;
         this.analysisReportPdfService = analysisReportPdfService;
+        this.analysisConfirmationPdfService = analysisConfirmationPdfService;
     }
 
     /** Upload PDF. Stores file and saves reference in session. */
@@ -231,6 +234,7 @@ public class SigningController {
                                            @RequestParam(value = "analysis_profile", defaultValue = "standard") String analysisProfile,
                                            HttpSession session) {
         SigningSessionData data = getOrCreate(session);
+        updatePreferredLanguage(data, language);
         if (!"COMPLETED".equals(data.getPaymentStatus())) {
             return ResponseEntity.badRequest().body(Map.of("error", "Payment required first"));
         }
@@ -251,7 +255,7 @@ public class SigningController {
             analysisProcessId,
             fileStorageService.resolve(data.getDocumentRef()),
             data.getDocumentName(),
-            new ContractAnalyzeOptions(language, jurisdictionHint, partyRole, analysisProfile, "consensus7")
+            new ContractAnalyzeOptions(resolveAnalysisLanguage(data, language), jurisdictionHint, partyRole, analysisProfile, "consensus3")
         );
         data.setAnalysisStatus(job.getStatus());
         data.setAnalysisError(job.getError());
@@ -265,17 +269,25 @@ public class SigningController {
     public ResponseEntity<?> analysisStatus(@RequestParam(value = "analyticProcessID", required = false) String analyticProcessId,
                                             HttpSession session) {
         SigningSessionData data = getOrCreate(session);
+        String requestedId = normalizeId(analyticProcessId);
+        if (requestedId != null) {
+            ContractAnalysisJobService.AnalysisJob requestedJob = contractAnalysisJobService.getJob(requestedId);
+            if (requestedJob == null) {
+                return ResponseEntity.status(404).body(Map.of(
+                    "error", "Analysis process not found",
+                    "analyticProcessID", requestedId
+                ));
+            }
+            Map<String, Object> response = analysisStatusResponseForJob(requestedId, requestedJob);
+            response.put("status", response.get("analysisStatus"));
+            return ResponseEntity.ok(response);
+        }
+
         if (!data.isContractAnalysisRequested()) {
             return ResponseEntity.ok(Map.of(
                 "analysisRequested", false,
                 "status", "NOT_REQUESTED"
             ));
-        }
-
-        if (analyticProcessId != null && !analyticProcessId.isBlank()
-            && data.getAnalysisProcessId() != null
-            && !data.getAnalysisProcessId().equals(analyticProcessId.trim())) {
-            return ResponseEntity.badRequest().body(Map.of("error", "analyticProcessID mismatch"));
         }
 
         syncAnalysisState(data);
@@ -291,33 +303,50 @@ public class SigningController {
                                             @RequestParam(value = "lang", required = false) String lang,
                                             HttpSession session) {
         SigningSessionData data = getOrCreate(session);
-        if (!data.isContractAnalysisRequested()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "AI analysis addon not selected"));
-        }
-        if (analyticProcessId != null && !analyticProcessId.isBlank()
-            && data.getAnalysisProcessId() != null
-            && !data.getAnalysisProcessId().equals(analyticProcessId.trim())) {
-            return ResponseEntity.badRequest().body(Map.of("error", "analyticProcessID mismatch"));
-        }
-
-        syncAnalysisState(data);
+        updatePreferredLanguage(data, lang);
         save(session, data);
 
-        if (!"COMPLETED".equals(data.getAnalysisStatus()) || data.getContractAnalysisResult() == null) {
+        String requestedId = normalizeId(analyticProcessId);
+        String effectiveAnalysisId = requestedId != null ? requestedId : normalizeId(data.getAnalysisProcessId());
+        if (effectiveAnalysisId == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "analyticProcessID is required"));
+        }
+
+        ContractAnalysisJobService.AnalysisJob job = contractAnalysisJobService.getJob(effectiveAnalysisId);
+        String effectiveStatus = null;
+        Map<String, Object> effectiveResult = null;
+        if (job != null) {
+            effectiveStatus = job.getStatus();
+            if ("COMPLETED".equals(job.getStatus()) && job.getResult() != null) {
+                effectiveResult = compactAnalysisForSession(job.getResult());
+            }
+        } else if (effectiveAnalysisId.equals(normalizeId(data.getAnalysisProcessId()))) {
+            syncAnalysisState(data);
+            save(session, data);
+            effectiveStatus = data.getAnalysisStatus();
+            effectiveResult = data.getContractAnalysisResult();
+        } else {
+            return ResponseEntity.status(404).body(Map.of(
+                "error", "Analysis process not found",
+                "analyticProcessID", effectiveAnalysisId
+            ));
+        }
+
+        if (!"COMPLETED".equals(effectiveStatus) || effectiveResult == null) {
             return ResponseEntity.status(409).body(Map.of(
                 "error", "Analysis is not ready yet",
-                "status", data.getAnalysisStatus() == null ? "PENDING_PAYMENT" : data.getAnalysisStatus(),
-                "analyticProcessID", data.getAnalysisProcessId()
+                "status", effectiveStatus == null ? "PENDING_PAYMENT" : effectiveStatus,
+                "analyticProcessID", effectiveAnalysisId
             ));
         }
 
         try {
             byte[] pdf = analysisReportPdfService.createReport(
-                data.getAnalysisProcessId(),
-                data.getContractAnalysisResult(),
-                lang
+                effectiveAnalysisId,
+                effectiveResult,
+                resolveAnalysisLanguage(data, lang)
             );
-            String filename = buildAnalysisFilename(data.getAnalysisProcessId());
+            String filename = buildAnalysisFilename(effectiveAnalysisId);
             return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(MediaType.APPLICATION_PDF)
@@ -327,10 +356,65 @@ public class SigningController {
         }
     }
 
+    /** Downloads a PDF confirmation for an AI analysis process id. */
+    @GetMapping("/analysis/confirmation")
+    public ResponseEntity<?> analysisConfirmation(@RequestParam(value = "analyticProcessID", required = false) String analyticProcessId,
+                                                  @RequestParam(value = "lang", required = false) String lang,
+                                                  HttpSession session,
+                                                  HttpServletRequest request) {
+        SigningSessionData data = getOrCreate(session);
+        updatePreferredLanguage(data, lang);
+        save(session, data);
+
+        String requestedId = normalizeId(analyticProcessId);
+        String effectiveAnalysisId = requestedId != null ? requestedId : normalizeId(data.getAnalysisProcessId());
+        if (effectiveAnalysisId == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "analyticProcessID is required"));
+        }
+
+        ContractAnalysisJobService.AnalysisJob job = contractAnalysisJobService.getJob(effectiveAnalysisId);
+        String effectiveStatus = "UNKNOWN";
+        Map<String, Object> effectiveResult = null;
+        if (job != null) {
+            effectiveStatus = job.getStatus();
+            if ("COMPLETED".equals(job.getStatus()) && job.getResult() != null) {
+                effectiveResult = compactAnalysisForSession(job.getResult());
+            }
+        } else if (effectiveAnalysisId.equals(normalizeId(data.getAnalysisProcessId()))) {
+            syncAnalysisState(data);
+            save(session, data);
+            effectiveStatus = data.getAnalysisStatus() == null ? "UNKNOWN" : data.getAnalysisStatus();
+            effectiveResult = data.getContractAnalysisResult();
+        }
+
+        String statusUrl = resolveOrigin(request)
+            + "/status?analyticProcessID="
+            + URLEncoder.encode(effectiveAnalysisId, StandardCharsets.UTF_8).replace("+", "%20");
+        try {
+            byte[] pdf = analysisConfirmationPdfService.createConfirmation(
+                effectiveAnalysisId,
+                effectiveStatus,
+                statusUrl,
+                resolveAnalysisLanguage(data, lang),
+                effectiveResult
+            );
+            String filename = buildAnalysisConfirmationFilename(effectiveAnalysisId);
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf);
+        } catch (IOException ex) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to generate analysis confirmation PDF"));
+        }
+    }
+
     /** Process payment (mock or real Stripe depending on stripe.mock). */
     @PostMapping("/pay")
-    public ResponseEntity<?> pay(HttpSession session, HttpServletRequest request) {
+    public ResponseEntity<?> pay(@RequestParam(value = "lang", required = false) String lang,
+                                 HttpSession session,
+                                 HttpServletRequest request) {
         SigningSessionData data = getOrCreate(session);
+        updatePreferredLanguage(data, lang);
         if (data.getSignatories().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Configure signatories first"));
         }
@@ -368,8 +452,10 @@ public class SigningController {
     /** Confirm payment status after returning from Stripe Checkout. */
     @GetMapping("/pay/confirm")
     public ResponseEntity<?> confirmPayment(@RequestParam(value = "sessionId", required = false) String sessionId,
+                                            @RequestParam(value = "lang", required = false) String lang,
                                             HttpSession session) {
         SigningSessionData data = getOrCreate(session);
+        updatePreferredLanguage(data, lang);
         if (data.getPaymentSessionId() == null || data.getPaymentSessionId().isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "No payment session found"));
         }
@@ -427,8 +513,10 @@ public class SigningController {
 
     /** Send signing invitations (mock or real Swisscom Sign depending on swisscom.sign.mock). */
     @PostMapping("/invite")
-    public ResponseEntity<?> invite(HttpSession session) {
+    public ResponseEntity<?> invite(@RequestParam(value = "lang", required = false) String lang,
+                                    HttpSession session) {
         SigningSessionData data = getOrCreate(session);
+        updatePreferredLanguage(data, lang);
         if (!"COMPLETED".equals(data.getPaymentStatus())) {
             return ResponseEntity.badRequest().body(Map.of("error", "Payment required first"));
         }
@@ -524,8 +612,10 @@ public class SigningController {
 
     /** Returns current session state. */
     @GetMapping("/state")
-    public ResponseEntity<?> state(HttpSession session) {
+    public ResponseEntity<?> state(@RequestParam(value = "lang", required = false) String lang,
+                                   HttpSession session) {
         SigningSessionData data = getOrCreate(session);
+        updatePreferredLanguage(data, lang);
         syncAnalysisState(data);
         save(session, data);
         return ResponseEntity.ok(data);
@@ -638,10 +728,48 @@ public class SigningController {
             analysisProcessId,
             fileStorageService.resolve(data.getDocumentRef()),
             data.getDocumentName(),
-            new ContractAnalyzeOptions("auto", null, null, "standard", "consensus7")
+            new ContractAnalyzeOptions(resolveAnalysisLanguage(data, null), null, null, "standard", "consensus3")
         );
         data.setAnalysisStatus(job.getStatus());
         data.setAnalysisError(job.getError());
+    }
+
+    private void updatePreferredLanguage(SigningSessionData data, String language) {
+        String normalized = normalizeFrontendLanguage(language);
+        if (normalized != null) {
+            data.setPreferredLanguage(normalized);
+        } else if (data.getPreferredLanguage() == null || data.getPreferredLanguage().isBlank()) {
+            data.setPreferredLanguage("de");
+        }
+    }
+
+    private String resolveAnalysisLanguage(SigningSessionData data, String requestedLanguage) {
+        String normalizedRequested = normalizeFrontendLanguage(requestedLanguage);
+        if (normalizedRequested != null) {
+            return normalizedRequested;
+        }
+        String preferred = normalizeFrontendLanguage(data.getPreferredLanguage());
+        return preferred != null ? preferred : "de";
+    }
+
+    private String normalizeFrontendLanguage(String language) {
+        if (language == null || language.isBlank()) {
+            return null;
+        }
+        String normalized = language.trim().toLowerCase(Locale.ROOT);
+        if ("auto".equals(normalized)) {
+            return null;
+        }
+        if (normalized.startsWith("de")) {
+            return "de";
+        }
+        if (normalized.startsWith("en")) {
+            return "en";
+        }
+        if (normalized.startsWith("fr")) {
+            return "fr";
+        }
+        return null;
     }
 
     private void syncAnalysisState(SigningSessionData data) {
@@ -724,6 +852,41 @@ public class SigningController {
         if (job != null && job.getCompletedAt() != null) {
             response.put("analysisCompletedAt", job.getCompletedAt().toString());
         }
+        if (job != null) {
+            response.put("analysisStepKey", job.getStepKey());
+            response.put("analysisStepIndex", job.getStepIndex());
+            response.put("analysisStepTotal", job.getStepTotal());
+        } else if ("PENDING_PAYMENT".equals(status)) {
+            response.put("analysisStepKey", "PENDING_PAYMENT");
+            response.put("analysisStepIndex", 0);
+            response.put("analysisStepTotal", ContractAnalysisService.TOTAL_ANALYSIS_STEPS);
+        }
+        return response;
+    }
+
+    private Map<String, Object> analysisStatusResponseForJob(String analysisProcessId,
+                                                             ContractAnalysisJobService.AnalysisJob job) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("analysisRequested", true);
+        response.put("analysisStatus", job == null ? "UNKNOWN" : job.getStatus());
+        response.put("analyticProcessID", analysisProcessId);
+        if (job != null && job.getError() != null && !job.getError().isBlank()) {
+            response.put("analysisError", job.getError());
+        }
+        if (job != null && "COMPLETED".equals(job.getStatus()) && job.getResult() != null) {
+            response.put("analysis", compactAnalysisForSession(job.getResult()));
+        }
+        if (job != null && job.getStartedAt() != null) {
+            response.put("analysisStartedAt", job.getStartedAt().toString());
+        }
+        if (job != null && job.getCompletedAt() != null) {
+            response.put("analysisCompletedAt", job.getCompletedAt().toString());
+        }
+        if (job != null) {
+            response.put("analysisStepKey", job.getStepKey());
+            response.put("analysisStepIndex", job.getStepIndex());
+            response.put("analysisStepTotal", job.getStepTotal());
+        }
         return response;
     }
 
@@ -743,6 +906,22 @@ public class SigningController {
             safeId = safeId.substring(0, 64);
         }
         return "justSign-analysis-" + date + "-" + safeId + ".pdf";
+    }
+
+    private String buildAnalysisConfirmationFilename(String analysisProcessId) {
+        String date = LocalDate.now().toString();
+        String safeId = analysisProcessId.replaceAll("[^a-zA-Z0-9._-]", "_");
+        if (safeId.length() > 64) {
+            safeId = safeId.substring(0, 64);
+        }
+        return "justSign-analysis-confirmation-" + date + "-" + safeId + ".pdf";
+    }
+
+    private String normalizeId(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 
     private String resolveOrigin(HttpServletRequest request) {

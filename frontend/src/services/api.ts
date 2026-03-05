@@ -51,6 +51,9 @@ export interface InviteResponse {
   analysisStatus?: string
   analysisError?: string
   analyticProcessID?: string
+  analysisStepKey?: string
+  analysisStepIndex?: number
+  analysisStepTotal?: number
   analysis?: Record<string, unknown>
 }
 
@@ -66,6 +69,9 @@ export interface PaymentResponse {
   analysisStatus?: string
   analysisError?: string
   analyticProcessID?: string
+  analysisStepKey?: string
+  analysisStepIndex?: number
+  analysisStepTotal?: number
   analysis?: Record<string, unknown>
 }
 
@@ -111,6 +117,9 @@ export interface AnalysisStatusResponse {
   analyticProcessID?: string
   analysisStartedAt?: string
   analysisCompletedAt?: string
+  analysisStepKey?: string
+  analysisStepIndex?: number
+  analysisStepTotal?: number
   analysis?: Record<string, unknown>
 }
 
@@ -149,24 +158,30 @@ export async function savePlacements(placements: SignatoryPlacement[]): Promise<
   return handleResponse(res)
 }
 
-export async function processPayment(): Promise<PaymentResponse> {
-  const res = await fetch(`${BASE}/pay`, { method: 'POST', credentials: 'include' })
+export async function processPayment(language?: string): Promise<PaymentResponse> {
+  const qs = language ? `?lang=${encodeURIComponent(language)}` : ''
+  const res = await fetch(`${BASE}/pay${qs}`, { method: 'POST', credentials: 'include' })
   return handleResponse(res)
 }
 
-export async function confirmPayment(sessionId?: string): Promise<PaymentResponse> {
-  const qs = sessionId ? `?sessionId=${encodeURIComponent(sessionId)}` : ''
+export async function confirmPayment(sessionId?: string, language?: string): Promise<PaymentResponse> {
+  const params = new URLSearchParams()
+  if (sessionId) params.set('sessionId', sessionId)
+  if (language) params.set('lang', language)
+  const qs = params.toString() ? `?${params.toString()}` : ''
   const res = await fetch(`${BASE}/pay/confirm${qs}`, { method: 'GET', credentials: 'include' })
   return handleResponse(res)
 }
 
-export async function sendInvitations(): Promise<InviteResponse> {
-  const res = await fetch(`${BASE}/invite`, { method: 'POST', credentials: 'include' })
+export async function sendInvitations(language?: string): Promise<InviteResponse> {
+  const qs = language ? `?lang=${encodeURIComponent(language)}` : ''
+  const res = await fetch(`${BASE}/invite${qs}`, { method: 'POST', credentials: 'include' })
   return handleResponse(res)
 }
 
-export async function getSigningState(): Promise<SigningState> {
-  const res = await fetch(`${BASE}/state`, { method: 'GET', credentials: 'include' })
+export async function getSigningState(language?: string): Promise<SigningState> {
+  const qs = language ? `?lang=${encodeURIComponent(language)}` : ''
+  const res = await fetch(`${BASE}/state${qs}`, { method: 'GET', credentials: 'include' })
   return handleResponse(res)
 }
 

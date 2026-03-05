@@ -44,6 +44,9 @@ public class ContractAnalysisJobService {
         AnalysisJob job = new AnalysisJob(analysisProcessId);
         job.status = "QUEUED";
         job.startedAt = Instant.now();
+        job.stepKey = "QUEUED";
+        job.stepIndex = 0;
+        job.stepTotal = ContractAnalysisService.TOTAL_ANALYSIS_STEPS;
         jobs.put(analysisProcessId, job);
 
         final Path snapshotPath;
@@ -60,13 +63,26 @@ public class ContractAnalysisJobService {
 
         CompletableFuture.runAsync(() -> {
             job.status = "RUNNING";
+            job.stepKey = "PREPARE_INPUT";
+            job.stepIndex = 1;
             try {
-                Map<String, Object> result = contractAnalysisService.analyzeStoredDocument(snapshotPath, fileName, options);
+                Map<String, Object> result = contractAnalysisService.analyzeStoredDocument(
+                    snapshotPath,
+                    fileName,
+                    options,
+                    (step, totalSteps, stepKey) -> {
+                        job.stepIndex = step;
+                        job.stepTotal = totalSteps;
+                        job.stepKey = stepKey;
+                    }
+                );
                 job.result = result;
                 job.status = "COMPLETED";
+                job.stepKey = "COMPLETED";
             } catch (RuntimeException ex) {
                 job.error = ex.getMessage();
                 job.status = "FAILED";
+                job.stepKey = "FAILED";
                 log.warn("analysis_job_failed id={} reason={}", analysisProcessId, ex.getMessage());
             } finally {
                 try {
@@ -95,6 +111,9 @@ public class ContractAnalysisJobService {
         private volatile Instant completedAt;
         private volatile String error;
         private volatile Map<String, Object> result;
+        private volatile int stepIndex;
+        private volatile int stepTotal;
+        private volatile String stepKey;
 
         private AnalysisJob(String id) {
             this.id = id;
@@ -106,6 +125,9 @@ public class ContractAnalysisJobService {
         public Instant getCompletedAt() { return completedAt; }
         public String getError() { return error; }
         public Map<String, Object> getResult() { return result; }
+        public int getStepIndex() { return stepIndex; }
+        public int getStepTotal() { return stepTotal; }
+        public String getStepKey() { return stepKey; }
 
         public boolean isTerminal() {
             return "COMPLETED".equals(status) || "FAILED".equals(status);

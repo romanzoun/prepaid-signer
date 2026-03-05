@@ -625,12 +625,18 @@ const ANALYZER_COPY = {
     downloadReport: 'Analysebericht (PDF) herunterladen',
     pendingAfterPayment: 'Die Analyse startet nach erfolgreicher Zahlung.',
     polling: 'Analyse wird erstellt. Bitte kurz warten…',
+    stepCounter: 'Schritt {{current}} von {{total}}',
     ready: 'Analyse ist bereit.',
     failed: 'Analyse konnte nicht erstellt werden.',
     processLabel: 'analyticProcessID',
+    copyId: 'Kopieren',
+    copiedId: 'Kopiert',
+    openStatus: 'Analyse im Status Checker öffnen',
+    downloadConfirmation: 'Analyse-Bestätigung (PDF) herunterladen',
     close: 'Schliessen',
     resultTitle: 'AI Analyseergebnis',
     confidence: 'Confidence',
+    consensus: 'Konsens zwischen den LLMs',
     keyDates: 'Wichtige Daten',
     topRisks: 'Top Risiken',
     topOps: 'Top Chancen',
@@ -649,12 +655,18 @@ const ANALYZER_COPY = {
     downloadReport: 'Download analysis report (PDF)',
     pendingAfterPayment: 'Analysis starts after successful payment.',
     polling: 'Analysis is running. Please wait…',
+    stepCounter: 'Step {{current}} of {{total}}',
     ready: 'Analysis is ready.',
     failed: 'Analysis could not be completed.',
     processLabel: 'analyticProcessID',
+    copyId: 'Copy',
+    copiedId: 'Copied',
+    openStatus: 'Open analysis in status checker',
+    downloadConfirmation: 'Download analysis confirmation (PDF)',
     close: 'Close',
     resultTitle: 'AI analysis result',
     confidence: 'Confidence',
+    consensus: 'Consensus between LLM cases',
     keyDates: 'Key dates',
     topRisks: 'Top risks',
     topOps: 'Top opportunities',
@@ -673,17 +685,64 @@ const ANALYZER_COPY = {
     downloadReport: 'Telecharger le rapport d analyse (PDF)',
     pendingAfterPayment: 'L analyse demarre apres le paiement.',
     polling: 'Analyse en cours. Veuillez patienter…',
+    stepCounter: 'Etape {{current}} sur {{total}}',
     ready: 'Analyse prete.',
     failed: 'Analyse impossible.',
     processLabel: 'analyticProcessID',
+    copyId: 'Copier',
+    copiedId: 'Copie',
+    openStatus: 'Ouvrir l analyse dans le status checker',
+    downloadConfirmation: 'Telecharger la confirmation analyse (PDF)',
     close: 'Fermer',
     resultTitle: 'Resultat de l analyse IA',
     confidence: 'Confiance',
+    consensus: 'Consensus entre les cas LLM',
     keyDates: 'Dates importantes',
     topRisks: 'Risques principaux',
     topOps: 'Opportunites principales',
   },
 } as const
+
+const ANALYSIS_STEP_LABELS: Record<Locale, Record<string, string>> = {
+  de: {
+    PENDING_PAYMENT: 'Warten auf abgeschlossene Zahlung',
+    QUEUED: 'Analyse wurde eingeplant',
+    PREPARE_INPUT: 'Texte und Strukturen aus dem PDF werden extrahiert',
+    CONSENSUS_CASE_1: 'Konsens-Fall 1: Strenge Rechts- und Risikoanalyse',
+    CONSENSUS_CASE_2: 'Konsens-Fall 2: Pflichten und operative Umsetzung',
+    CONSENSUS_CASE_3: 'Konsens-Fall 3: Management- und Business-Sicht',
+    SEMANTIC_CONSENSUS: 'Semantische Einigkeit und Zusammenfassung werden berechnet',
+    BUILD_RESULT: 'Ergebnis wird aufbereitet',
+    COMPLETED: 'Analyse abgeschlossen',
+    FAILED: 'Analyse fehlgeschlagen',
+  },
+  en: {
+    PENDING_PAYMENT: 'Waiting for completed payment',
+    QUEUED: 'Analysis has been queued',
+    PREPARE_INPUT: 'Extracting text and structure from the PDF',
+    CONSENSUS_CASE_1: 'Consensus case 1: strict legal and risk review',
+    CONSENSUS_CASE_2: 'Consensus case 2: obligations and operational execution',
+    CONSENSUS_CASE_3: 'Consensus case 3: executive and business perspective',
+    SEMANTIC_CONSENSUS: 'Computing semantic agreement and final summary',
+    BUILD_RESULT: 'Preparing final output',
+    COMPLETED: 'Analysis completed',
+    FAILED: 'Analysis failed',
+  },
+  fr: {
+    PENDING_PAYMENT: 'En attente du paiement confirme',
+    QUEUED: 'Analyse placee en file d attente',
+    PREPARE_INPUT: 'Extraction du texte et de la structure du PDF',
+    CONSENSUS_CASE_1: 'Cas consensus 1: revue juridique et risques stricte',
+    CONSENSUS_CASE_2: 'Cas consensus 2: obligations et execution operationnelle',
+    CONSENSUS_CASE_3: 'Cas consensus 3: perspective direction et business',
+    SEMANTIC_CONSENSUS: 'Calcul de l accord semantique et du resume final',
+    BUILD_RESULT: 'Preparation du resultat final',
+    COMPLETED: 'Analyse terminee',
+    FAILED: 'Analyse echouee',
+  },
+}
+
+const ANALYSIS_STEP_TOTAL_DEFAULT = 6
 
 let signatoryCounter = 0
 
@@ -720,6 +779,17 @@ function replaceRecommendation(template: string, documentType: string, level: Si
     .replace('{{level}}', level)
 }
 
+function replaceStepCounter(template: string, current: number, total: number): string {
+  return template
+    .replace('{{current}}', String(current))
+    .replace('{{total}}', String(total))
+}
+
+function analysisStepLabel(locale: Locale, stepKey?: string): string {
+  if (!stepKey) return ANALYSIS_STEP_LABELS[locale].PENDING_PAYMENT
+  return ANALYSIS_STEP_LABELS[locale][stepKey] ?? stepKey
+}
+
 function asArray(value: unknown): Record<string, unknown>[] {
   return Array.isArray(value) ? value.filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null) : []
 }
@@ -732,6 +802,26 @@ function confidenceText(analysis: Record<string, unknown>): string {
       ?? (confidence as Record<string, unknown>).score
     if (typeof score === 'number' || typeof score === 'string') {
       return `${score}/100`
+    }
+  }
+  return 'n/a'
+}
+
+function consensusText(analysis: Record<string, unknown>): string {
+  const consensus = analysis.consensus
+  if (consensus && typeof consensus === 'object') {
+    const agreement = (consensus as Record<string, unknown>).agreement_score
+      ?? (consensus as Record<string, unknown>).critical_claims_agreement
+    if (typeof agreement === 'number') {
+      const percent = agreement <= 1 ? Math.round(agreement * 100) : Math.round(agreement)
+      return `${percent}%`
+    }
+    if (typeof agreement === 'string' && agreement.trim()) {
+      return agreement
+    }
+    const label = (consensus as Record<string, unknown>).agreement_label
+    if (typeof label === 'string' && label.trim()) {
+      return label
     }
   }
   return 'n/a'
@@ -776,10 +866,14 @@ export default function SignPage() {
   const [analysisStatus, setAnalysisStatus] = useState('NOT_REQUESTED')
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [analysisPolling, setAnalysisPolling] = useState(false)
+  const [analysisStepKey, setAnalysisStepKey] = useState<string>('PENDING_PAYMENT')
+  const [analysisStepIndex, setAnalysisStepIndex] = useState(0)
+  const [analysisStepTotal, setAnalysisStepTotal] = useState(ANALYSIS_STEP_TOTAL_DEFAULT)
   const [serverPrice, setServerPrice] = useState<PriceBreakdown | null>(null)
   const [loading,     setLoading]     = useState(false)
   const [session,     setSession]     = useState<InviteResponse | null>(null)
   const [processIdCopied, setProcessIdCopied] = useState(false)
+  const [analysisIdCopied, setAnalysisIdCopied] = useState(false)
   const [error,       setError]       = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -798,6 +892,16 @@ export default function SignPage() {
   const estimatedPrice = calculatePrice(signatories.length, documentSignatureLevel, analysisSelected)
   const price = serverPrice ?? estimatedPrice
 
+  function applyAnalysisProgress(result: {
+    analysisStepKey?: string
+    analysisStepIndex?: number
+    analysisStepTotal?: number
+  }) {
+    if (result.analysisStepKey) setAnalysisStepKey(result.analysisStepKey)
+    if (typeof result.analysisStepIndex === 'number') setAnalysisStepIndex(result.analysisStepIndex)
+    if (typeof result.analysisStepTotal === 'number') setAnalysisStepTotal(result.analysisStepTotal)
+  }
+
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
     if (f && f.type === 'application/pdf') {
@@ -808,6 +912,9 @@ export default function SignPage() {
       setAnalysisProcessId(null)
       setAnalysisStatus('NOT_REQUESTED')
       setAnalysisError(null)
+      setAnalysisStepKey('PENDING_PAYMENT')
+      setAnalysisStepIndex(0)
+      setAnalysisStepTotal(ANALYSIS_STEP_TOTAL_DEFAULT)
       setServerPrice(null)
       setError(null)
     } else if (f) {
@@ -826,6 +933,9 @@ export default function SignPage() {
       setAnalysisProcessId(null)
       setAnalysisStatus('NOT_REQUESTED')
       setAnalysisError(null)
+      setAnalysisStepKey('PENDING_PAYMENT')
+      setAnalysisStepIndex(0)
+      setAnalysisStepTotal(ANALYSIS_STEP_TOTAL_DEFAULT)
       setServerPrice(null)
       setError(null)
     } else {
@@ -926,11 +1036,19 @@ export default function SignPage() {
       const response = await api.selectAnalysisAddon(enabled)
       setAnalysisSelected(response.analysisRequested)
       setAnalysisStatus(response.analysisStatus ?? (response.analysisRequested ? 'PENDING_PAYMENT' : 'NOT_REQUESTED'))
+      if (response.analysisRequested) {
+        setAnalysisStepKey('PENDING_PAYMENT')
+        setAnalysisStepIndex(0)
+        setAnalysisStepTotal(ANALYSIS_STEP_TOTAL_DEFAULT)
+      }
       if (response.price) setServerPrice(response.price)
       if (!response.analysisRequested) {
         setAnalysisResult(null)
         setAnalysisProcessId(null)
         setAnalysisModalOpen(false)
+        setAnalysisStepKey('PENDING_PAYMENT')
+        setAnalysisStepIndex(0)
+        setAnalysisStepTotal(ANALYSIS_STEP_TOTAL_DEFAULT)
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'AI analysis selection failed')
@@ -971,7 +1089,7 @@ export default function SignPage() {
       setError(null)
       setStep('payment')
       try {
-        const currentState = await api.getSigningState().catch(() => null)
+        const currentState = await api.getSigningState(locale).catch(() => null)
         if (currentState?.signatories?.length) {
           setSignatories(currentState.signatories)
         }
@@ -992,11 +1110,14 @@ export default function SignPage() {
         } else {
           setAnalysisResult(null)
         }
+        setAnalysisStepKey('PENDING_PAYMENT')
+        setAnalysisStepIndex(0)
+        setAnalysisStepTotal(ANALYSIS_STEP_TOTAL_DEFAULT)
         if (currentState?.price) {
           setServerPrice(currentState.price)
         }
 
-        const payment = await api.confirmPayment(sessionId)
+        const payment = await api.confirmPayment(sessionId, locale)
         if (cancelled) return
 
         if (payment.status === 'success') {
@@ -1004,6 +1125,7 @@ export default function SignPage() {
           setAnalysisProcessId(payment.analyticProcessID ?? currentState?.analysisProcessId ?? null)
           setAnalysisStatus(payment.analysisStatus ?? currentState?.analysisStatus ?? 'PENDING_PAYMENT')
           setAnalysisError(payment.analysisError ?? currentState?.analysisError ?? null)
+          applyAnalysisProgress(payment)
           if (payment.analysis && typeof payment.analysis === 'object') {
             setAnalysisResult(payment.analysis)
           }
@@ -1016,12 +1138,13 @@ export default function SignPage() {
             })
             setStep('done')
           } else {
-            const result = await api.sendInvitations()
+            const result = await api.sendInvitations(locale)
             if (cancelled) return
             setAnalysisSelected(Boolean(result.analysisRequested ?? analysisSelected))
             setAnalysisProcessId(result.analyticProcessID ?? currentState?.analysisProcessId ?? null)
             if (result.analysisStatus) setAnalysisStatus(result.analysisStatus)
             if (result.analysisError) setAnalysisError(result.analysisError)
+            applyAnalysisProgress(result)
             if (result.analysis && typeof result.analysis === 'object') setAnalysisResult(result.analysis)
             setSession(result)
             setStep('done')
@@ -1072,6 +1195,7 @@ export default function SignPage() {
         const nextStatus = result.analysisStatus ?? result.status ?? 'PENDING_PAYMENT'
         setAnalysisStatus(nextStatus)
         setAnalysisError(result.analysisError ?? null)
+        applyAnalysisProgress(result)
         if (result.analysis && typeof result.analysis === 'object') {
           setAnalysisResult(result.analysis)
         }
@@ -1088,6 +1212,7 @@ export default function SignPage() {
         const message = e instanceof Error ? e.message : analyzerCopy.failed
         setAnalysisError(message)
         setAnalysisStatus('FAILED')
+        setAnalysisStepKey('FAILED')
         setAnalysisPolling(false)
       }
     }
@@ -1104,7 +1229,7 @@ export default function SignPage() {
     setError(null)
     setAnalysisError(null)
     try {
-      const payment = await api.processPayment()
+      const payment = await api.processPayment(locale)
       setAnalysisSelected(Boolean(payment.analysisRequested ?? analysisSelected))
       setAnalysisProcessId(payment.analyticProcessID ?? null)
       if (payment.analysisStatus) {
@@ -1113,6 +1238,7 @@ export default function SignPage() {
       if (payment.analysisError) {
         setAnalysisError(payment.analysisError)
       }
+      applyAnalysisProgress(payment)
       if (payment.analysis && typeof payment.analysis === 'object') {
         setAnalysisResult(payment.analysis)
       }
@@ -1125,11 +1251,12 @@ export default function SignPage() {
             invitations: payment.invitations,
           })
         } else {
-          const result = await api.sendInvitations()
+          const result = await api.sendInvitations(locale)
           setAnalysisSelected(Boolean(result.analysisRequested ?? analysisSelected))
           setAnalysisProcessId(result.analyticProcessID ?? analysisProcessId)
           if (result.analysisStatus) setAnalysisStatus(result.analysisStatus)
           if (result.analysisError) setAnalysisError(result.analysisError)
+          applyAnalysisProgress(result)
           if (result.analysis && typeof result.analysis === 'object') setAnalysisResult(result.analysis)
           setSession(result)
         }
@@ -1159,6 +1286,16 @@ export default function SignPage() {
       window.setTimeout(() => setProcessIdCopied(false), 1400)
     } catch {
       setProcessIdCopied(false)
+    }
+  }
+
+  async function copyAnalysisProcessId(value: string) {
+    try {
+      await navigator.clipboard.writeText(value)
+      setAnalysisIdCopied(true)
+      window.setTimeout(() => setAnalysisIdCopied(false), 1400)
+    } catch {
+      setAnalysisIdCopied(false)
     }
   }
 
@@ -1679,6 +1816,32 @@ export default function SignPage() {
                   <div className="done-process-row">
                     <span>{analyzerCopy.processLabel}</span>
                     <code>{analysisProcessId}</code>
+                    <button
+                      className="btn btn-ghost done-process-copy"
+                      type="button"
+                      onClick={() => void copyAnalysisProcessId(analysisProcessId)}
+                      aria-label={analyzerCopy.copyId}
+                      title={analyzerCopy.copyId}
+                    >
+                      📋 {analysisIdCopied ? analyzerCopy.copiedId : analyzerCopy.copyId}
+                    </button>
+                  </div>
+                )}
+                {analysisProcessId && (
+                  <div className="done-process-link">
+                    <Link to={`/status?analyticProcessID=${encodeURIComponent(analysisProcessId)}`}>
+                      {analyzerCopy.openStatus}
+                    </Link>
+                  </div>
+                )}
+                {analysisProcessId && (
+                  <div className="done-process-link">
+                    <a
+                      href={`/api/sign/analysis/confirmation?analyticProcessID=${encodeURIComponent(analysisProcessId)}&lang=${encodeURIComponent(locale)}`}
+                      className="done-process-download"
+                    >
+                      {analyzerCopy.downloadConfirmation}
+                    </a>
                   </div>
                 )}
                 {(analysisStatus === 'QUEUED' || analysisStatus === 'RUNNING' || analysisStatus === 'PENDING_PAYMENT') && (
@@ -1687,6 +1850,12 @@ export default function SignPage() {
                       {analysisPolling && <span className="analysis-spinner" aria-hidden="true" />}
                       {analyzerCopy.polling}
                     </span>
+                    <div className="analysis-progress-meta">
+                      {replaceStepCounter(analyzerCopy.stepCounter, analysisStepIndex, analysisStepTotal)}
+                    </div>
+                    <div className="analysis-progress-label">
+                      {analysisStepLabel(locale, analysisStepKey)}
+                    </div>
                   </div>
                 )}
                 {analysisStatus === 'COMPLETED' && (
@@ -1752,8 +1921,12 @@ export default function SignPage() {
                 setAnalysisStatus('NOT_REQUESTED')
                 setAnalysisError(null)
                 setAnalysisPolling(false)
+                setAnalysisStepKey('PENDING_PAYMENT')
+                setAnalysisStepIndex(0)
+                setAnalysisStepTotal(ANALYSIS_STEP_TOTAL_DEFAULT)
                 setServerPrice(null)
                 setProcessIdCopied(false)
+                setAnalysisIdCopied(false)
                 setSession(null)
               }}
             >
@@ -1768,6 +1941,7 @@ export default function SignPage() {
               <h3>{analyzerCopy.resultTitle}</h3>
               <p className="analysis-modal-summary">{analysisSummaryText(analysisResult)}</p>
               <p><strong>{analyzerCopy.confidence}:</strong> {confidenceText(analysisResult)}</p>
+              <p><strong>{analyzerCopy.consensus}:</strong> {consensusText(analysisResult)}</p>
 
               {asArray(analysisResult.key_dates).length > 0 && (
                 <div className="analysis-modal-block">
