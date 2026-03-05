@@ -20,6 +20,7 @@ services:
       - .env
     volumes:
       - uploads:/app/uploads
+      - ./data:/app/data:ro
       - ./logs/backend:/app/logs
     depends_on:
       redis:

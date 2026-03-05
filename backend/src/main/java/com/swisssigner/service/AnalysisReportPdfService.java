@@ -28,41 +28,138 @@ public class AnalysisReportPdfService {
 
             float margin = 52f;
             float width = page.getMediaBox().getWidth();
-            float y = page.getMediaBox().getHeight() - margin;
+            float y;
 
             try (PDPageContentStream content = new PDPageContentStream(document, page)) {
-                content.setNonStrokingColor(22, 82, 240);
-                content.addRect(0, page.getMediaBox().getHeight() - 100, width, 100);
-                content.fill();
+                y = JustSignPdfTemplateSupport.drawHeader(document, page, content, margin);
+                y = JustSignPdfTemplateSupport.writeCentered(
+                    content,
+                    reportSubtitle(locale),
+                    PDType1Font.HELVETICA,
+                    9.5f,
+                    width,
+                    y,
+                    JustSignPdfTemplateSupport.MUTED_R,
+                    JustSignPdfTemplateSupport.MUTED_G,
+                    JustSignPdfTemplateSupport.MUTED_B
+                );
+                y -= 22f;
 
-                write(content, "justSign", PDType1Font.HELVETICA_BOLD, 26, margin, page.getMediaBox().getHeight() - 52, true);
-                write(content, reportTitle(locale), PDType1Font.HELVETICA, 11, margin, page.getMediaBox().getHeight() - 72, true);
-                y = page.getMediaBox().getHeight() - 124;
-
-                y = write(content, processLabel(locale) + analysisProcessId, PDType1Font.HELVETICA_BOLD, 11, margin, y, false);
-                y -= 18;
+                y = JustSignPdfTemplateSupport.writeCentered(
+                    content,
+                    reportTitle(locale),
+                    PDType1Font.HELVETICA_BOLD,
+                    20f,
+                    width,
+                    y,
+                    JustSignPdfTemplateSupport.PRIMARY_R,
+                    JustSignPdfTemplateSupport.PRIMARY_G,
+                    JustSignPdfTemplateSupport.PRIMARY_B
+                );
+                y -= 16f;
+                y = JustSignPdfTemplateSupport.writeCentered(
+                    content,
+                    processLabel(locale) + analysisProcessId,
+                    PDType1Font.HELVETICA,
+                    10f,
+                    width,
+                    y,
+                    JustSignPdfTemplateSupport.BODY_R,
+                    JustSignPdfTemplateSupport.BODY_G,
+                    JustSignPdfTemplateSupport.BODY_B
+                );
+                y -= 12f;
                 String generated = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'")
                     .withZone(ZoneOffset.UTC)
                     .format(Instant.now());
-                y = write(content, createdLabel(locale) + generated, PDType1Font.HELVETICA, 10, margin, y, false);
-                y -= 18;
+                y = JustSignPdfTemplateSupport.writeCentered(
+                    content,
+                    createdLabel(locale) + generated,
+                    PDType1Font.HELVETICA,
+                    9.5f,
+                    width,
+                    y,
+                    JustSignPdfTemplateSupport.MUTED_R,
+                    JustSignPdfTemplateSupport.MUTED_G,
+                    JustSignPdfTemplateSupport.MUTED_B
+                );
+                y -= 16f;
 
-                y = write(content, summaryLabel(locale), PDType1Font.HELVETICA_BOLD, 12, margin, y, false);
-                y -= 14;
-                y = writeWrapped(content, safeSummary(analysisResult), PDType1Font.HELVETICA, 10, margin, y, width - (2 * margin));
-                y -= 8;
+                y = writeSectionTitle(content, summaryLabel(locale), width, y);
+                y -= 12f;
+                y = JustSignPdfTemplateSupport.writeWrapped(
+                    content,
+                    safeSummary(analysisResult),
+                    PDType1Font.HELVETICA,
+                    10f,
+                    margin,
+                    y,
+                    width - (2 * margin),
+                    JustSignPdfTemplateSupport.BODY_R,
+                    JustSignPdfTemplateSupport.BODY_G,
+                    JustSignPdfTemplateSupport.BODY_B
+                );
+                y -= 8f;
 
-                y = write(content, confidenceLabel(locale) + safeConfidence(analysisResult), PDType1Font.HELVETICA_BOLD, 11, margin, y, false);
-                y -= 18;
+                y = JustSignPdfTemplateSupport.writeCentered(
+                    content,
+                    confidenceLabel(locale) + safeConfidence(analysisResult),
+                    PDType1Font.HELVETICA_BOLD,
+                    10f,
+                    width,
+                    y,
+                    JustSignPdfTemplateSupport.MUTED_R,
+                    JustSignPdfTemplateSupport.MUTED_G,
+                    JustSignPdfTemplateSupport.MUTED_B
+                );
+                y -= 12f;
 
-                y = write(content, risksLabel(locale), PDType1Font.HELVETICA_BOLD, 12, margin, y, false);
-                y -= 14;
-                y = writeWrapped(content, listText(safeList(analysisResult, "risks"), "risk", "title"), PDType1Font.HELVETICA, 10, margin, y, width - (2 * margin));
-                y -= 8;
+                y = writeSectionTitle(content, keyDatesLabel(locale), width, y);
+                y -= 10f;
+                y = JustSignPdfTemplateSupport.writeWrapped(
+                    content,
+                    listText(safeList(analysisResult, "key_dates"), "date", "label"),
+                    PDType1Font.HELVETICA,
+                    9.6f,
+                    margin,
+                    y,
+                    width - (2 * margin),
+                    JustSignPdfTemplateSupport.BODY_R,
+                    JustSignPdfTemplateSupport.BODY_G,
+                    JustSignPdfTemplateSupport.BODY_B
+                );
+                y -= 10f;
 
-                y = write(content, opportunitiesLabel(locale), PDType1Font.HELVETICA_BOLD, 12, margin, y, false);
-                y -= 14;
-                writeWrapped(content, listText(safeList(analysisResult, "opportunities"), "opportunity", "title"), PDType1Font.HELVETICA, 10, margin, y, width - (2 * margin));
+                y = writeSectionTitle(content, risksLabel(locale), width, y);
+                y -= 10f;
+                y = JustSignPdfTemplateSupport.writeWrapped(
+                    content,
+                    listText(safeList(analysisResult, "risks"), "risk", "title"),
+                    PDType1Font.HELVETICA,
+                    9.6f,
+                    margin,
+                    y,
+                    width - (2 * margin),
+                    JustSignPdfTemplateSupport.BODY_R,
+                    JustSignPdfTemplateSupport.BODY_G,
+                    JustSignPdfTemplateSupport.BODY_B
+                );
+                y -= 10f;
+
+                y = writeSectionTitle(content, opportunitiesLabel(locale), width, y);
+                y -= 10f;
+                JustSignPdfTemplateSupport.writeWrapped(
+                    content,
+                    listText(safeList(analysisResult, "opportunities"), "opportunity", "title"),
+                    PDType1Font.HELVETICA,
+                    9.6f,
+                    margin,
+                    y,
+                    width - (2 * margin),
+                    JustSignPdfTemplateSupport.BODY_R,
+                    JustSignPdfTemplateSupport.BODY_G,
+                    JustSignPdfTemplateSupport.BODY_B
+                );
             }
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -71,10 +168,30 @@ public class AnalysisReportPdfService {
         }
     }
 
+    private float writeSectionTitle(PDPageContentStream content, String title, float pageWidth, float y) throws IOException {
+        return JustSignPdfTemplateSupport.writeCentered(
+            content,
+            title,
+            PDType1Font.HELVETICA_BOLD,
+            13f,
+            pageWidth,
+            y,
+            JustSignPdfTemplateSupport.PRIMARY_R,
+            JustSignPdfTemplateSupport.PRIMARY_G,
+            JustSignPdfTemplateSupport.PRIMARY_B
+        );
+    }
+
     private String reportTitle(Locale locale) {
         if (Locale.FRENCH.getLanguage().equals(locale.getLanguage())) return "Rapport analyse IA";
         if (Locale.ENGLISH.getLanguage().equals(locale.getLanguage())) return "AI Analysis Report";
         return "KI-Analysebericht";
+    }
+
+    private String reportSubtitle(Locale locale) {
+        if (Locale.FRENCH.getLanguage().equals(locale.getLanguage())) return "Resultat d analyse genere automatiquement";
+        if (Locale.ENGLISH.getLanguage().equals(locale.getLanguage())) return "Automatically generated analysis result";
+        return "Automatisch erstelltes Analyseergebnis";
     }
 
     private String processLabel(Locale locale) {
@@ -93,6 +210,12 @@ public class AnalysisReportPdfService {
         if (Locale.FRENCH.getLanguage().equals(locale.getLanguage())) return "Resume";
         if (Locale.ENGLISH.getLanguage().equals(locale.getLanguage())) return "Summary";
         return "Zusammenfassung";
+    }
+
+    private String keyDatesLabel(Locale locale) {
+        if (Locale.FRENCH.getLanguage().equals(locale.getLanguage())) return "Dates importantes";
+        if (Locale.ENGLISH.getLanguage().equals(locale.getLanguage())) return "Key dates";
+        return "Wichtige Daten";
     }
 
     private String confidenceLabel(Locale locale) {
@@ -116,12 +239,23 @@ public class AnalysisReportPdfService {
     private String safeSummary(Map<String, Object> analysisResult) {
         Object summary = analysisResult == null ? null : analysisResult.get("summary");
         if (summary instanceof String s && !s.isBlank()) return s;
+        if (summary instanceof Map<?, ?> map) {
+            Object executive = map.get("executive");
+            if (executive instanceof String s && !s.isBlank()) return s;
+            Object plain = map.get("plain_language");
+            if (plain instanceof String s && !s.isBlank()) return s;
+        }
+        Object executiveSummary = analysisResult == null ? null : analysisResult.get("executive_summary");
+        if (executiveSummary instanceof String s && !s.isBlank()) return s;
         return "n/a";
     }
 
     @SuppressWarnings("unchecked")
     private String safeConfidence(Map<String, Object> analysisResult) {
         Object confidence = analysisResult == null ? null : analysisResult.get("confidence");
+        if (confidence instanceof Number n) {
+            return String.valueOf(n.intValue()) + "/100";
+        }
         if (confidence instanceof Map<?, ?> map) {
             Object score = map.get("overall_score");
             if (score == null) score = map.get("score");
@@ -133,6 +267,13 @@ public class AnalysisReportPdfService {
     @SuppressWarnings("unchecked")
     private List<Map<String, Object>> safeList(Map<String, Object> analysisResult, String key) {
         Object value = analysisResult == null ? null : analysisResult.get(key);
+        if (!(value instanceof List<?>)) {
+            if ("risks".equals(key)) {
+                value = analysisResult == null ? null : analysisResult.get("top_risks");
+            } else if ("opportunities".equals(key)) {
+                value = analysisResult == null ? null : analysisResult.get("top_opportunities");
+            }
+        }
         if (value instanceof List<?> list) {
             List<Map<String, Object>> out = new ArrayList<>();
             for (Object item : list) {
@@ -158,57 +299,6 @@ public class AnalysisReportPdfService {
             if (i < list.size() - 1) sb.append("\n");
         }
         return sb.toString();
-    }
-
-    private float write(PDPageContentStream content,
-                        String text,
-                        PDType1Font font,
-                        float fontSize,
-                        float x,
-                        float y,
-                        boolean inverseColor) throws IOException {
-        content.setNonStrokingColor(inverseColor ? 255 : 18, inverseColor ? 255 : 27, inverseColor ? 255 : 44);
-        content.beginText();
-        content.setFont(font, fontSize);
-        content.newLineAtOffset(x, y);
-        content.showText(text == null ? "" : text);
-        content.endText();
-        return y;
-    }
-
-    private float writeWrapped(PDPageContentStream content,
-                               String text,
-                               PDType1Font font,
-                               float fontSize,
-                               float x,
-                               float y,
-                               float maxWidth) throws IOException {
-        float cursor = y;
-        for (String line : wrap(text == null ? "" : text, font, fontSize, maxWidth)) {
-            write(content, line, font, fontSize, x, cursor, false);
-            cursor -= (fontSize + 3);
-        }
-        return cursor;
-    }
-
-    private List<String> wrap(String text, PDType1Font font, float fontSize, float maxWidth) throws IOException {
-        List<String> lines = new ArrayList<>();
-        String[] words = text.split("\\s+");
-        StringBuilder line = new StringBuilder();
-        for (String word : words) {
-            String candidate = line.isEmpty() ? word : line + " " + word;
-            float width = font.getStringWidth(candidate) / 1000f * fontSize;
-            if (width <= maxWidth) {
-                line.setLength(0);
-                line.append(candidate);
-            } else {
-                if (!line.isEmpty()) lines.add(line.toString());
-                line.setLength(0);
-                line.append(word);
-            }
-        }
-        if (!line.isEmpty()) lines.add(line.toString());
-        return lines;
     }
 
     private Locale resolveLocale(String language) {
