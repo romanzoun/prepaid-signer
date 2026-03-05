@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -22,6 +23,7 @@ public class AnalysisReportPdfService {
 
     public byte[] createReport(String analysisProcessId, Map<String, Object> analysisResult, String language) throws IOException {
         Locale locale = resolveLocale(language);
+        TemplateValues template = buildTemplateValues(analysisProcessId, analysisResult, locale);
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
@@ -47,7 +49,7 @@ public class AnalysisReportPdfService {
 
                 y = JustSignPdfTemplateSupport.writeCentered(
                     content,
-                    reportTitle(locale),
+                    template.analysisTitle(),
                     PDType1Font.HELVETICA_BOLD,
                     20f,
                     width,
@@ -59,7 +61,7 @@ public class AnalysisReportPdfService {
                 y -= 16f;
                 y = JustSignPdfTemplateSupport.writeCentered(
                     content,
-                    processLabel(locale) + analysisProcessId,
+                    processLabel(locale) + template.analyticsId(),
                     PDType1Font.HELVETICA,
                     10f,
                     width,
@@ -69,12 +71,9 @@ public class AnalysisReportPdfService {
                     JustSignPdfTemplateSupport.BODY_B
                 );
                 y -= 12f;
-                String generated = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'")
-                    .withZone(ZoneOffset.UTC)
-                    .format(Instant.now());
                 y = JustSignPdfTemplateSupport.writeCentered(
                     content,
-                    createdLabel(locale) + generated,
+                    template.dateTime(),
                     PDType1Font.HELVETICA,
                     9.5f,
                     width,
@@ -85,11 +84,11 @@ public class AnalysisReportPdfService {
                 );
                 y -= 16f;
 
-                y = writeSectionTitle(content, summaryLabel(locale), width, y);
+                y = writeSectionTitle(content, template.summaryTitle(), width, y);
                 y -= 12f;
                 y = JustSignPdfTemplateSupport.writeWrapped(
                     content,
-                    safeSummary(analysisResult),
+                    template.content(),
                     PDType1Font.HELVETICA,
                     10f,
                     margin,
@@ -103,7 +102,7 @@ public class AnalysisReportPdfService {
 
                 y = JustSignPdfTemplateSupport.writeCentered(
                     content,
-                    confidenceLabel(locale) + safeConfidence(analysisResult),
+                    template.confidence(),
                     PDType1Font.HELVETICA_BOLD,
                     10f,
                     width,
@@ -114,11 +113,11 @@ public class AnalysisReportPdfService {
                 );
                 y -= 12f;
 
-                y = writeSectionTitle(content, keyDatesLabel(locale), width, y);
+                y = writeSectionTitle(content, template.topRiskTitle(), width, y);
                 y -= 10f;
                 y = JustSignPdfTemplateSupport.writeWrapped(
                     content,
-                    listText(safeList(analysisResult, "key_dates"), "date", "label"),
+                    String.join("\n", template.topRisk1(), template.topRisk2(), template.topRisk3()),
                     PDType1Font.HELVETICA,
                     9.6f,
                     margin,
@@ -130,27 +129,11 @@ public class AnalysisReportPdfService {
                 );
                 y -= 10f;
 
-                y = writeSectionTitle(content, risksLabel(locale), width, y);
-                y -= 10f;
-                y = JustSignPdfTemplateSupport.writeWrapped(
-                    content,
-                    listText(safeList(analysisResult, "risks"), "risk", "title"),
-                    PDType1Font.HELVETICA,
-                    9.6f,
-                    margin,
-                    y,
-                    width - (2 * margin),
-                    JustSignPdfTemplateSupport.BODY_R,
-                    JustSignPdfTemplateSupport.BODY_G,
-                    JustSignPdfTemplateSupport.BODY_B
-                );
-                y -= 10f;
-
-                y = writeSectionTitle(content, opportunitiesLabel(locale), width, y);
+                y = writeSectionTitle(content, template.topChanceTitle(), width, y);
                 y -= 10f;
                 JustSignPdfTemplateSupport.writeWrapped(
                     content,
-                    listText(safeList(analysisResult, "opportunities"), "opportunity", "title"),
+                    String.join("\n", template.topChance1(), template.topChance2(), template.topChance3()),
                     PDType1Font.HELVETICA,
                     9.6f,
                     margin,
@@ -166,6 +149,90 @@ public class AnalysisReportPdfService {
             document.save(out);
             return out.toByteArray();
         }
+    }
+
+    private TemplateValues buildTemplateValues(String analysisProcessId, Map<String, Object> analysisResult, Locale locale) {
+        Map<String, String> placeholders = buildPlaceholderValues(analysisProcessId, analysisResult, locale);
+        return new TemplateValues(
+            placeholderValue(placeholders, "AI-ANALYTICS_REPORT_TITEL"),
+            placeholderValue(placeholders, "analytics_id"),
+            placeholderValue(placeholders, "date time"),
+            placeholderValue(placeholders, "summary"),
+            placeholderValue(placeholders, "content"),
+            placeholderValue(placeholders, "confidence"),
+            placeholderValue(placeholders, "TOP-RISK-TITEL"),
+            placeholderValue(placeholders, "top risks1"),
+            placeholderValue(placeholders, "top risks2"),
+            placeholderValue(placeholders, "top risks3"),
+            placeholderValue(placeholders, "top-chancen"),
+            placeholderValue(placeholders, "top chance 1"),
+            placeholderValue(placeholders, "top chance 2"),
+            placeholderValue(placeholders, "top chance 3")
+        );
+    }
+
+    private Map<String, String> buildPlaceholderValues(String analysisProcessId, Map<String, Object> analysisResult, Locale locale) {
+        List<Map<String, Object>> risks = safeList(analysisResult, "risks");
+        List<Map<String, Object>> opportunities = safeList(analysisResult, "opportunities");
+        String generatedContent = safeSummary(analysisResult);
+        String keyDates = listText(safeList(analysisResult, "key_dates"), "date", "label");
+        if (!"- n/a".equals(keyDates)) {
+            generatedContent = generatedContent + "\n\n" + keyDatesLabel(locale) + ":\n" + keyDates;
+        }
+        String generatedAt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'")
+            .withZone(ZoneOffset.UTC)
+            .format(Instant.now());
+
+        Map<String, String> values = new LinkedHashMap<>();
+        values.put("AI-ANALYTICS_REPORT_TITEL", reportTitle(locale));
+        values.put("analytics_id", analysisProcessId == null ? "n/a" : analysisProcessId);
+        values.put("date time", createdLabel(locale) + generatedAt);
+        values.put("summary", summaryLabel(locale));
+        values.put("content", generatedContent);
+        values.put("confidence", confidenceLabel(locale) + safeConfidence(analysisResult));
+        values.put("TOP-RISK-TITEL", risksLabel(locale));
+        values.put("top risks1", listItemAt(risks, 0, "risk", "title"));
+        values.put("top risks2", listItemAt(risks, 1, "risk", "title"));
+        values.put("top risks3", listItemAt(risks, 2, "risk", "title"));
+        values.put("top-chancen", opportunitiesLabel(locale));
+        values.put("top chance 1", listItemAt(opportunities, 0, "opportunity", "title"));
+        values.put("top chance 2", listItemAt(opportunities, 1, "opportunity", "title"));
+        values.put("top chance 3", listItemAt(opportunities, 2, "opportunity", "title"));
+        return values;
+    }
+
+    private String placeholderValue(Map<String, String> placeholders, String key) {
+        String value = placeholders.get(key);
+        return value == null || value.isBlank() ? "n/a" : value;
+    }
+
+    private String listItemAt(List<Map<String, Object>> list, int index, String primaryKey, String secondaryKey) {
+        if (list == null || index < 0 || index >= list.size()) {
+            return (index + 1) + ") n/a";
+        }
+        Map<String, Object> item = list.get(index);
+        Object value = item.get(primaryKey);
+        if (value == null) value = item.get(secondaryKey);
+        if (value == null) value = "n/a";
+        return (index + 1) + ") " + value;
+    }
+
+    private record TemplateValues(
+        String analysisTitle,
+        String analyticsId,
+        String dateTime,
+        String summaryTitle,
+        String content,
+        String confidence,
+        String topRiskTitle,
+        String topRisk1,
+        String topRisk2,
+        String topRisk3,
+        String topChanceTitle,
+        String topChance1,
+        String topChance2,
+        String topChance3
+    ) {
     }
 
     private float writeSectionTitle(PDPageContentStream content, String title, float pageWidth, float y) throws IOException {
