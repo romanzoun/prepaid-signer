@@ -17,8 +17,8 @@
   --sdx-color-text-success: #146c43;
   --sdx-color-text-warning: #8a3a00;
 
-  --sdx-color-border-ui-1: #d8dee8;
-  --sdx-color-border-ui-2: #c4ccd8;
+  --sdx-color-border-ui-1: #e9edf2;
+  --sdx-color-border-ui-2: #d8dee8;
   --sdx-color-border-interaction-default: #0445c8;
   --sdx-color-border-error-emphasis: #d92d20;
 
@@ -33,6 +33,7 @@
   --sdx-color-feedback-warning-soft-border: #ffcf9a;
   --sdx-color-feedback-success-surface: #ecfdf3;
   --sdx-color-feedback-success-border: #9ce0b7;
+  --sdx-color-feedback-warning-text: #8a3a00;
   --sdx-color-viewer-background: #4e5564;
   --sdx-color-overlay-white-86: rgba(255, 255, 255, 0.86);
   --sdx-color-overlay-heading-24: rgba(0, 17, 85, 0.24);
@@ -53,7 +54,7 @@
   --sdx-signatory-7: #b42318;
   --sdx-signatory-8: #1f4ea3;
 
-  /* SDX spacing tokens */
+  /* SDX spacing tokens (8px grid) */
   --sdx-spacing-1: 4px;
   --sdx-spacing-2: 8px;
   --sdx-spacing-3: 16px;
@@ -65,13 +66,15 @@
   --sdx-border-radius-small: 4px;
   --sdx-border-radius-medium: 8px;
   --sdx-border-radius-large: 12px;
+  --sdx-border-radius-xlarge: 20px;
   --sdx-border-radius-full: 80px;
+  --sdx-border-radius-pill: 999px;
 
   --sdx-border-width-thin: 1px;
   --sdx-border-width-medium: 2px;
 
-  --sdx-box-shadow-default: 0 4px 16px rgba(0, 17, 85, 0.08);
-  --sdx-box-shadow-hover: 0 8px 24px rgba(0, 17, 85, 0.12);
+  --sdx-box-shadow-default: 0 2px 8px rgba(0, 17, 85, 0.06);
+  --sdx-box-shadow-hover: 0 4px 16px rgba(0, 17, 85, 0.1);
 
   --sdx-font-family: 'TheSans', 'TheSansB', 'Segoe UI', sans-serif;
 
@@ -95,21 +98,6 @@
   :root {
     --page-padding: var(--sdx-spacing-5);
   }
-}
-
-/* Legacy aliases for existing components */
-:root {
-  --color-red: var(--sdx-color-surface-interaction-default);
-  --color-red-dark: var(--sdx-color-surface-interaction-hover);
-  --color-white: var(--sdx-color-text-inverse);
-  --color-bg: var(--sdx-color-surface-ui-1);
-  --color-text: var(--sdx-color-text-body);
-  --color-text-muted: var(--sdx-color-text-secondary);
-  --color-border: var(--sdx-color-border-ui-2);
-  --color-success: var(--sdx-color-status-success);
-  --color-card: var(--sdx-color-surface-default);
-  --radius: var(--sdx-border-radius-medium);
-  --shadow: var(--sdx-box-shadow-default);
 }
 
 *,
@@ -148,12 +136,7 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   color: var(--sdx-color-text-heading);
   line-height: 1.25;
   margin: 0;
@@ -171,9 +154,10 @@ p {
   width: 100%;
 }
 
+/* SDX Button */
 .btn {
   align-items: center;
-  border: var(--sdx-border-width-thin) solid transparent;
+  border: var(--sdx-border-width-medium) solid transparent;
   border-radius: var(--sdx-border-radius-small);
   cursor: pointer;
   display: inline-flex;
@@ -183,7 +167,7 @@ p {
   justify-content: center;
   min-height: 40px;
   padding: var(--sdx-spacing-2) var(--sdx-spacing-4);
-  transition: background-color 200ms ease-in-out, border-color 200ms ease-in-out, color 200ms ease-in-out, box-shadow 200ms ease-in-out;
+  transition: background-color 200ms ease-in-out, border-color 200ms ease-in-out, color 200ms ease-in-out;
 }
 
 .btn:disabled {
@@ -193,23 +177,25 @@ p {
 
 .btn-primary {
   background: var(--sdx-color-surface-interaction-default);
+  border-color: var(--sdx-color-surface-interaction-default);
   color: var(--sdx-color-text-inverse);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--sdx-color-surface-interaction-hover);
+  border-color: var(--sdx-color-surface-interaction-hover);
   color: var(--sdx-color-text-inverse);
   text-decoration: none;
 }
 
 .btn-primary:active:not(:disabled) {
   background: var(--sdx-color-surface-interaction-active);
+  border-color: var(--sdx-color-surface-interaction-active);
 }
 
 .btn-outline {
   background: transparent;
   border-color: var(--sdx-color-border-interaction-default);
-  border-width: var(--sdx-border-width-medium);
   color: var(--sdx-color-surface-interaction-default);
 }
 
@@ -220,7 +206,7 @@ p {
 
 .btn-ghost {
   background: transparent;
-  border-color: var(--sdx-color-border-ui-2);
+  border-color: transparent;
   color: var(--sdx-color-text-secondary);
 }
 
@@ -229,13 +215,15 @@ p {
   text-decoration: none;
 }
 
+/* SDX Card */
 .card {
-  background: var(--sdx-color-surface-ui-1);
-  border: var(--sdx-border-width-thin) solid var(--sdx-color-border-ui-2);
+  background: var(--sdx-color-surface-default);
+  border: var(--sdx-border-width-thin) solid var(--sdx-color-border-ui-1);
   border-radius: var(--sdx-border-radius-medium);
   padding: var(--sdx-spacing-4);
 }
 
+/* SDX Inputs */
 input,
 select,
 textarea {
@@ -247,11 +235,18 @@ textarea {
   font-size: 16px;
   min-height: 48px;
   padding: 12px var(--sdx-spacing-3);
+  transition: border-color 200ms ease-in-out;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--sdx-color-border-interaction-default);
 }
 
 input:disabled,
 select:disabled,
 textarea:disabled {
-  background: var(--sdx-color-surface-ui-2);
+  background: var(--sdx-color-surface-ui-1);
   color: var(--sdx-color-text-disabled);
 }

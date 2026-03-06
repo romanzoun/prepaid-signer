@@ -73,7 +73,7 @@ describe('SignPage', () => {
 
   it('next button is disabled without file', () => {
     renderSignPage()
-    const btn = screen.getByRole('button', { name: /Signaturlevel prüfen/i })
+    const btn = screen.getByRole('button', { name: /Dokumentart.*Level/i })
     expect(btn).toBeDisabled()
   })
 
@@ -91,10 +91,11 @@ describe('SignPage', () => {
     const input = screen.getByTestId('file-input')
     const file = new File(['%PDF-1.4'], 'test.pdf', { type: 'application/pdf' })
     fireEvent.change(input, { target: { files: [file] } })
+    await userEvent.click(screen.getByRole('button', { name: /Dokumentart.*Level/i }))
+    await screen.findByText('Dokumentart und Signaturlevel')
     await userEvent.type(screen.getByRole('textbox', { name: 'Dokumentart suchen' }), 'NDA')
     await userEvent.click(screen.getByRole('button', { name: /^NDA \/ Geheimhaltungsvereinbarung/i }))
-    await userEvent.click(screen.getByRole('button', { name: /Signaturlevel prüfen/i }))
-    expect(await screen.findByText('Signaturlevel wählen')).toBeInTheDocument()
+    expect(screen.getByText(/empfehlen wir/i)).toBeInTheDocument()
   })
 
   it('allows continuing without selecting document type', async () => {
@@ -102,8 +103,8 @@ describe('SignPage', () => {
     const input = screen.getByTestId('file-input')
     const file = new File(['%PDF-1.4'], 'test.pdf', { type: 'application/pdf' })
     fireEvent.change(input, { target: { files: [file] } })
-    await userEvent.click(screen.getByRole('button', { name: /Signaturlevel prüfen/i }))
-    expect(await screen.findByText('Signaturlevel wählen')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /Dokumentart.*Level/i }))
+    expect(await screen.findByText('Dokumentart und Signaturlevel')).toBeInTheDocument()
   })
 
   it('preselects recommended signature level based on selected document type', async () => {
@@ -111,11 +112,10 @@ describe('SignPage', () => {
     const input = screen.getByTestId('file-input')
     const file = new File(['%PDF-1.4'], 'test.pdf', { type: 'application/pdf' })
     fireEvent.change(input, { target: { files: [file] } })
+    await userEvent.click(screen.getByRole('button', { name: /Dokumentart.*Level/i }))
+    await screen.findByText('Dokumentart und Signaturlevel')
     await userEvent.type(screen.getByRole('textbox', { name: 'Dokumentart suchen' }), 'Arbeitsvertrag')
     await userEvent.click(screen.getByRole('button', { name: /^Arbeitsvertrag/i }))
-    await userEvent.click(screen.getByRole('button', { name: /Signaturlevel prüfen/i }))
-
-    await screen.findByText('Signaturlevel wählen')
     expect(screen.getByText(/empfehlen wir QES/i)).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: /QES/i })).toBeChecked()
   })
@@ -125,9 +125,10 @@ describe('SignPage', () => {
     const input = screen.getByTestId('file-input')
     const file = new File(['%PDF-1.4'], 'test.pdf', { type: 'application/pdf' })
     fireEvent.change(input, { target: { files: [file] } })
+    await userEvent.click(screen.getByRole('button', { name: /Dokumentart.*Level/i }))
+    await screen.findByText('Dokumentart und Signaturlevel')
+    await userEvent.type(screen.getByRole('textbox', { name: 'Dokumentart suchen' }), 'NDA')
     await userEvent.click(screen.getByRole('button', { name: /^NDA \/ Geheimhaltungsvereinbarung/i }))
-    await userEvent.click(screen.getByRole('button', { name: /Signaturlevel prüfen/i }))
-    await screen.findByText('Signaturlevel wählen')
     await userEvent.click(screen.getByRole('button', { name: /Unterzeichner/i }))
     await screen.findByText('Unterzeichner konfigurieren')
     expect(screen.getAllByPlaceholderText('Vorname')).toHaveLength(1)
@@ -139,9 +140,10 @@ describe('SignPage', () => {
     const input = screen.getByTestId('file-input')
     const file = new File(['%PDF-1.4'], 'test.pdf', { type: 'application/pdf' })
     fireEvent.change(input, { target: { files: [file] } })
+    await userEvent.click(screen.getByRole('button', { name: /Dokumentart.*Level/i }))
+    await screen.findByText('Dokumentart und Signaturlevel')
+    await userEvent.type(screen.getByRole('textbox', { name: 'Dokumentart suchen' }), 'NDA')
     await userEvent.click(screen.getByRole('button', { name: /^NDA \/ Geheimhaltungsvereinbarung/i }))
-    await userEvent.click(screen.getByRole('button', { name: /Signaturlevel prüfen/i }))
-    await screen.findByText('Signaturlevel wählen')
     await userEvent.click(screen.getByRole('button', { name: /Unterzeichner/i }))
     await screen.findByText('Unterzeichner konfigurieren')
     await userEvent.click(screen.getByText(/Weiteren Unterzeichner/i))
@@ -152,7 +154,7 @@ describe('SignPage', () => {
   it('shows stepper with all 7 steps', () => {
     renderSignPage()
     expect(screen.getByText('Upload')).toBeInTheDocument()
-    expect(screen.getByText('Signaturlevel')).toBeInTheDocument()
+    expect(screen.getByText('Dokumentart & Level')).toBeInTheDocument()
     expect(screen.getByText('Unterzeichner')).toBeInTheDocument()
     expect(screen.getByText('Platzierung')).toBeInTheDocument()
     expect(screen.getByText('Preis')).toBeInTheDocument()
@@ -167,11 +169,11 @@ describe('SignPage', () => {
     const input = screen.getByTestId('file-input')
     const file = new File(['%PDF-1.4'], 'test.pdf', { type: 'application/pdf' })
     fireEvent.change(input, { target: { files: [file] } })
+    await userEvent.click(screen.getByRole('button', { name: /Dokumentart.*Level/i }))
+    await screen.findByText('Dokumentart und Signaturlevel')
+    await userEvent.type(screen.getByRole('textbox', { name: 'Dokumentart suchen' }), 'NDA')
     await userEvent.click(screen.getByRole('button', { name: /^NDA \/ Geheimhaltungsvereinbarung/i }))
-    fireEvent.click(screen.getByRole('button', { name: /Signaturlevel prüfen/i }))
-
-    // Step 2: choose signature level
-    await screen.findByText('Signaturlevel wählen')
+    // Step 2: choose signature level / continue
     await userEvent.click(screen.getByRole('button', { name: /Unterzeichner/i }))
 
     // Step 3: fill signatory and advance (calls api.setSignatories)

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import * as api from '../services/api'
 import { useI18n } from '../i18n'
+import { usePageMeta } from '../hooks/usePageMeta'
 import './StatusPage.css'
 
 const STATUS_COPY = {
@@ -112,15 +113,27 @@ const STATUS_COPY = {
   },
 } as const
 
+const STATUS_PAGE_META = {
+  de: {
+    title: 'Status prüfen | justSign - Signaturstatus & Analyse abrufen',
+    description: 'Signaturstatus oder AI-Analyse-Ergebnis per Process-ID abrufen. Echtzeit-Status von Swisscom Sign.',
+  },
+  en: {
+    title: 'Check Status | justSign - Signature Status & Analysis',
+    description: 'Check signing status or AI analysis result by process ID. Real-time status from Swisscom Sign.',
+  },
+  fr: {
+    title: 'Verifier le statut | justSign - Statut de signature & analyse',
+    description: 'Verifiez le statut de signature ou le resultat d analyse IA par process ID. Statut en temps reel.',
+  },
+} as const
+
 const ANALYSIS_STEP_LABELS = {
   de: {
     PENDING_PAYMENT: 'Warten auf abgeschlossene Zahlung',
     QUEUED: 'Analyse wurde eingeplant',
-    PREPARE_INPUT: 'Texte und Struktur werden extrahiert',
-    CONSENSUS_CASE_1: 'Konsens-Fall 1: Strenge Rechts- und Risikoanalyse',
-    CONSENSUS_CASE_2: 'Konsens-Fall 2: Pflichten und operative Umsetzung',
-    CONSENSUS_CASE_3: 'Konsens-Fall 3: Management- und Business-Sicht',
-    SEMANTIC_CONSENSUS: 'Semantische Einigkeit und Zusammenfassung werden berechnet',
+    PREPARE_INPUT: 'Dokument wird vorbereitet',
+    AI_ANALYSIS: 'AI analysiert das Dokument',
     BUILD_RESULT: 'Ergebnis wird aufbereitet',
     COMPLETED: 'Analyse abgeschlossen',
     FAILED: 'Analyse fehlgeschlagen',
@@ -128,11 +141,8 @@ const ANALYSIS_STEP_LABELS = {
   en: {
     PENDING_PAYMENT: 'Waiting for completed payment',
     QUEUED: 'Analysis queued',
-    PREPARE_INPUT: 'Extracting text and structure',
-    CONSENSUS_CASE_1: 'Consensus case 1: strict legal and risk review',
-    CONSENSUS_CASE_2: 'Consensus case 2: obligations and operational execution',
-    CONSENSUS_CASE_3: 'Consensus case 3: executive and business perspective',
-    SEMANTIC_CONSENSUS: 'Computing semantic agreement and final summary',
+    PREPARE_INPUT: 'Preparing document',
+    AI_ANALYSIS: 'AI is analyzing the document',
     BUILD_RESULT: 'Preparing final output',
     COMPLETED: 'Analysis completed',
     FAILED: 'Analysis failed',
@@ -140,11 +150,8 @@ const ANALYSIS_STEP_LABELS = {
   fr: {
     PENDING_PAYMENT: 'En attente du paiement confirme',
     QUEUED: 'Analyse en file d attente',
-    PREPARE_INPUT: 'Extraction du texte et de la structure',
-    CONSENSUS_CASE_1: 'Cas consensus 1: revue juridique et risques stricte',
-    CONSENSUS_CASE_2: 'Cas consensus 2: obligations et execution operationnelle',
-    CONSENSUS_CASE_3: 'Cas consensus 3: perspective direction et business',
-    SEMANTIC_CONSENSUS: 'Calcul de l accord semantique et du resume final',
+    PREPARE_INPUT: 'Preparation du document',
+    AI_ANALYSIS: 'L IA analyse le document',
     BUILD_RESULT: 'Preparation du resultat final',
     COMPLETED: 'Analyse terminee',
     FAILED: 'Analyse echouee',
@@ -153,6 +160,7 @@ const ANALYSIS_STEP_LABELS = {
 
 export default function StatusPage() {
   const { locale } = useI18n()
+  usePageMeta(STATUS_PAGE_META[locale].title, STATUS_PAGE_META[locale].description)
   const copy = STATUS_COPY[locale]
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -165,6 +173,7 @@ export default function StatusPage() {
   const [error, setError] = useState<string | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [status, setStatus] = useState<api.ProcessStatusResponse | null>(null)
+  const [analysisFeatureEnabled, setAnalysisFeatureEnabled] = useState(false)
   const [analysisStatus, setAnalysisStatus] = useState<api.AnalysisStatusResponse | null>(null)
   const [analysisIdCopied, setAnalysisIdCopied] = useState(false)
 
@@ -175,6 +184,25 @@ export default function StatusPage() {
   useEffect(() => {
     setAnalysisId(initialAnalysisId)
   }, [initialAnalysisId])
+
+  useEffect(() => {
+    let cancelled = false
+    const loadFeatureState = async () => {
+      try {
+        const state = await api.getSigningState(locale)
+        if (cancelled) return
+        setAnalysisFeatureEnabled(Boolean(state.analysisFeatureEnabled))
+      } catch {
+        if (!cancelled) {
+          setAnalysisFeatureEnabled(false)
+        }
+      }
+    }
+    void loadFeatureState()
+    return () => {
+      cancelled = true
+    }
+  }, [locale])
 
   async function fetchStatus() {
     const id = processId.trim()
@@ -305,114 +333,118 @@ export default function StatusPage() {
             <Link to="/sign">{copy.openSign}</Link>
           </div>
 
-          <hr className="status-divider" />
+          {analysisFeatureEnabled && (
+            <>
+              <hr className="status-divider" />
 
-          <h2 className="status-section-title">{copy.analysisTitle}</h2>
-          <p className="status-subtitle">{copy.analysisSubtitle}</p>
+              <h2 className="status-section-title">{copy.analysisTitle}</h2>
+              <p className="status-subtitle">{copy.analysisSubtitle}</p>
 
-          <label className="status-label" htmlFor="analysis-id-input">{copy.analysisInputLabel}</label>
-          <div className="status-controls">
-            <input
-              id="analysis-id-input"
-              type="text"
-              placeholder={copy.analysisInputPlaceholder}
-              value={analysisId}
-              onChange={(e) => setAnalysisId(e.target.value)}
-            />
-            <button className="btn btn-primary" onClick={() => void fetchAnalysisStatus()} disabled={analysisLoading}>
-              {analysisLoading ? '...' : copy.analysisCheckNow}
-            </button>
-          </div>
-
-          {analysisError && <div className="sign-error" role="alert">{analysisError}</div>}
-
-          {analysisStatus && (
-            <div className="status-result">
-              <h2>{copy.analysisResultTitle}</h2>
-              <div className="status-result-grid">
-                <div>
-                  <span>{copy.analysisInputLabel}</span>
-                  <strong>{analysisStatus.analyticProcessID ?? analysisId}</strong>
-                  <button
-                    className="btn btn-ghost status-copy-btn"
-                    type="button"
-                    onClick={() => void copyAnalysisProcessId(effectiveAnalysisId)}
-                  >
-                    📋 {analysisIdCopied ? copy.analysisCopiedId : copy.analysisCopyId}
-                  </button>
-                </div>
-                <div>
-                  <span>Status</span>
-                  <strong className={`status-pill ${statusClass(analysisStatusValue)}`}>{analysisStatusValue || 'UNKNOWN'}</strong>
-                </div>
-                {typeof analysisStatus.analysisStepIndex === 'number' && typeof analysisStatus.analysisStepTotal === 'number' && (
-                  <div>
-                    <span>{copy.analysisStep}</span>
-                    <strong>
-                      {replaceStepCounter(copy.analysisStepCounter, analysisStatus.analysisStepIndex, analysisStatus.analysisStepTotal)}
-                      {' · '}
-                      {analysisStepLabel(locale, analysisStatus.analysisStepKey)}
-                    </strong>
-                  </div>
-                )}
-                {analysisStatus.analysisStartedAt && (
-                  <div>
-                    <span>{copy.checkedAt}</span>
-                    <strong>{analysisStatus.analysisStartedAt}</strong>
-                  </div>
-                )}
-                {analysisStatus.analysisCompletedAt && (
-                  <div>
-                    <span>{copy.updatedAt}</span>
-                    <strong>{analysisStatus.analysisCompletedAt}</strong>
-                  </div>
-                )}
-                {analysisStatus.analysisError && (
-                  <div>
-                    <span>Error</span>
-                    <strong>{analysisStatus.analysisError}</strong>
-                  </div>
-                )}
+              <label className="status-label" htmlFor="analysis-id-input">{copy.analysisInputLabel}</label>
+              <div className="status-controls">
+                <input
+                  id="analysis-id-input"
+                  type="text"
+                  placeholder={copy.analysisInputPlaceholder}
+                  value={analysisId}
+                  onChange={(e) => setAnalysisId(e.target.value)}
+                />
+                <button className="btn btn-primary" onClick={() => void fetchAnalysisStatus()} disabled={analysisLoading}>
+                  {analysisLoading ? '...' : copy.analysisCheckNow}
+                </button>
               </div>
-              <div className="status-analysis-actions">
-                <a
-                  className="status-download status-download-secondary"
-                  href={`/api/sign/analysis/confirmation?analyticProcessID=${encodeURIComponent(effectiveAnalysisId)}&lang=${encodeURIComponent(locale)}`}
-                >
-                  {copy.analysisConfirmation}
-                </a>
-                {canDownloadAnalysis ? (
-                  <a
-                    className="status-download"
-                    href={`/api/sign/analysis/report?analyticProcessID=${encodeURIComponent(effectiveAnalysisId)}&lang=${encodeURIComponent(locale)}`}
-                  >
-                    {copy.analysisDownload}
-                  </a>
-                ) : (
-                  <p>{copy.analysisNotReady}</p>
-                )}
-              </div>
-              {completedAnalysis && (
-                <div className="status-analysis-result-block">
-                  <h3>{copy.analysisSummary}</h3>
-                  <p>{analysisSummaryText(completedAnalysis)}</p>
-                  <p><strong>{copy.analysisConfidence}:</strong> {confidenceText(completedAnalysis)}</p>
-                  <p><strong>{copy.analysisConsensus}:</strong> {consensusText(completedAnalysis)}</p>
-                  {asArray(completedAnalysis.key_dates).length > 0 && (
-                    <>
-                      <h4>{copy.analysisKeyDates}</h4>
-                      <ul>
-                        {asArray(completedAnalysis.key_dates).slice(0, 5).map((item, index) => (
-                          <li key={`analysis-date-${index}`}>
-                            {String(item.date ?? 'n/a')} - {String(item.label ?? item.description ?? '')}
-                          </li>
-                        ))}
-                      </ul>
-                    </>
+
+              {analysisError && <div className="sign-error" role="alert">{analysisError}</div>}
+
+              {analysisStatus && (
+                <div className="status-result">
+                  <h2>{copy.analysisResultTitle}</h2>
+                  <div className="status-result-grid">
+                    <div>
+                      <span>{copy.analysisInputLabel}</span>
+                      <strong>{analysisStatus.analyticProcessID ?? analysisId}</strong>
+                      <button
+                        className="btn btn-ghost status-copy-btn"
+                        type="button"
+                        onClick={() => void copyAnalysisProcessId(effectiveAnalysisId)}
+                      >
+                        📋 {analysisIdCopied ? copy.analysisCopiedId : copy.analysisCopyId}
+                      </button>
+                    </div>
+                    <div>
+                      <span>Status</span>
+                      <strong className={`status-pill ${statusClass(analysisStatusValue)}`}>{analysisStatusValue || 'UNKNOWN'}</strong>
+                    </div>
+                    {typeof analysisStatus.analysisStepIndex === 'number' && typeof analysisStatus.analysisStepTotal === 'number' && (
+                      <div>
+                        <span>{copy.analysisStep}</span>
+                        <strong>
+                          {replaceStepCounter(copy.analysisStepCounter, analysisStatus.analysisStepIndex, analysisStatus.analysisStepTotal)}
+                          {' · '}
+                          {analysisStepLabel(locale, analysisStatus.analysisStepKey)}
+                        </strong>
+                      </div>
+                    )}
+                    {analysisStatus.analysisStartedAt && (
+                      <div>
+                        <span>{copy.checkedAt}</span>
+                        <strong>{analysisStatus.analysisStartedAt}</strong>
+                      </div>
+                    )}
+                    {analysisStatus.analysisCompletedAt && (
+                      <div>
+                        <span>{copy.updatedAt}</span>
+                        <strong>{analysisStatus.analysisCompletedAt}</strong>
+                      </div>
+                    )}
+                    {analysisStatus.analysisError && (
+                      <div>
+                        <span>Error</span>
+                        <strong>{analysisStatus.analysisError}</strong>
+                      </div>
+                    )}
+                  </div>
+                  <div className="status-analysis-actions">
+                    <a
+                      className="status-download status-download-secondary"
+                      href={`/api/sign/analysis/confirmation?analyticProcessID=${encodeURIComponent(effectiveAnalysisId)}&lang=${encodeURIComponent(locale)}`}
+                    >
+                      {copy.analysisConfirmation}
+                    </a>
+                    {canDownloadAnalysis ? (
+                      <a
+                        className="status-download"
+                        href={`/api/sign/analysis/report?analyticProcessID=${encodeURIComponent(effectiveAnalysisId)}&lang=${encodeURIComponent(locale)}`}
+                      >
+                        {copy.analysisDownload}
+                      </a>
+                    ) : (
+                      <p>{copy.analysisNotReady}</p>
+                    )}
+                  </div>
+                  {completedAnalysis && (
+                    <div className="status-analysis-result-block">
+                      <h3>{copy.analysisSummary}</h3>
+                      <p>{analysisSummaryText(completedAnalysis)}</p>
+                      <p><strong>{copy.analysisConfidence}:</strong> {confidenceText(completedAnalysis)}</p>
+                      <p><strong>{copy.analysisConsensus}:</strong> {consensusText(completedAnalysis)}</p>
+                      {asArray(completedAnalysis.key_dates).length > 0 && (
+                        <>
+                          <h4>{copy.analysisKeyDates}</h4>
+                          <ul>
+                            {asArray(completedAnalysis.key_dates).slice(0, 5).map((item, index) => (
+                              <li key={`analysis-date-${index}`}>
+                                {String(item.date ?? 'n/a')} - {String(item.label ?? item.description ?? '')}
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
-            </div>
+            </>
           )}
         </section>
       </div>

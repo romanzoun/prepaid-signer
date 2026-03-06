@@ -22,6 +22,7 @@ public class SigningSessionData implements Serializable {
     private String analysisStatus; // NOT_REQUESTED, QUEUED, RUNNING, COMPLETED, FAILED
     private String analysisError;
     private Map<String, Object> contractAnalysisResult;
+    private boolean analysisFeatureEnabled;
     private String preferredLanguage = "de"; // de, en, fr
     private String step = "UPLOAD"; // UPLOAD, SIGNATORIES, PLACEMENT, PRICING, PAYMENT, DONE
 
@@ -57,6 +58,8 @@ public class SigningSessionData implements Serializable {
     public void setAnalysisError(String analysisError) { this.analysisError = analysisError; }
     public Map<String, Object> getContractAnalysisResult() { return contractAnalysisResult; }
     public void setContractAnalysisResult(Map<String, Object> contractAnalysisResult) { this.contractAnalysisResult = contractAnalysisResult; }
+    public boolean isAnalysisFeatureEnabled() { return analysisFeatureEnabled; }
+    public void setAnalysisFeatureEnabled(boolean analysisFeatureEnabled) { this.analysisFeatureEnabled = analysisFeatureEnabled; }
     public String getPreferredLanguage() { return preferredLanguage; }
     public void setPreferredLanguage(String preferredLanguage) { this.preferredLanguage = preferredLanguage; }
     public String getStep() { return step; }

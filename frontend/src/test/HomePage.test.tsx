@@ -17,7 +17,7 @@ function renderHomePage() {
 describe('HomePage', () => {
   it('renders hero headline', () => {
     renderHomePage()
-    expect(screen.getByText(/Digitale Signaturen/i)).toBeInTheDocument()
+    expect(screen.getByText(/PDF online signieren/i)).toBeInTheDocument()
   })
 
   it('renders CTA link to /sign', () => {
@@ -28,10 +28,10 @@ describe('HomePage', () => {
 
   it('renders 4 feature cards', () => {
     renderHomePage()
-    expect(screen.getByText('PDF hochladen')).toBeInTheDocument()
-    expect(screen.getByText('Unterzeichner einladen')).toBeInTheDocument()
-    expect(screen.getByText('Nur zahlen was du brauchst')).toBeInTheDocument()
-    expect(screen.getByText('Qualifizierte Signatur')).toBeInTheDocument()
+    expect(screen.getByText('PDF hochladen & signieren')).toBeInTheDocument()
+    expect(screen.getByText('Unterzeichner per E-Mail einladen')).toBeInTheDocument()
+    expect(screen.getByText('Prepaid - nur zahlen was du brauchst')).toBeInTheDocument()
+    expect(screen.getByText('Qualifizierte elektronische Signatur (QES)')).toBeInTheDocument()
   })
 
   it('renders step numbers 01-04', () => {

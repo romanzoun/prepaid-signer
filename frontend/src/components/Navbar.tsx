@@ -36,6 +36,12 @@ const NAV_COPY = {
   },
 } as const
 
+const LOCALE_FLAGS = {
+  de: '🇩🇪',
+  en: '🇬🇧',
+  fr: '🇫🇷',
+} as const
+
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const { locale, setLocale } = useI18n()
@@ -61,21 +67,26 @@ export default function Navbar() {
         >
           {copy.menu}
         </button>
-        <label className="navbar-locale-label">
-          <span>{copy.localeLabel}</span>
-          <select
-            className="navbar-locale-select"
-            value={locale}
-            onChange={(e) => setLocale(e.target.value as (typeof LOCALES)[number])}
-            aria-label={copy.localeLabel}
-          >
-            {LOCALES.map((code) => (
-              <option key={code} value={code}>
-                {LOCALE_LABELS[code]}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="navbar-locale" aria-label={copy.localeLabel}>
+          <div className="navbar-locale-switch" role="group" aria-label={copy.localeLabel}>
+            {LOCALES.map((code) => {
+              const active = code === locale
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  className={`locale-pill ${active ? 'active' : ''}`}
+                  onClick={() => setLocale(code)}
+                  aria-pressed={active}
+                  aria-label={`${LOCALE_LABELS[code]} (${code.toUpperCase()})`}
+                >
+                  <span className="locale-flag" aria-hidden="true">{LOCALE_FLAGS[code]}</span>
+                  <span className="locale-code">{code.toUpperCase()}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
         <ul id="main-nav-links" className={`navbar-links ${menuOpen ? 'open' : ''}`}>
           <li><NavLink to="/" end onClick={closeMenu}>{copy.home}</NavLink></li>
           <li><NavLink to="/sign" onClick={closeMenu}>{copy.sign}</NavLink></li>

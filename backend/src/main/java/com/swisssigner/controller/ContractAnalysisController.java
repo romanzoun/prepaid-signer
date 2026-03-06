@@ -2,6 +2,7 @@ package com.swisssigner.controller;
 
 import com.swisssigner.model.ContractAnalyzeOptions;
 import com.swisssigner.service.ContractAnalysisService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,8 @@ import java.util.Map;
 public class ContractAnalysisController {
 
     private final ContractAnalysisService contractAnalysisService;
+    @Value("${app.contract-analysis.enabled:false}")
+    private boolean contractAnalysisEnabled;
 
     public ContractAnalysisController(ContractAnalysisService contractAnalysisService) {
         this.contractAnalysisService = contractAnalysisService;
@@ -29,6 +32,9 @@ public class ContractAnalysisController {
                                      @RequestParam(value = "party_role", required = false) String partyRole,
                                      @RequestParam(value = "analysis_profile", defaultValue = "standard") String analysisProfile,
                                      @RequestParam(value = "confidence_mode", defaultValue = "consensus3") String confidenceMode) {
+        if (!contractAnalysisEnabled) {
+            return ResponseEntity.status(404).body(Map.of("error", "AI analysis feature is disabled"));
+        }
         try {
             ContractAnalyzeOptions options = new ContractAnalyzeOptions(
                 language,

@@ -1,17 +1,14 @@
 package com.swisssigner.service;
 
 import com.swisssigner.model.ContractAnalyzeOptions;
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -22,8 +19,8 @@ public class ContractAnalysisJobService {
     private static final Logger log = LoggerFactory.getLogger(ContractAnalysisJobService.class);
 
     private final ContractAnalysisService contractAnalysisService;
-    private final ExecutorService executor = Executors.newFixedThreadPool(2);
     private final ConcurrentMap<String, AnalysisJob> jobs = new ConcurrentHashMap<>();
+    private final ExecutorService analysisExecutor = Executors.newCachedThreadPool();
 
     public ContractAnalysisJobService(ContractAnalysisService contractAnalysisService) {
         this.contractAnalysisService = contractAnalysisService;
@@ -49,52 +46,40 @@ public class ContractAnalysisJobService {
         job.stepTotal = ContractAnalysisService.TOTAL_ANALYSIS_STEPS;
         jobs.put(analysisProcessId, job);
 
-        final Path snapshotPath;
-        try {
-            snapshotPath = Files.createTempFile("contract-analysis-", ".pdf");
-            Files.copy(pdfPath, snapshotPath, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException ex) {
-            job.error = "Could not prepare analysis input: " + ex.getMessage();
-            job.status = "FAILED";
-            job.completedAt = Instant.now();
-            log.warn("analysis_job_prepare_failed id={} reason={}", analysisProcessId, ex.getMessage());
-            return job;
-        }
-
-        CompletableFuture.runAsync(() -> {
-            job.status = "RUNNING";
-            job.stepKey = "PREPARE_INPUT";
-            job.stepIndex = 1;
-            try {
-                Map<String, Object> result = contractAnalysisService.analyzeStoredDocument(
-                    snapshotPath,
-                    fileName,
-                    options,
-                    (step, totalSteps, stepKey) -> {
-                        job.stepIndex = step;
-                        job.stepTotal = totalSteps;
-                        job.stepKey = stepKey;
-                    }
-                );
-                job.result = result;
-                job.status = "COMPLETED";
-                job.stepKey = "COMPLETED";
-            } catch (RuntimeException ex) {
-                job.error = ex.getMessage();
-                job.status = "FAILED";
-                job.stepKey = "FAILED";
-                log.warn("analysis_job_failed id={} reason={}", analysisProcessId, ex.getMessage());
-            } finally {
-                try {
-                    Files.deleteIfExists(snapshotPath);
-                } catch (IOException ignored) {
-                    // best-effort cleanup
-                }
-                job.completedAt = Instant.now();
-            }
-        }, executor);
-
+        analysisExecutor.submit(() -> runJob(job, analysisProcessId, pdfPath, fileName, options));
         return job;
+    }
+
+    private void runJob(AnalysisJob job,
+                        String analysisProcessId,
+                        Path pdfPath,
+                        String fileName,
+                        ContractAnalyzeOptions options) {
+        job.status = "RUNNING";
+        job.stepKey = "PREPARE_INPUT";
+        job.stepIndex = 1;
+        try {
+            Map<String, Object> result = contractAnalysisService.analyzeStoredDocument(
+                pdfPath,
+                fileName,
+                options,
+                (step, totalSteps, stepKey) -> {
+                    job.stepIndex = step;
+                    job.stepTotal = totalSteps;
+                    job.stepKey = stepKey;
+                }
+            );
+            job.result = result;
+            job.status = "COMPLETED";
+            job.stepKey = "COMPLETED";
+        } catch (RuntimeException ex) {
+            job.error = ex.getMessage();
+            job.status = "FAILED";
+            job.stepKey = "FAILED";
+            log.warn("analysis_job_failed id={} reason={}", analysisProcessId, ex.getMessage());
+        } finally {
+            job.completedAt = Instant.now();
+        }
     }
 
     public AnalysisJob getJob(String analysisProcessId) {
@@ -102,6 +87,11 @@ public class ContractAnalysisJobService {
             return null;
         }
         return jobs.get(analysisProcessId);
+    }
+
+    @PreDestroy
+    public void shutdownExecutor() {
+        analysisExecutor.shutdownNow();
     }
 
     public static class AnalysisJob {

@@ -1,15 +1,15 @@
 .footer {
   background: var(--sdx-color-text-heading);
   color: var(--sdx-color-text-inverse);
-  margin-top: var(--sdx-spacing-6);
+  margin-top: var(--sdx-spacing-7);
 }
 
 .footer-inner {
   display: grid;
-  gap: var(--sdx-spacing-4);
+  gap: var(--sdx-spacing-5);
   grid-template-columns: 1fr;
-  padding-bottom: var(--sdx-spacing-5);
-  padding-top: var(--sdx-spacing-5);
+  padding-bottom: var(--sdx-spacing-6);
+  padding-top: var(--sdx-spacing-6);
 }
 
 .footer-brand .brand-cross {
@@ -25,7 +25,8 @@
 .footer-brand p {
   color: var(--sdx-color-text-inverse-72);
   font-size: 14px;
-  margin-top: var(--sdx-spacing-2);
+  line-height: 1.6;
+  margin-top: var(--sdx-spacing-3);
 }
 
 .footer-links h4 {
@@ -33,7 +34,7 @@
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.08em;
-  margin-bottom: var(--sdx-spacing-2);
+  margin-bottom: var(--sdx-spacing-3);
   text-transform: uppercase;
 }
 
@@ -62,8 +63,8 @@
   border-top: var(--sdx-border-width-thin) solid var(--sdx-color-border-inverse-20);
   color: var(--sdx-color-text-inverse-75);
   font-size: 12px;
-  padding-bottom: var(--sdx-spacing-3);
-  padding-top: var(--sdx-spacing-3);
+  padding-bottom: var(--sdx-spacing-4);
+  padding-top: var(--sdx-spacing-4);
   text-align: center;
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { usePageMeta } from '../hooks/usePageMeta'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Components } from 'react-markdown'
@@ -379,16 +380,10 @@ export default function MarkdownPage() {
       .catch(() => setError(true))
   }, [typedSlug, moduleLoader, config])
 
-  useEffect(() => {
-    if (config) {
-      document.title = config.title
-      const meta = document.querySelector('meta[name="description"]')
-      if (meta) meta.setAttribute('content', config.description)
-    }
-    return () => {
-      document.title = pageCopy.defaultTitle
-    }
-  }, [config, pageCopy.defaultTitle])
+  usePageMeta(
+    config?.title ?? pageCopy.defaultTitle,
+    config?.description ?? '',
+  )
 
   if (error) {
     return (

@@ -232,6 +232,7 @@
   border-radius: var(--sdx-border-radius-medium);
   max-height: 72vh;
   overflow: auto;
+  width: 100%;
 }
 
 .placer-canvas-wrapper {
@@ -402,5 +403,9 @@
   .zoom-slider {
     flex: 1;
     min-width: 90px;
+  }
+
+  .placer-scroll {
+    max-height: 56vh;
   }
 }

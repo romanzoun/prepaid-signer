@@ -30,7 +30,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,7 +41,7 @@ public class ContractAnalysisService {
     private static final Pattern ISO_DATE_PATTERN = Pattern.compile("\\b\\d{4}-\\d{2}-\\d{2}\\b");
     private static final Pattern DOTTED_DATE_PATTERN = Pattern.compile("\\b\\d{1,2}\\.\\d{1,2}\\.\\d{2,4}\\b");
     private static final Pattern FIRST_INTEGER_PATTERN = Pattern.compile("-?\\d+");
-    public static final int TOTAL_ANALYSIS_STEPS = 6;
+    public static final int TOTAL_ANALYSIS_STEPS = 3;
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final HttpClient httpClient = HttpClient.newBuilder()
@@ -61,7 +60,7 @@ public class ContractAnalysisService {
     @Value("${app.contract-analysis.timeout-seconds:120}")
     private int timeoutSeconds;
 
-    @Value("${app.contract-analysis.max-input-chars:120000}")
+    @Value("${app.contract-analysis.max-input-chars:40000}")
     private int maxInputChars;
 
     public Map<String, Object> analyze(MultipartFile file, ContractAnalyzeOptions options) {
@@ -121,112 +120,53 @@ public class ContractAnalysisService {
         docMeta.put("jurisdiction_hint", normalize(options.jurisdictionHint(), null));
         docMeta.put("party_role", normalize(options.partyRole(), null));
         docMeta.put("analysis_profile", normalize(options.analysisProfile(), "standard"));
-        docMeta.put("confidence_mode", normalize(options.confidenceMode(), "consensus3"));
 
         Map<String, Object> preExtractHints = buildPreExtractHints(chunks);
         List<Map<String, Object>> trimmedChunks = trimChunks(chunks);
 
-        progressListener.onProgress(2, TOTAL_ANALYSIS_STEPS, "CONSENSUS_CASE_1");
-        JsonNode case1 = runPrompt("consensus_case", Map.of(
+        String outputLanguage = resolveOutputLanguage(options.language());
+
+        progressListener.onProgress(2, TOTAL_ANALYSIS_STEPS, "AI_ANALYSIS");
+        JsonNode result = runPrompt("single_analysis", Map.of(
             "doc_meta", docMeta,
-            "case_config", Map.of(
-                "case_id", "case_1",
-                "name", "strict_legal_risk",
-                "perspective", "Strict legal reviewer focused on termination, liability, payment risk, and compliance gaps.",
-                "focus", "Surface hidden risks, penalties, missing clauses, and high-impact legal ambiguities.",
-                "style", "Conservative and evidence-first"
-            ),
             "chunks", trimmedChunks,
-            "preextract_hints", preExtractHints,
-            "all_cases_count", 3
-        ));
+            "preextract_hints", preExtractHints
+        ), outputLanguage);
 
-        progressListener.onProgress(3, TOTAL_ANALYSIS_STEPS, "CONSENSUS_CASE_2");
-        JsonNode case2 = runPrompt("consensus_case", Map.of(
-            "doc_meta", docMeta,
-            "case_config", Map.of(
-                "case_id", "case_2",
-                "name", "operational_execution",
-                "perspective", "Operational reviewer focused on obligations, deadlines, deliverables, and practical execution.",
-                "focus", "Extract who must do what by when, and what happens if obligations are missed.",
-                "style", "Action-oriented and implementation-focused"
-            ),
-            "chunks", trimmedChunks,
-            "preextract_hints", preExtractHints,
-            "all_cases_count", 3
-        ));
-
-        progressListener.onProgress(4, TOTAL_ANALYSIS_STEPS, "CONSENSUS_CASE_3");
-        JsonNode case3 = runPrompt("consensus_case", Map.of(
-            "doc_meta", docMeta,
-            "case_config", Map.of(
-                "case_id", "case_3",
-                "name", "executive_business",
-                "perspective", "Executive reviewer focused on business impact, negotiation levers, and decision readiness.",
-                "focus", "Produce management-ready findings with key dates, duties, risks, and opportunities.",
-                "style", "Business concise and plain language"
-            ),
-            "chunks", trimmedChunks,
-            "preextract_hints", preExtractHints,
-            "all_cases_count", 3
-        ));
-
-        List<Map<String, Object>> cases = new ArrayList<>();
-        Map<String, Object> casePayload1 = new LinkedHashMap<>();
-        casePayload1.put("case_id", "case_1");
-        casePayload1.put("result", toJava(case1));
-        cases.add(casePayload1);
-
-        Map<String, Object> casePayload2 = new LinkedHashMap<>();
-        casePayload2.put("case_id", "case_2");
-        casePayload2.put("result", toJava(case2));
-        cases.add(casePayload2);
-
-        Map<String, Object> casePayload3 = new LinkedHashMap<>();
-        casePayload3.put("case_id", "case_3");
-        casePayload3.put("result", toJava(case3));
-        cases.add(casePayload3);
-
-        progressListener.onProgress(5, TOTAL_ANALYSIS_STEPS, "SEMANTIC_CONSENSUS");
-        JsonNode semanticConsensus = runPrompt("semantic_consensus_summary", Map.of(
-            "doc_meta", docMeta,
-            "cases", cases
-        ));
-
-        String summary = semanticConsensus.path("summary").asText("");
+        String summary = result.path("summary").asText("");
         if (summary.isBlank()) {
-            summary = semanticConsensus.path("final_report").path("executive_summary").asText("");
+            summary = result.path("final_report").path("executive_summary").asText("");
         }
 
-        JsonNode rawConfidenceNode = semanticConsensus.path("confidence");
+        JsonNode rawConfidenceNode = result.path("confidence");
         if (rawConfidenceNode.isMissingNode() || rawConfidenceNode.isNull()) {
             ObjectNode fallbackConfidence = mapper.createObjectNode();
             fallbackConfidence.put("score", 0);
             fallbackConfidence.put("overall_score", 0);
-            fallbackConfidence.put("explanation", "No confidence score returned by semantic consensus.");
+            fallbackConfidence.put("explanation", "No confidence score returned.");
             rawConfidenceNode = fallbackConfidence;
         }
         ObjectNode confidenceNode = normalizeConfidenceNode(rawConfidenceNode);
 
-        JsonNode finalReportNode = semanticConsensus.path("final_report");
+        JsonNode finalReportNode = result.path("final_report");
         if (finalReportNode.isMissingNode() || finalReportNode.isNull() || !finalReportNode.isObject()) {
-            finalReportNode = buildFinalReportFallback(summary, semanticConsensus, confidenceNode);
+            finalReportNode = buildFinalReportFallback(summary, result, confidenceNode);
         } else {
             normalizeFinalReportConfidence((ObjectNode) finalReportNode, confidenceNode);
         }
 
-        progressListener.onProgress(6, TOTAL_ANALYSIS_STEPS, "BUILD_RESULT");
+        progressListener.onProgress(3, TOTAL_ANALYSIS_STEPS, "BUILD_RESULT");
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("doc_id", docId);
         response.put("summary", summary);
-        response.put("key_dates", toJava(arrayOrEmpty(semanticConsensus.path("key_dates"))));
-        response.put("termination", toJava(objectOrEmpty(semanticConsensus.path("termination"))));
-        response.put("obligations", toJava(arrayOrEmpty(semanticConsensus.path("obligations"))));
-        response.put("risks", toJava(arrayOrEmpty(semanticConsensus.path("risks"))));
-        response.put("opportunities", toJava(arrayOrEmpty(semanticConsensus.path("opportunities"))));
-        response.put("open_questions", toJava(arrayOrEmpty(semanticConsensus.path("open_questions"))));
-        response.put("evidence", toJava(arrayOrEmpty(semanticConsensus.path("evidence"))));
-        response.put("consensus", toJava(objectOrEmpty(semanticConsensus.path("consensus"))));
+        response.put("key_dates", toJava(arrayOrEmpty(result.path("key_dates"))));
+        response.put("termination", toJava(objectOrEmpty(result.path("termination"))));
+        response.put("obligations", toJava(arrayOrEmpty(result.path("obligations"))));
+        response.put("risks", toJava(arrayOrEmpty(result.path("risks"))));
+        response.put("opportunities", toJava(arrayOrEmpty(result.path("opportunities"))));
+        response.put("open_questions", toJava(arrayOrEmpty(result.path("open_questions"))));
+        response.put("evidence", toJava(arrayOrEmpty(result.path("evidence"))));
+        response.put("consensus", mapper.createObjectNode());
         response.put("confidence", toJava(confidenceNode));
         response.put("final_report", toJava(finalReportNode));
         response.put("generated_at", Instant.now().toString());
@@ -360,31 +300,6 @@ public class ContractAnalysisService {
         return hints;
     }
 
-    private List<Map<String, Object>> focusChunks(List<Map<String, Object>> chunks, Set<String> keywords) {
-        List<Map<String, Object>> selected = new ArrayList<>();
-        int charBudget = Math.max(20000, maxInputChars / 6);
-        int used = 0;
-
-        for (Map<String, Object> chunk : chunks) {
-            String text = String.valueOf(chunk.get("text")).toLowerCase(Locale.ROOT);
-            boolean match = keywords.stream().anyMatch(text::contains);
-            if (!match) {
-                continue;
-            }
-            int len = text.length();
-            if (used + len > charBudget) {
-                break;
-            }
-            selected.add(chunk);
-            used += len;
-        }
-
-        if (selected.isEmpty()) {
-            return chunks;
-        }
-        return selected;
-    }
-
     private List<Map<String, Object>> trimChunks(List<Map<String, Object>> chunks) {
         List<Map<String, Object>> out = new ArrayList<>();
         int used = 0;
@@ -400,9 +315,16 @@ public class ContractAnalysisService {
     }
 
     private JsonNode runPrompt(String promptName, Map<String, Object> inputPayload) {
+        return runPrompt(promptName, inputPayload, null);
+    }
+
+    private JsonNode runPrompt(String promptName, Map<String, Object> inputPayload, String outputLanguage) {
         try {
             String systemPrompt = loadPrompt("prompts/contracts/_system.md");
             String promptTemplate = loadPrompt("prompts/contracts/" + promptName + ".md");
+            if (outputLanguage != null) {
+                promptTemplate = promptTemplate.replace("{{OUTPUT_LANGUAGE}}", outputLanguage);
+            }
             String inputJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(inputPayload);
             String userPrompt = promptTemplate + "\n\nInput JSON:\n" + inputJson;
 
@@ -574,6 +496,19 @@ public class ContractAnalysisService {
             return 0;
         }
         return Math.min(value, 99);
+    }
+
+    private String resolveOutputLanguage(String language) {
+        if (language == null || language.isBlank() || "auto".equalsIgnoreCase(language)) {
+            return "the same language as the document";
+        }
+        return switch (language.toLowerCase(Locale.ROOT)) {
+            case "de" -> "German (Deutsch)";
+            case "en" -> "English";
+            case "fr" -> "French (Francais)";
+            case "it" -> "Italian (Italiano)";
+            default -> language;
+        };
     }
 
     private String loadPrompt(String path) throws IOException {

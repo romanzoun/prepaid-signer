@@ -138,6 +138,7 @@ export default function PdfSignaturePlacer({ file, signatories, placements, onCh
   const copy = PLACER_COPY[locale]
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const renderTask = useRef<ReturnType<PDFPageProxy['render']> | null>(null)
   const dragState = useRef<DragState | null>(null)
@@ -150,6 +151,25 @@ export default function PdfSignaturePlacer({ file, signatories, placements, onCh
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [livePos, setLivePos] = useState<{ signatoryId: string; x: number; y: number } | null>(null)
+  const [viewerWidth, setViewerWidth] = useState(0)
+
+  useEffect(() => {
+    const updateWidth = () => {
+      setViewerWidth(scrollRef.current?.clientWidth ?? 0)
+    }
+
+    updateWidth()
+    let resizeObserver: ResizeObserver | null = null
+    if (typeof ResizeObserver !== 'undefined' && scrollRef.current) {
+      resizeObserver = new ResizeObserver(() => updateWidth())
+      resizeObserver.observe(scrollRef.current)
+    }
+    window.addEventListener('resize', updateWidth)
+    return () => {
+      window.removeEventListener('resize', updateWidth)
+      resizeObserver?.disconnect()
+    }
+  }, [])
 
   useEffect(() => {
     setLoading(true)
@@ -192,8 +212,11 @@ export default function PdfSignaturePlacer({ file, signatories, placements, onCh
     pdfDoc.getPage(currentPage).then((page) => {
       if (cancelled) return
 
-      const viewport = page.getViewport({ scale: zoom })
       const unscaled = page.getViewport({ scale: 1 })
+      const fitScale = viewerWidth > 0 ? (viewerWidth - 8) / unscaled.width : zoom
+      const shouldFitToWidth = viewerWidth > 0 && viewerWidth < 900
+      const renderScale = shouldFitToWidth ? Math.max(0.25, Math.min(zoom, fitScale)) : zoom
+      const viewport = page.getViewport({ scale: renderScale })
 
       const canvas = canvasRef.current!
       canvas.width = viewport.width
@@ -223,7 +246,7 @@ export default function PdfSignaturePlacer({ file, signatories, placements, onCh
     return () => {
       cancelled = true
     }
-  }, [pdfDoc, currentPage, zoom, copy])
+  }, [pdfDoc, currentPage, zoom, copy, viewerWidth])
 
   function canvasToPdf(cx: number, cy: number): [number, number] {
     if (!pageInfo) return [0, 0]
@@ -321,7 +344,8 @@ export default function PdfSignaturePlacer({ file, signatories, placements, onCh
   const pagePlacements = placements.filter((placement) => placement.page === currentPage)
   const placedIds = new Set(placements.map((placement) => placement.signatoryId))
   const allPlaced = signatories.length > 0 && signatories.every((signer) => placedIds.has(signer.id))
-  const zoomPercent = Math.round(zoom * 100)
+  const effectiveZoom = pageInfo?.viewport.scale ?? zoom
+  const zoomPercent = Math.round(effectiveZoom * 100)
 
   function clampZoom(nextZoom: number): number {
     return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number(nextZoom.toFixed(2))))
@@ -421,7 +445,7 @@ export default function PdfSignaturePlacer({ file, signatories, placements, onCh
           </div>
         )}
 
-        <div className="placer-scroll">
+        <div ref={scrollRef} className="placer-scroll">
           <div
             ref={wrapperRef}
             className={`placer-canvas-wrapper ${isDragOver ? 'drop-active' : ''}`}

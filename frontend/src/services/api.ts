@@ -47,6 +47,7 @@ export interface InviteResponse {
   documentName: string
   processId?: string
   invitations: InvitationResult[]
+  analysisFeatureEnabled?: boolean
   analysisRequested?: boolean
   analysisStatus?: string
   analysisError?: string
@@ -65,6 +66,7 @@ export interface PaymentResponse {
   documentName?: string
   processId?: string
   invitations?: InvitationResult[]
+  analysisFeatureEnabled?: boolean
   analysisRequested?: boolean
   analysisStatus?: string
   analysisError?: string
@@ -92,6 +94,7 @@ export interface SigningState {
   price?: PriceBreakdown
   paymentSessionId?: string
   paymentStatus?: string
+  analysisFeatureEnabled?: boolean
   contractAnalysisRequested?: boolean
   analysisProcessId?: string
   analysisStatus?: string
@@ -101,6 +104,7 @@ export interface SigningState {
 }
 
 export interface AnalysisSelectionResponse {
+  analysisFeatureEnabled?: boolean
   analysisRequested: boolean
   analysisStatus?: string
   analysisPriceGross: number
@@ -110,6 +114,7 @@ export interface AnalysisSelectionResponse {
 }
 
 export interface AnalysisStatusResponse {
+  analysisFeatureEnabled?: boolean
   analysisRequested?: boolean
   analysisStatus: string
   status?: string
@@ -216,6 +221,11 @@ export async function startAnalysis(input: {
     method: 'POST',
     credentials: 'include',
   })
+  return handleResponse(res)
+}
+
+export async function suggestPlacements(): Promise<{ suggestions: SignatoryPlacement[] }> {
+  const res = await fetch(`${BASE}/placements/suggest`, { method: 'POST', credentials: 'include' })
   return handleResponse(res)
 }
 

@@ -1,23 +1,24 @@
 import { Link } from 'react-router-dom'
 import { useI18n } from '../i18n'
+import { usePageMeta } from '../hooks/usePageMeta'
 import './HomePage.css'
 
 const HOME_COPY = {
   de: {
     badge: 'Kein Lock-in · Keine Verpflichtungen',
-    heroTitleLine1: 'Digitale Signaturen,',
-    heroTitleLine2: 'so einfach wie möglich.',
-    heroSubtitleLine1: 'Lade ein PDF hoch, lade Unterzeichner ein, bezahle einmalig.',
-    heroSubtitleLine2: 'Keine Abonnements. Nur Digitalisierung.',
+    heroTitleLine1: 'PDF online signieren -',
+    heroTitleLine2: 'qualifizierte digitale Signatur Schweiz.',
+    heroSubtitleLine1: 'PDF hochladen, Unterzeichner per E-Mail einladen, einmalig bezahlen.',
+    heroSubtitleLine2: 'Kein Abo. Kein Konto. Prepaid ab CHF 3.40 pro Signatur.',
     ctaSign: 'Jetzt Dokument signieren',
     ctaHow: 'Wie es funktioniert',
     trustLine: '✦ Powered by Swisscom Sign API · Swiss Quality',
-    featuresTitle: 'Was macht justSign anders?',
+    featuresTitle: 'Warum justSign für digitale Signaturen?',
     features: [
-      { icon: '📄', title: 'PDF hochladen', desc: 'Lade dein Dokument hoch - kein Konto erforderlich.' },
-      { icon: '👥', title: 'Unterzeichner einladen', desc: 'Per E-Mail oder Telefon - einfach, schnell, sicher.' },
-      { icon: '💳', title: 'Nur zahlen was du brauchst', desc: 'Prepaid - keine Abonnements, keine Verpflichtungen.' },
-      { icon: '✅', title: 'Qualifizierte Signatur', desc: 'Powered by Swisscom Sign API - rechtsgueltig in der Schweiz und EU.' },
+      { icon: '📄', title: 'PDF hochladen & signieren', desc: 'Dokument hochladen und sofort digital signieren lassen - kein Konto, keine Installation.' },
+      { icon: '👥', title: 'Unterzeichner per E-Mail einladen', desc: 'Signatureinladung per E-Mail oder SMS - Unterzeichner klicken und signieren.' },
+      { icon: '💳', title: 'Prepaid - nur zahlen was du brauchst', desc: 'Ab CHF 1.20 pro Signatur. Keine Abonnements, keine monatlichen Kosten.' },
+      { icon: '✅', title: 'Qualifizierte elektronische Signatur (QES)', desc: 'Rechtsgültig in der Schweiz und EU. Powered by Swisscom Sign API (eIDAS & ZertES).' },
     ],
     stepsTitle: 'In 4 Schritten zum signierten Dokument',
     steps: [
@@ -40,19 +41,19 @@ const HOME_COPY = {
   },
   en: {
     badge: 'No lock-in · No commitment',
-    heroTitleLine1: 'Digital signatures,',
-    heroTitleLine2: 'as simple as possible.',
-    heroSubtitleLine1: 'Upload a PDF, invite signers, pay once.',
-    heroSubtitleLine2: 'No subscriptions. Just digitization.',
+    heroTitleLine1: 'Sign PDF online -',
+    heroTitleLine2: 'qualified digital signature Switzerland.',
+    heroSubtitleLine1: 'Upload a PDF, invite signers by email, pay once.',
+    heroSubtitleLine2: 'No subscription. No account. Prepaid from CHF 3.40 per signature.',
     ctaSign: 'Sign a document now',
     ctaHow: 'How it works',
     trustLine: '✦ Powered by Swisscom Sign API · Swiss Quality',
-    featuresTitle: 'Why justSign is different',
+    featuresTitle: 'Why justSign for digital signatures?',
     features: [
-      { icon: '📄', title: 'Upload PDF', desc: 'Upload your document - no account required.' },
-      { icon: '👥', title: 'Invite signers', desc: 'By email or phone - simple, fast, secure.' },
-      { icon: '💳', title: 'Pay only what you need', desc: 'Prepaid - no subscriptions, no commitment.' },
-      { icon: '✅', title: 'Qualified signature', desc: 'Powered by Swisscom Sign API - legally valid in Switzerland and the EU.' },
+      { icon: '📄', title: 'Upload PDF & sign online', desc: 'Upload your document and get it signed digitally - no account, no installation.' },
+      { icon: '👥', title: 'Invite signers by email', desc: 'Send signature invitations by email or SMS - signers click and sign.' },
+      { icon: '💳', title: 'Prepaid - pay only what you need', desc: 'From CHF 1.20 per signature. No subscriptions, no monthly fees.' },
+      { icon: '✅', title: 'Qualified electronic signature (QES)', desc: 'Legally valid in Switzerland and the EU. Powered by Swisscom Sign API (eIDAS & ZertES).' },
     ],
     stepsTitle: 'Signed document in 4 steps',
     steps: [
@@ -75,19 +76,19 @@ const HOME_COPY = {
   },
   fr: {
     badge: 'Sans lock-in · Sans engagement',
-    heroTitleLine1: 'Signatures numeriques,',
-    heroTitleLine2: 'aussi simples que possible.',
-    heroSubtitleLine1: 'Importez un PDF, invitez les signataires, payez une seule fois.',
-    heroSubtitleLine2: 'Pas d abonnement. Seulement la digitalisation.',
+    heroTitleLine1: 'Signer un PDF en ligne -',
+    heroTitleLine2: 'signature numerique qualifiee Suisse.',
+    heroSubtitleLine1: 'Importez un PDF, invitez les signataires par e-mail, payez une seule fois.',
+    heroSubtitleLine2: 'Sans abonnement. Sans compte. Prepaid des CHF 3.40 par signature.',
     ctaSign: 'Signer un document',
     ctaHow: 'Fonctionnement',
     trustLine: '✦ Powered by Swisscom Sign API · Qualite suisse',
-    featuresTitle: 'Pourquoi justSign est different',
+    featuresTitle: 'Pourquoi justSign pour la signature numerique?',
     features: [
-      { icon: '📄', title: 'Importer un PDF', desc: 'Importez votre document - aucun compte requis.' },
-      { icon: '👥', title: 'Inviter les signataires', desc: 'Par e-mail ou telephone - simple, rapide, securise.' },
-      { icon: '💳', title: 'Payer uniquement le necessaire', desc: 'Prepaid - sans abonnement, sans engagement.' },
-      { icon: '✅', title: 'Signature qualifiee', desc: 'Powered by Swisscom Sign API - valable en Suisse et dans l UE.' },
+      { icon: '📄', title: 'Importer un PDF & signer en ligne', desc: 'Importez votre document et faites-le signer numeriquement - sans compte, sans installation.' },
+      { icon: '👥', title: 'Inviter les signataires par e-mail', desc: 'Envoyez des invitations par e-mail ou SMS - les signataires cliquent et signent.' },
+      { icon: '💳', title: 'Prepaid - payer uniquement le necessaire', desc: 'Des CHF 1.20 par signature. Sans abonnement, sans frais mensuels.' },
+      { icon: '✅', title: 'Signature electronique qualifiee (QES)', desc: 'Valable en Suisse et dans l UE. Powered by Swisscom Sign API (eIDAS & ZertES).' },
     ],
     stepsTitle: 'Document signe en 4 etapes',
     steps: [
@@ -110,9 +111,25 @@ const HOME_COPY = {
   },
 } as const
 
+const PAGE_META = {
+  de: {
+    title: 'justSign - Digitale Signatur Schweiz | PDF online signieren ohne Abo',
+    description: 'PDF hochladen, Unterzeichner einladen, einmalig bezahlen. Qualifizierte elektronische Signatur (QES) ab CHF 3.40 inkl. MwSt. Prepaid, kein Abo, kein Konto. Powered by Swisscom Sign API.',
+  },
+  en: {
+    title: 'justSign - Digital Signatures Switzerland | Sign PDF Online',
+    description: 'Upload PDF, invite signers, pay once. Qualified electronic signature (QES) from CHF 3.40 incl. VAT. Prepaid, no subscription, no account. Powered by Swisscom Sign API.',
+  },
+  fr: {
+    title: 'justSign - Signature numerique Suisse | Signer un PDF en ligne',
+    description: 'Importez un PDF, invitez les signataires, payez une seule fois. Signature electronique qualifiee (QES) des CHF 3.40 TTC. Prepaid, sans abonnement.',
+  },
+} as const
+
 export default function HomePage() {
   const { locale } = useI18n()
   const copy = HOME_COPY[locale]
+  usePageMeta(PAGE_META[locale].title, PAGE_META[locale].description)
 
   return (
     <main>

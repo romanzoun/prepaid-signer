@@ -28,11 +28,15 @@ app:
     enabled: ${LOG_DEBUG_SWISSCOM_SIGN:false}
     file: ${LOG_DEBUG_SWISSCOM_SIGN_FILE:${UPLOAD_DIR:/tmp/swisssigner}/swisscom-sign-debug.log}
   contract-analysis:
+    enabled: ${CONTRACT_ANALYZER_ENABLED:false}
     openai-api-key: ${OPENAI_API_KEY:}
     openai-model: ${OPENAI_MODEL:gpt-4.1-mini}
     openai-base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
     timeout-seconds: ${OPENAI_TIMEOUT_SECONDS:120}
-    max-input-chars: ${CONTRACT_ANALYSIS_MAX_INPUT_CHARS:120000}
+    max-input-chars: ${CONTRACT_ANALYSIS_MAX_INPUT_CHARS:40000}
+  placement-analysis:
+    openai-model: ${OPENAI_PLACEMENT_MODEL:gpt-5}
+    timeout-seconds: ${OPENAI_PLACEMENT_TIMEOUT_SECONDS:60}
 
 swisscom:
   sign:

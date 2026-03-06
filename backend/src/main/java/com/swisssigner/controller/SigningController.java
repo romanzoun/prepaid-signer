@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,9 @@ public class SigningController {
     private final ConfirmationPdfService confirmationPdfService;
     private final AnalysisReportPdfService analysisReportPdfService;
     private final AnalysisConfirmationPdfService analysisConfirmationPdfService;
+    private final SignaturePlacementService signaturePlacementService;
+    @Value("${app.contract-analysis.enabled:false}")
+    private boolean contractAnalysisEnabled;
 
     public SigningController(PricingService pricingService,
                              FileStorageService fileStorageService,
@@ -48,7 +52,8 @@ public class SigningController {
                              ContractAnalysisJobService contractAnalysisJobService,
                              ConfirmationPdfService confirmationPdfService,
                              AnalysisReportPdfService analysisReportPdfService,
-                             AnalysisConfirmationPdfService analysisConfirmationPdfService) {
+                             AnalysisConfirmationPdfService analysisConfirmationPdfService,
+                             SignaturePlacementService signaturePlacementService) {
         this.pricingService = pricingService;
         this.fileStorageService = fileStorageService;
         this.paymentService = paymentService;
@@ -57,6 +62,7 @@ public class SigningController {
         this.confirmationPdfService = confirmationPdfService;
         this.analysisReportPdfService = analysisReportPdfService;
         this.analysisConfirmationPdfService = analysisConfirmationPdfService;
+        this.signaturePlacementService = signaturePlacementService;
     }
 
     /** Upload PDF. Stores file and saves reference in session. */
@@ -126,7 +132,7 @@ public class SigningController {
         PriceBreakdown price = pricingService.calculate(
             req.getSignatories().size(),
             normalizedDocumentLevel,
-            data.isContractAnalysisRequested()
+            isAnalysisEnabledForSession(data)
         );
         data.setSignatories(req.getSignatories());
         data.setSignatureLevel(normalizedDocumentLevel);
@@ -184,11 +190,36 @@ public class SigningController {
         return ResponseEntity.ok(Map.of("placements", req.getPlacements()));
     }
 
+    /** AI-powered signature placement suggestion. Analyzes the PDF with GPT Vision. */
+    @PostMapping("/placements/suggest")
+    public ResponseEntity<?> suggestPlacements(HttpSession session) {
+        SigningSessionData data = getOrCreate(session);
+        if (data.getDocumentRef() == null || data.getDocumentRef().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Upload a document first"));
+        }
+        if (data.getSignatories() == null || data.getSignatories().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Configure signatories first"));
+        }
+
+        java.nio.file.Path pdfPath = fileStorageService.resolve(data.getDocumentRef());
+        if (!java.nio.file.Files.exists(pdfPath)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Uploaded document not found"));
+        }
+
+        List<com.swisssigner.model.SignatoryPlacement> suggestions =
+                signaturePlacementService.suggestPlacements(pdfPath, data.getSignatories());
+
+        return ResponseEntity.ok(Map.of("suggestions", suggestions));
+    }
+
     /** Enable or disable AI analysis addon (CHF 1.00). */
     @PostMapping({"/analysis", "/analysis/select"})
     public ResponseEntity<?> selectAnalysis(@RequestParam(value = "enabled", defaultValue = "true") boolean enabled,
                                             HttpSession session) {
         SigningSessionData data = getOrCreate(session);
+        if (!contractAnalysisEnabled) {
+            return ResponseEntity.status(404).body(Map.of("error", "AI analysis feature is disabled"));
+        }
         if (enabled && (data.getDocumentRef() == null || data.getDocumentRef().isBlank())) {
             return ResponseEntity.badRequest().body(Map.of("error", "Upload a document first"));
         }
@@ -209,7 +240,7 @@ public class SigningController {
             data.setPrice(pricingService.calculate(
                 data.getSignatories().size(),
                 data.getSignatureLevel(),
-                enabled
+                enabled && contractAnalysisEnabled
             ));
         }
         save(session, data);
@@ -220,19 +251,23 @@ public class SigningController {
         response.put("analysisPriceCurrency", "CHF");
         response.put("analysisIncludedInInvoice", data.isContractAnalysisRequested());
         response.put("analysisStatus", data.getAnalysisStatus() == null ? "NOT_REQUESTED" : data.getAnalysisStatus());
+        response.put("analysisFeatureEnabled", contractAnalysisEnabled);
         if (data.getPrice() != null) {
             response.put("price", data.getPrice());
         }
         return ResponseEntity.ok(response);
     }
 
-    /** Starts async AI analysis job (normally triggered automatically after payment). */
+    /** Starts AI analysis with a direct synchronous API call. */
     @PostMapping("/analysis/start")
     public ResponseEntity<?> startAnalysis(@RequestParam(value = "language", defaultValue = "auto") String language,
                                            @RequestParam(value = "jurisdiction_hint", required = false) String jurisdictionHint,
                                            @RequestParam(value = "party_role", required = false) String partyRole,
                                            @RequestParam(value = "analysis_profile", defaultValue = "standard") String analysisProfile,
                                            HttpSession session) {
+        if (!contractAnalysisEnabled) {
+            return ResponseEntity.status(404).body(Map.of("error", "AI analysis feature is disabled"));
+        }
         SigningSessionData data = getOrCreate(session);
         updatePreferredLanguage(data, language);
         if (!"COMPLETED".equals(data.getPaymentStatus())) {
@@ -255,19 +290,25 @@ public class SigningController {
             analysisProcessId,
             fileStorageService.resolve(data.getDocumentRef()),
             data.getDocumentName(),
-            new ContractAnalyzeOptions(resolveAnalysisLanguage(data, language), jurisdictionHint, partyRole, analysisProfile, "consensus3")
+            new ContractAnalyzeOptions(resolveAnalysisLanguage(data, language), jurisdictionHint, partyRole, analysisProfile, "single_call")
         );
         data.setAnalysisStatus(job.getStatus());
         data.setAnalysisError(job.getError());
+        if ("COMPLETED".equals(job.getStatus()) && job.getResult() != null) {
+            data.setContractAnalysisResult(compactAnalysisForSession(job.getResult()));
+        }
         save(session, data);
 
         return ResponseEntity.ok(analysisStatusResponse(data, job));
     }
 
-    /** Returns async AI analysis status and compact result if ready. */
+    /** Returns AI analysis status and compact result if available. */
     @GetMapping("/analysis/status")
     public ResponseEntity<?> analysisStatus(@RequestParam(value = "analyticProcessID", required = false) String analyticProcessId,
                                             HttpSession session) {
+        if (!contractAnalysisEnabled) {
+            return ResponseEntity.status(404).body(Map.of("error", "AI analysis feature is disabled"));
+        }
         SigningSessionData data = getOrCreate(session);
         String requestedId = normalizeId(analyticProcessId);
         if (requestedId != null) {
@@ -285,6 +326,7 @@ public class SigningController {
 
         if (!data.isContractAnalysisRequested()) {
             return ResponseEntity.ok(Map.of(
+                "analysisFeatureEnabled", contractAnalysisEnabled,
                 "analysisRequested", false,
                 "status", "NOT_REQUESTED"
             ));
@@ -297,11 +339,14 @@ public class SigningController {
         return ResponseEntity.ok(response);
     }
 
-    /** Downloads AI analysis report PDF after async job completion. */
+    /** Downloads AI analysis report PDF after analysis completion. */
     @GetMapping("/analysis/report")
     public ResponseEntity<?> analysisReport(@RequestParam(value = "analyticProcessID", required = false) String analyticProcessId,
                                             @RequestParam(value = "lang", required = false) String lang,
                                             HttpSession session) {
+        if (!contractAnalysisEnabled) {
+            return ResponseEntity.status(404).body(Map.of("error", "AI analysis feature is disabled"));
+        }
         SigningSessionData data = getOrCreate(session);
         updatePreferredLanguage(data, lang);
         save(session, data);
@@ -362,6 +407,9 @@ public class SigningController {
                                                   @RequestParam(value = "lang", required = false) String lang,
                                                   HttpSession session,
                                                   HttpServletRequest request) {
+        if (!contractAnalysisEnabled) {
+            return ResponseEntity.status(404).body(Map.of("error", "AI analysis feature is disabled"));
+        }
         SigningSessionData data = getOrCreate(session);
         updatePreferredLanguage(data, lang);
         save(session, data);
@@ -625,7 +673,10 @@ public class SigningController {
 
     private SigningSessionData getOrCreate(HttpSession session) {
         SigningSessionData data = (SigningSessionData) session.getAttribute(SESSION_KEY);
-        return data != null ? data : new SigningSessionData();
+        SigningSessionData effective = data != null ? data : new SigningSessionData();
+        effective.setAnalysisFeatureEnabled(contractAnalysisEnabled);
+        enforceAnalysisFeature(effective);
+        return effective;
     }
 
     private void save(HttpSession session, SigningSessionData data) {
@@ -699,6 +750,11 @@ public class SigningController {
     }
 
     private void ensureAnalysisJobStartedIfRequested(SigningSessionData data) {
+        if (!contractAnalysisEnabled) {
+            data.setContractAnalysisRequested(false);
+            resetAnalysisState(data);
+            return;
+        }
         if (!data.isContractAnalysisRequested()) {
             if (data.getAnalysisStatus() == null) {
                 data.setAnalysisStatus("NOT_REQUESTED");
@@ -712,26 +768,11 @@ public class SigningController {
         }
 
         syncAnalysisState(data);
-        if ("QUEUED".equals(data.getAnalysisStatus())
-            || "RUNNING".equals(data.getAnalysisStatus())
-            || "COMPLETED".equals(data.getAnalysisStatus())) {
-            return;
+        if (data.getAnalysisStatus() == null
+            || data.getAnalysisStatus().isBlank()
+            || "NOT_REQUESTED".equals(data.getAnalysisStatus())) {
+            data.setAnalysisStatus("PENDING_PAYMENT");
         }
-
-        String analysisProcessId = data.getAnalysisProcessId();
-        if (analysisProcessId == null || analysisProcessId.isBlank()) {
-            analysisProcessId = "analysis-" + UUID.randomUUID().toString().replace("-", "");
-            data.setAnalysisProcessId(analysisProcessId);
-        }
-
-        ContractAnalysisJobService.AnalysisJob job = contractAnalysisJobService.startJob(
-            analysisProcessId,
-            fileStorageService.resolve(data.getDocumentRef()),
-            data.getDocumentName(),
-            new ContractAnalyzeOptions(resolveAnalysisLanguage(data, null), null, null, "standard", "consensus3")
-        );
-        data.setAnalysisStatus(job.getStatus());
-        data.setAnalysisError(job.getError());
     }
 
     private void updatePreferredLanguage(SigningSessionData data, String language) {
@@ -773,6 +814,11 @@ public class SigningController {
     }
 
     private void syncAnalysisState(SigningSessionData data) {
+        if (!contractAnalysisEnabled) {
+            data.setContractAnalysisRequested(false);
+            resetAnalysisState(data);
+            return;
+        }
         if (data.getAnalysisProcessId() == null || data.getAnalysisProcessId().isBlank()) {
             if (data.isContractAnalysisRequested() && data.getAnalysisStatus() == null) {
                 data.setAnalysisStatus("PENDING_PAYMENT");
@@ -829,11 +875,16 @@ public class SigningController {
 
     private Map<String, Object> analysisStatusResponse(SigningSessionData data, ContractAnalysisJobService.AnalysisJob job) {
         Map<String, Object> response = new HashMap<>();
-        response.put("analysisRequested", data.isContractAnalysisRequested());
+        response.put("analysisFeatureEnabled", contractAnalysisEnabled);
+        response.put("analysisRequested", isAnalysisEnabledForSession(data));
+        if (!contractAnalysisEnabled) {
+            response.put("analysisStatus", "NOT_REQUESTED");
+            return response;
+        }
 
         String status = data.getAnalysisStatus();
         if (status == null || status.isBlank()) {
-            status = data.isContractAnalysisRequested() ? "PENDING_PAYMENT" : "NOT_REQUESTED";
+            status = isAnalysisEnabledForSession(data) ? "PENDING_PAYMENT" : "NOT_REQUESTED";
         }
         response.put("analysisStatus", status);
 
@@ -867,7 +918,12 @@ public class SigningController {
     private Map<String, Object> analysisStatusResponseForJob(String analysisProcessId,
                                                              ContractAnalysisJobService.AnalysisJob job) {
         Map<String, Object> response = new HashMap<>();
-        response.put("analysisRequested", true);
+        response.put("analysisFeatureEnabled", contractAnalysisEnabled);
+        response.put("analysisRequested", contractAnalysisEnabled);
+        if (!contractAnalysisEnabled) {
+            response.put("analysisStatus", "NOT_REQUESTED");
+            return response;
+        }
         response.put("analysisStatus", job == null ? "UNKNOWN" : job.getStatus());
         response.put("analyticProcessID", analysisProcessId);
         if (job != null && job.getError() != null && !job.getError().isBlank()) {
@@ -888,6 +944,32 @@ public class SigningController {
             response.put("analysisStepTotal", job.getStepTotal());
         }
         return response;
+    }
+
+    private void enforceAnalysisFeature(SigningSessionData data) {
+        if (contractAnalysisEnabled) {
+            return;
+        }
+        boolean hadAnalysisState = data.isContractAnalysisRequested()
+            || (data.getAnalysisProcessId() != null && !data.getAnalysisProcessId().isBlank())
+            || (data.getAnalysisStatus() != null && !"NOT_REQUESTED".equals(data.getAnalysisStatus()))
+            || data.getAnalysisError() != null
+            || data.getContractAnalysisResult() != null;
+        if (hadAnalysisState) {
+            data.setContractAnalysisRequested(false);
+            resetAnalysisState(data);
+        }
+        if (data.getSignatories() != null && !data.getSignatories().isEmpty() && data.getPrice() != null) {
+            data.setPrice(pricingService.calculate(
+                data.getSignatories().size(),
+                data.getSignatureLevel(),
+                false
+            ));
+        }
+    }
+
+    private boolean isAnalysisEnabledForSession(SigningSessionData data) {
+        return contractAnalysisEnabled && data.isContractAnalysisRequested();
     }
 
     private String buildConfirmationFilename(String processId) {

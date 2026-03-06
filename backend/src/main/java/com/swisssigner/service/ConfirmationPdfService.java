@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -24,6 +25,8 @@ public class ConfirmationPdfService {
                                                  String language,
                                                  Map<String, Object> analysisResult) throws IOException {
         Locale locale = resolveLocale(language);
+        boolean withAnalysisSection = analysisResult != null && !analysisResult.isEmpty();
+        TemplateValues template = buildTemplateValues(processId, locale, withAnalysisSection);
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
@@ -49,7 +52,7 @@ public class ConfirmationPdfService {
 
                 y = JustSignPdfTemplateSupport.writeCentered(
                     content,
-                    title(locale),
+                    template.processReceiptTitle(),
                     PDType1Font.HELVETICA_BOLD,
                     19f,
                     pageWidth,
@@ -73,7 +76,7 @@ public class ConfirmationPdfService {
                 );
                 y -= 12f;
 
-                y = writeSectionTitle(content, sectionDoneTitle(locale), pageWidth, y);
+                y = writeSectionTitle(content, template.summaryTitle(), pageWidth, y);
                 y -= 12f;
                 y = JustSignPdfTemplateSupport.writeWrappedCentered(
                     content,
@@ -89,7 +92,7 @@ public class ConfirmationPdfService {
                 );
                 y -= 10f;
 
-                y = writeSectionTitle(content, sectionNextTitle(locale), pageWidth, y);
+                y = writeSectionTitle(content, template.nextStepsTitle(), pageWidth, y);
                 y -= 12f;
                 y = JustSignPdfTemplateSupport.writeWrappedCentered(
                     content,
@@ -105,12 +108,12 @@ public class ConfirmationPdfService {
                 );
                 y -= 12f;
 
-                y = writeSectionTitle(content, sectionProcessIdTitle(locale), pageWidth, y);
+                y = writeSectionTitle(content, template.processIdTitle(), pageWidth, y);
                 y -= 10f;
-                y = JustSignPdfTemplateSupport.drawCenteredInfoBox(content, processId, pageWidth, y, 430f, 30f);
+                y = JustSignPdfTemplateSupport.drawCenteredInfoBox(content, template.processId(), pageWidth, y, 430f, 30f);
                 y -= 14f;
 
-                y = writeSectionTitle(content, sectionUseIdTitle(locale), pageWidth, y);
+                y = writeSectionTitle(content, template.howToUseProcessIdTitle(), pageWidth, y);
                 y -= 12f;
                 y = JustSignPdfTemplateSupport.writeWrappedCentered(
                     content,
@@ -150,12 +153,9 @@ public class ConfirmationPdfService {
                     180
                 );
                 y -= 8f;
-                String createdAt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'")
-                    .withZone(ZoneOffset.UTC)
-                    .format(Instant.now());
                 y = JustSignPdfTemplateSupport.writeCentered(
                     content,
-                    createdAtLabel(locale) + createdAt,
+                    template.datetime(),
                     PDType1Font.HELVETICA,
                     9.5f,
                     pageWidth,
@@ -166,7 +166,7 @@ public class ConfirmationPdfService {
                 );
                 y -= 12f;
 
-                if (analysisResult != null && !analysisResult.isEmpty()) {
+                if (withAnalysisSection) {
                     y = writeSectionTitle(content, sectionAnalysisTitle(locale), pageWidth, y);
                     y -= 10f;
                     y = JustSignPdfTemplateSupport.writeWrappedCentered(
@@ -186,7 +186,7 @@ public class ConfirmationPdfService {
 
                 y = JustSignPdfTemplateSupport.writeCentered(
                     content,
-                    sectionSupportTitle(locale, analysisResult != null && !analysisResult.isEmpty()),
+                    template.swisscomSupportLinksTitle(),
                     PDType1Font.HELVETICA_BOLD,
                     13f,
                     pageWidth,
@@ -214,6 +214,54 @@ public class ConfirmationPdfService {
             document.save(out);
             return out.toByteArray();
         }
+    }
+
+    private TemplateValues buildTemplateValues(String processId, Locale locale, boolean withAnalysisSection) {
+        Map<String, String> placeholders = buildPlaceholderValues(processId, locale, withAnalysisSection);
+        return new TemplateValues(
+            placeholderValue(placeholders, "Process_receipt_title"),
+            placeholderValue(placeholders, "summary"),
+            placeholderValue(placeholders, "next-steps"),
+            placeholderValue(placeholders, "process-id titel"),
+            placeholderValue(placeholders, "processID"),
+            placeholderValue(placeholders, "how-to-use-processId titel"),
+            placeholderValue(placeholders, "datetime"),
+            placeholderValue(placeholders, "swisscom-support-links")
+        );
+    }
+
+    private Map<String, String> buildPlaceholderValues(String processId, Locale locale, boolean withAnalysisSection) {
+        String createdAt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'")
+            .withZone(ZoneOffset.UTC)
+            .format(Instant.now());
+
+        Map<String, String> values = new LinkedHashMap<>();
+        values.put("Process_receipt_title", title(locale));
+        values.put("summary", sectionDoneTitle(locale));
+        values.put("next-steps", sectionNextTitle(locale));
+        values.put("process-id titel", sectionProcessIdTitle(locale));
+        values.put("processID", processId == null || processId.isBlank() ? "n/a" : processId);
+        values.put("how-to-use-processId titel", sectionUseIdTitle(locale));
+        values.put("datetime", createdAtLabel(locale) + createdAt);
+        values.put("swisscom-support-links", sectionSupportTitle(locale, withAnalysisSection));
+        return values;
+    }
+
+    private String placeholderValue(Map<String, String> placeholders, String key) {
+        String value = placeholders.get(key);
+        return value == null || value.isBlank() ? "n/a" : value;
+    }
+
+    private record TemplateValues(
+        String processReceiptTitle,
+        String summaryTitle,
+        String nextStepsTitle,
+        String processIdTitle,
+        String processId,
+        String howToUseProcessIdTitle,
+        String datetime,
+        String swisscomSupportLinksTitle
+    ) {
     }
 
     private float writeSectionTitle(PDPageContentStream content, String title, float pageWidth, float y) throws IOException {

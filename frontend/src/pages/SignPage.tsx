@@ -5,6 +5,7 @@ import { calculatePrice } from '../services/mockStripe'
 import * as api from '../services/api'
 import type { AnalysisStatusResponse, InviteResponse, PriceBreakdown, Signatory, SignatoryPlacement, SignatureLevel } from '../services/api'
 import { type Locale, useI18n } from '../i18n'
+import { usePageMeta } from '../hooks/usePageMeta'
 import PdfSignaturePlacer from './PdfSignaturePlacer'
 import './SignPage.css'
 
@@ -46,7 +47,7 @@ const SIGN_COPY = {
       dropOrClick: 'PDF hier ablegen oder klicken',
       hint: 'Nur PDF-Dateien · Max. 20 MB',
       uploading: 'Hochladen…',
-      next: 'Weiter: Signaturlevel prüfen →',
+      next: 'Weiter: Dokumentart & Level →',
     },
     signatories: {
       title: 'Unterzeichner konfigurieren',
@@ -67,6 +68,7 @@ const SIGN_COPY = {
       ariaPhone: 'Telefon Unterzeichner {{index}}',
       ariaRemove: 'Unterzeichner {{index}} entfernen',
       add: '+ Weiteren Unterzeichner hinzufügen',
+      validationHint: 'Bitte Vorname, Nachname und E-Mail (oder Telefon) für jeden Unterzeichner ausfüllen.',
       back: '← Zurück',
       saving: 'Speichern…',
       next: 'Weiter: Signaturfelder platzieren →',
@@ -90,6 +92,10 @@ const SIGN_COPY = {
       next: 'Weiter: Überprüfen →',
       needAllTitle: 'Alle Unterzeichner müssen platziert sein',
       pageCoords: 'Seite {{page}} · X {{x}} · Y {{y}}',
+      autoPlace: 'Automatische Signatur platzieren',
+      autoPlacing: 'AI analysiert das Dokument…',
+      autoPlaceError: 'Automatische Platzierung fehlgeschlagen. Bitte manuell platzieren.',
+      autoPlaceHint: 'Die AI erkennt Signaturfelder im Dokument und platziert die Unterzeichner automatisch. Du kannst die Positionen danach anpassen.',
     },
     initiator: {
       title: 'Initiator festlegen',
@@ -140,7 +146,6 @@ const SIGN_COPY = {
       copiedProcessId: 'Kopiert',
       downloadConfirmation: 'Bestaetigung (PDF) herunterladen',
       openStatus: 'Zum Status Checker',
-      mockLink: 'Mock-Link →',
       signAnother: 'Weiteres Dokument signieren',
     },
     fallbackDocument: 'Dokument',
@@ -181,7 +186,7 @@ const SIGN_COPY = {
       dropOrClick: 'Drop PDF here or click',
       hint: 'PDF files only · Max 20 MB',
       uploading: 'Uploading…',
-      next: 'Next: Review signature level →',
+      next: 'Next: Doc type & level →',
     },
     signatories: {
       title: 'Configure signers',
@@ -202,6 +207,7 @@ const SIGN_COPY = {
       ariaPhone: 'Phone signer {{index}}',
       ariaRemove: 'Remove signer {{index}}',
       add: '+ Add another signer',
+      validationHint: 'Please fill in first name, last name and email (or phone) for each signer.',
       back: '← Back',
       saving: 'Saving…',
       next: 'Next: Place signature fields →',
@@ -225,6 +231,10 @@ const SIGN_COPY = {
       next: 'Next: Review →',
       needAllTitle: 'All signers must be placed',
       pageCoords: 'Page {{page}} · X {{x}} · Y {{y}}',
+      autoPlace: 'Automatically place signatures',
+      autoPlacing: 'AI is analyzing the document…',
+      autoPlaceError: 'Auto-placement failed. Please place manually.',
+      autoPlaceHint: 'AI detects signature fields in the document and places signers automatically. You can adjust positions afterwards.',
     },
     initiator: {
       title: 'Set initiator',
@@ -275,7 +285,6 @@ const SIGN_COPY = {
       copiedProcessId: 'Copied',
       downloadConfirmation: 'Download confirmation (PDF)',
       openStatus: 'Open status checker',
-      mockLink: 'Mock link →',
       signAnother: 'Sign another document',
     },
     fallbackDocument: 'Document',
@@ -316,7 +325,7 @@ const SIGN_COPY = {
       dropOrClick: 'Deposez le PDF ici ou cliquez',
       hint: 'Fichiers PDF uniquement · Max 20 MB',
       uploading: 'Televersement…',
-      next: 'Suivant: verifier le niveau de signature →',
+      next: 'Suivant: type & niveau →',
     },
     signatories: {
       title: 'Configurer les signataires',
@@ -337,6 +346,7 @@ const SIGN_COPY = {
       ariaPhone: 'Telephone signataire {{index}}',
       ariaRemove: 'Supprimer signataire {{index}}',
       add: '+ Ajouter un autre signataire',
+      validationHint: 'Veuillez remplir prenom, nom et e-mail (ou telephone) pour chaque signataire.',
       back: '← Retour',
       saving: 'Enregistrement…',
       next: 'Suivant: placer les champs de signature →',
@@ -360,6 +370,10 @@ const SIGN_COPY = {
       next: 'Suivant: verifier →',
       needAllTitle: 'Tous les signataires doivent etre places',
       pageCoords: 'Page {{page}} · X {{x}} · Y {{y}}',
+      autoPlace: 'Placer automatiquement les signatures',
+      autoPlacing: 'L IA analyse le document…',
+      autoPlaceError: 'Le placement automatique a echoue. Veuillez placer manuellement.',
+      autoPlaceHint: 'L IA detecte les zones de signature dans le document et place les signataires automatiquement. Vous pouvez ajuster ensuite.',
     },
     initiator: {
       title: 'Definir l initiateur',
@@ -410,7 +424,6 @@ const SIGN_COPY = {
       copiedProcessId: 'Copie',
       downloadConfirmation: 'Telecharger la confirmation (PDF)',
       openStatus: 'Ouvrir le status checker',
-      mockLink: 'Lien mock →',
       signAnother: 'Signer un autre document',
     },
     fallbackDocument: 'Document',
@@ -421,7 +434,7 @@ const SIGN_COPY = {
 const STEP_LABELS: Record<Locale, Record<Step, string>> = {
   de: {
     upload: 'Upload',
-    signatureLevel: 'Signaturlevel',
+    signatureLevel: 'Dokumentart & Level',
     signatories: 'Unterzeichner',
     placement: 'Platzierung',
     pricing: 'Preis',
@@ -430,7 +443,7 @@ const STEP_LABELS: Record<Locale, Record<Step, string>> = {
   },
   en: {
     upload: 'Upload',
-    signatureLevel: 'Signature level',
+    signatureLevel: 'Doc type & level',
     signatories: 'Signers',
     placement: 'Placement',
     pricing: 'Pricing',
@@ -439,7 +452,7 @@ const STEP_LABELS: Record<Locale, Record<Step, string>> = {
   },
   fr: {
     upload: 'Import',
-    signatureLevel: 'Niveau de signature',
+    signatureLevel: 'Type & niveau',
     signatories: 'Signataires',
     placement: 'Placement',
     pricing: 'Tarif',
@@ -480,8 +493,8 @@ const DOCUMENT_TYPE_COPY = {
 
 const LEVEL_COPY = {
   de: {
-    title: 'Signaturlevel wählen',
-    desc: 'Wir haben ein Level vorausgewählt. Du kannst es anpassen.',
+    title: 'Dokumentart und Signaturlevel',
+    desc: 'Dokumentart ist optional. Das Signaturlevel ist bereits vorausgewählt und kann angepasst werden.',
     recommendation: 'Basierend auf der Dokumentart "{{documentType}}" empfehlen wir {{level}}.',
     recommendationHint: 'Dieses Level ist bereits vorausgewählt.',
     label: 'Signaturlevel für dieses Dokument',
@@ -492,8 +505,8 @@ const LEVEL_COPY = {
     next: 'Weiter: Unterzeichner →',
   },
   en: {
-    title: 'Choose signature level',
-    desc: 'One level is preselected for you. You can still change it.',
+    title: 'Document type and signature level',
+    desc: 'Document type is optional. The signature level is preselected and can be changed.',
     recommendation: 'Based on document type "{{documentType}}", we recommend {{level}}.',
     recommendationHint: 'This level is already preselected.',
     label: 'Signature level for this document',
@@ -504,8 +517,8 @@ const LEVEL_COPY = {
     next: 'Next: Signers →',
   },
   fr: {
-    title: 'Choisir le niveau de signature',
-    desc: 'Un niveau est deja preselectionne. Vous pouvez le modifier.',
+    title: 'Type de document et niveau de signature',
+    desc: 'Le type de document est optionnel. Le niveau de signature est preselectionne et modifiable.',
     recommendation: 'Selon le type de document "{{documentType}}", nous recommandons {{level}}.',
     recommendationHint: 'Ce niveau est deja preselectionne.',
     label: 'Niveau de signature pour ce document',
@@ -520,11 +533,11 @@ const LEVEL_COPY = {
 const STEP_GUIDE_COPY: Record<Locale, Record<Step, { now: string; next: string }>> = {
   de: {
     upload: {
-      now: 'Jetzt: PDF hochladen (Dokumentart ist optional).',
-      next: 'Danach: Wir empfehlen ein Signaturlevel, das du bestätigen kannst.',
+      now: 'Jetzt: PDF hochladen.',
+      next: 'Danach: Optional Dokumentart wählen und Signaturlevel festlegen.',
     },
     signatureLevel: {
-      now: 'Jetzt: Passendes Signaturlevel prüfen.',
+      now: 'Jetzt: Optional Dokumentart wählen und Signaturlevel bestätigen.',
       next: 'Danach: Unterzeichner mit Name und E-Mail/Telefon erfassen.',
     },
     signatories: {
@@ -550,11 +563,11 @@ const STEP_GUIDE_COPY: Record<Locale, Record<Step, { now: string; next: string }
   },
   en: {
     upload: {
-      now: 'Now: Upload your PDF (document type is optional).',
-      next: 'Next: We preselect a signature level for your review.',
+      now: 'Now: Upload your PDF.',
+      next: 'Next: Optionally pick document type and confirm signature level.',
     },
     signatureLevel: {
-      now: 'Now: Review the suggested signature level.',
+      now: 'Now: Optionally pick document type and confirm signature level.',
       next: 'Next: Add signers with name and email/phone.',
     },
     signatories: {
@@ -580,11 +593,11 @@ const STEP_GUIDE_COPY: Record<Locale, Record<Step, { now: string; next: string }
   },
   fr: {
     upload: {
-      now: 'Maintenant: Televersez le PDF (type de document optionnel).',
-      next: 'Ensuite: Nous preselectionnons un niveau de signature.',
+      now: 'Maintenant: Televersez le PDF.',
+      next: 'Ensuite: Type de document optionnel et niveau de signature.',
     },
     signatureLevel: {
-      now: 'Maintenant: Verifiez le niveau de signature propose.',
+      now: 'Maintenant: Choisissez optionnellement un type puis confirmez le niveau.',
       next: 'Ensuite: Ajoutez les signataires avec nom et e-mail/telephone.',
     },
     signatories: {
@@ -628,7 +641,8 @@ const ANALYZER_COPY = {
     stepCounter: 'Schritt {{current}} von {{total}}',
     ready: 'Analyse ist bereit.',
     failed: 'Analyse konnte nicht erstellt werden.',
-    processLabel: 'analyticProcessID',
+    failedFileMissing: 'Die Datei ist nicht mehr verfügbar. Bitte Analyse erneut starten.',
+    processLabel: 'Analyse-ID',
     copyId: 'Kopieren',
     copiedId: 'Kopiert',
     openStatus: 'Analyse im Status Checker öffnen',
@@ -636,7 +650,7 @@ const ANALYZER_COPY = {
     close: 'Schliessen',
     resultTitle: 'AI Analyseergebnis',
     confidence: 'Confidence',
-    consensus: 'Konsens zwischen den LLMs',
+    consensus: 'Übereinstimmung der KI-Auswertungen',
     keyDates: 'Wichtige Daten',
     topRisks: 'Top Risiken',
     topOps: 'Top Chancen',
@@ -658,7 +672,8 @@ const ANALYZER_COPY = {
     stepCounter: 'Step {{current}} of {{total}}',
     ready: 'Analysis is ready.',
     failed: 'Analysis could not be completed.',
-    processLabel: 'analyticProcessID',
+    failedFileMissing: 'The file is no longer available. Please start the analysis again.',
+    processLabel: 'Analysis ID',
     copyId: 'Copy',
     copiedId: 'Copied',
     openStatus: 'Open analysis in status checker',
@@ -666,7 +681,7 @@ const ANALYZER_COPY = {
     close: 'Close',
     resultTitle: 'AI analysis result',
     confidence: 'Confidence',
-    consensus: 'Consensus between LLM cases',
+    consensus: 'Agreement across AI analysis runs',
     keyDates: 'Key dates',
     topRisks: 'Top risks',
     topOps: 'Top opportunities',
@@ -688,7 +703,8 @@ const ANALYZER_COPY = {
     stepCounter: 'Etape {{current}} sur {{total}}',
     ready: 'Analyse prete.',
     failed: 'Analyse impossible.',
-    processLabel: 'analyticProcessID',
+    failedFileMissing: 'Le fichier n est plus disponible. Veuillez relancer l analyse.',
+    processLabel: 'ID d analyse',
     copyId: 'Copier',
     copiedId: 'Copie',
     openStatus: 'Ouvrir l analyse dans le status checker',
@@ -696,7 +712,7 @@ const ANALYZER_COPY = {
     close: 'Fermer',
     resultTitle: 'Resultat de l analyse IA',
     confidence: 'Confiance',
-    consensus: 'Consensus entre les cas LLM',
+    consensus: 'Concordance des analyses IA',
     keyDates: 'Dates importantes',
     topRisks: 'Risques principaux',
     topOps: 'Opportunites principales',
@@ -707,11 +723,8 @@ const ANALYSIS_STEP_LABELS: Record<Locale, Record<string, string>> = {
   de: {
     PENDING_PAYMENT: 'Warten auf abgeschlossene Zahlung',
     QUEUED: 'Analyse wurde eingeplant',
-    PREPARE_INPUT: 'Texte und Strukturen aus dem PDF werden extrahiert',
-    CONSENSUS_CASE_1: 'Konsens-Fall 1: Strenge Rechts- und Risikoanalyse',
-    CONSENSUS_CASE_2: 'Konsens-Fall 2: Pflichten und operative Umsetzung',
-    CONSENSUS_CASE_3: 'Konsens-Fall 3: Management- und Business-Sicht',
-    SEMANTIC_CONSENSUS: 'Semantische Einigkeit und Zusammenfassung werden berechnet',
+    PREPARE_INPUT: 'Dokument wird vorbereitet',
+    AI_ANALYSIS: 'AI analysiert das Dokument',
     BUILD_RESULT: 'Ergebnis wird aufbereitet',
     COMPLETED: 'Analyse abgeschlossen',
     FAILED: 'Analyse fehlgeschlagen',
@@ -719,11 +732,8 @@ const ANALYSIS_STEP_LABELS: Record<Locale, Record<string, string>> = {
   en: {
     PENDING_PAYMENT: 'Waiting for completed payment',
     QUEUED: 'Analysis has been queued',
-    PREPARE_INPUT: 'Extracting text and structure from the PDF',
-    CONSENSUS_CASE_1: 'Consensus case 1: strict legal and risk review',
-    CONSENSUS_CASE_2: 'Consensus case 2: obligations and operational execution',
-    CONSENSUS_CASE_3: 'Consensus case 3: executive and business perspective',
-    SEMANTIC_CONSENSUS: 'Computing semantic agreement and final summary',
+    PREPARE_INPUT: 'Preparing document',
+    AI_ANALYSIS: 'AI is analyzing the document',
     BUILD_RESULT: 'Preparing final output',
     COMPLETED: 'Analysis completed',
     FAILED: 'Analysis failed',
@@ -731,18 +741,30 @@ const ANALYSIS_STEP_LABELS: Record<Locale, Record<string, string>> = {
   fr: {
     PENDING_PAYMENT: 'En attente du paiement confirme',
     QUEUED: 'Analyse placee en file d attente',
-    PREPARE_INPUT: 'Extraction du texte et de la structure du PDF',
-    CONSENSUS_CASE_1: 'Cas consensus 1: revue juridique et risques stricte',
-    CONSENSUS_CASE_2: 'Cas consensus 2: obligations et execution operationnelle',
-    CONSENSUS_CASE_3: 'Cas consensus 3: perspective direction et business',
-    SEMANTIC_CONSENSUS: 'Calcul de l accord semantique et du resume final',
+    PREPARE_INPUT: 'Preparation du document',
+    AI_ANALYSIS: 'L IA analyse le document',
     BUILD_RESULT: 'Preparation du resultat final',
     COMPLETED: 'Analyse terminee',
     FAILED: 'Analyse echouee',
   },
 }
 
-const ANALYSIS_STEP_TOTAL_DEFAULT = 6
+const SIGN_PAGE_META = {
+  de: {
+    title: 'PDF signieren | justSign - Digitale Signatur in wenigen Schritten',
+    description: 'Jetzt PDF hochladen und digital signieren lassen. Qualifizierte elektronische Signatur (QES, AES, SIMPLE) ab CHF 1.20. Kein Konto nötig.',
+  },
+  en: {
+    title: 'Sign PDF | justSign - Digital Signature in a Few Steps',
+    description: 'Upload your PDF and get it digitally signed. Qualified electronic signature (QES, AES, SIMPLE) from CHF 1.20. No account needed.',
+  },
+  fr: {
+    title: 'Signer un PDF | justSign - Signature numerique en quelques etapes',
+    description: 'Importez votre PDF et faites-le signer numeriquement. Signature electronique qualifiee (QES, AES, SIMPLE) des CHF 1.20. Aucun compte requis.',
+  },
+} as const
+
+const ANALYSIS_STEP_TOTAL_DEFAULT = 3
 
 let signatoryCounter = 0
 
@@ -764,13 +786,6 @@ function replacePlacement(template: string, count: number, price: number): strin
   return template
     .replace('{{count}}', String(count))
     .replace('{{price}}', price.toFixed(2))
-}
-
-function replaceCoords(template: string, page: number, x: number, y: number): string {
-  return template
-    .replace('{{page}}', String(page))
-    .replace('{{x}}', String(x))
-    .replace('{{y}}', String(y))
 }
 
 function replaceRecommendation(template: string, documentType: string, level: SignatureLevel): string {
@@ -842,8 +857,23 @@ function analysisSummaryText(analysis: Record<string, unknown>): string {
   return ''
 }
 
+function analysisErrorText(locale: Locale, error: string | null): string {
+  if (!error) return ''
+  const normalized = error.toLowerCase()
+  const fileMissing =
+    normalized.includes('uploaded pdf not found')
+    || normalized.includes('could not read uploaded pdf')
+    || normalized.includes('upload a document first')
+
+  if (!fileMissing) return error
+  if (locale === 'en') return 'The file is no longer available. Please start the analysis again.'
+  if (locale === 'fr') return 'Le fichier n est plus disponible. Veuillez relancer l analyse.'
+  return 'Die Datei ist nicht mehr verfügbar. Bitte Analyse erneut starten.'
+}
+
 export default function SignPage() {
   const { locale } = useI18n()
+  usePageMeta(SIGN_PAGE_META[locale].title, SIGN_PAGE_META[locale].description)
   const copy = SIGN_COPY[locale]
   const documentTypeCopy = DOCUMENT_TYPE_COPY[locale]
   const levelCopy = LEVEL_COPY[locale]
@@ -858,6 +888,7 @@ export default function SignPage() {
   const [signatories, setSignatories] = useState<Signatory[]>(() => [createSignatory()])
   const [documentSignatureLevel, setDocumentSignatureLevel] = useState<SignatureLevel>('QES')
   const [placements,  setPlacements]  = useState<SignatoryPlacement[]>([])
+  const [analysisFeatureEnabled, setAnalysisFeatureEnabled] = useState(false)
   const [analysisSelected, setAnalysisSelected] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<Record<string, unknown> | null>(null)
   const [analysisLoading, setAnalysisLoading] = useState(false)
@@ -875,7 +906,10 @@ export default function SignPage() {
   const [processIdCopied, setProcessIdCopied] = useState(false)
   const [analysisIdCopied, setAnalysisIdCopied] = useState(false)
   const [error,       setError]       = useState<string | null>(null)
+  const [autoPlacing, setAutoPlacing] = useState(false)
+  const [signatoryValidationShown, setSignatoryValidationShown] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const pageRef = useRef<HTMLElement>(null)
 
   const documentTypeSuggestions = useMemo(
     () => searchDocumentSignatures(locale, documentTypeQuery, 6),
@@ -887,10 +921,15 @@ export default function SignPage() {
     const item = getDocumentSignatureById(selectedDocumentTypeId)
     return item ? localizeDocumentSignature(locale, item) : undefined
   }, [locale, selectedDocumentTypeId])
+  const showDocumentTypeSuggestions =
+    documentTypeQuery.trim().length > 0
+    && (!selectedDocumentType || documentTypeQuery.trim() !== selectedDocumentType.title.trim())
 
   const recommendedSignatureLevel = selectedDocumentType?.recommendedSignatureLevel ?? 'QES'
-  const estimatedPrice = calculatePrice(signatories.length, documentSignatureLevel, analysisSelected)
+  const analysisSelectedEffective = analysisFeatureEnabled && analysisSelected
+  const estimatedPrice = calculatePrice(signatories.length, documentSignatureLevel, analysisSelectedEffective)
   const price = serverPrice ?? estimatedPrice
+  const analysisErrorMessage = analysisErrorText(locale, analysisError)
 
   function applyAnalysisProgress(result: {
     analysisStepKey?: string
@@ -901,6 +940,35 @@ export default function SignPage() {
     if (typeof result.analysisStepIndex === 'number') setAnalysisStepIndex(result.analysisStepIndex)
     if (typeof result.analysisStepTotal === 'number') setAnalysisStepTotal(result.analysisStepTotal)
   }
+
+  useEffect(() => {
+    let cancelled = false
+    const loadFeatureState = async () => {
+      try {
+        const currentState = await api.getSigningState(locale)
+        if (cancelled) return
+        const enabled = Boolean(currentState.analysisFeatureEnabled)
+        setAnalysisFeatureEnabled(enabled)
+        if (!enabled) {
+          setAnalysisSelected(false)
+          setAnalysisResult(null)
+          setAnalysisModalOpen(false)
+          setAnalysisProcessId(null)
+          setAnalysisStatus('NOT_REQUESTED')
+          setAnalysisError(null)
+          setAnalysisPolling(false)
+        }
+      } catch {
+        if (!cancelled) {
+          setAnalysisFeatureEnabled(false)
+        }
+      }
+    }
+    void loadFeatureState()
+    return () => {
+      cancelled = true
+    }
+  }, [locale])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]
@@ -970,6 +1038,31 @@ export default function SignPage() {
     setError(null)
   }
 
+  useEffect(() => {
+    const scrollToTop = () => {
+      const isJsdom = typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)
+      if (!isJsdom) {
+        try {
+          window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+        } catch {
+          try {
+            window.scrollTo(0, 0)
+          } catch {
+            // Ignore environments without scroll support.
+          }
+        }
+      }
+      try {
+        pageRef.current?.scrollIntoView({ block: 'start' })
+      } catch {
+        // Ignore environments without scroll support.
+      }
+    }
+
+    const frame = window.requestAnimationFrame(scrollToTop)
+    return () => window.cancelAnimationFrame(frame)
+  }, [step])
+
   async function handleSignatoriesNext() {
     setLoading(true)
     setError(null)
@@ -998,6 +1091,21 @@ export default function SignPage() {
     }
   }
 
+  async function handleAutoPlace() {
+    setAutoPlacing(true)
+    setError(null)
+    try {
+      const result = await api.suggestPlacements()
+      if (result.suggestions?.length) {
+        setPlacements(result.suggestions)
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : copy.placement.autoPlaceError)
+    } finally {
+      setAutoPlacing(false)
+    }
+  }
+
   function addSignatory() {
     setSignatories((prev) => [...prev, createSignatory()])
   }
@@ -1018,12 +1126,12 @@ export default function SignPage() {
   const placedIds = new Set(placements.map((p) => p.signatoryId))
   const placedCount = signatories.filter((s) => placedIds.has(s.id)).length
   const allPlaced = signatories.length > 0 && placedCount === signatories.length
-  const placedPrice = calculatePrice(placedCount, documentSignatureLevel, analysisSelected)
+  const placedPrice = calculatePrice(placedCount, documentSignatureLevel, analysisSelectedEffective)
   const signaturesSubtotal = Number((price.count * (price.perSignatureGross ?? price.perSignature)).toFixed(2))
   const placedSignaturesSubtotal = Number((placedCount * (placedPrice.perSignatureGross ?? placedPrice.perSignature)).toFixed(2))
 
   async function handleToggleAnalysis() {
-    if (!file) return
+    if (!analysisFeatureEnabled || !file) return
     setAnalysisLoading(true)
     setError(null)
     setAnalysisError(null)
@@ -1034,15 +1142,18 @@ export default function SignPage() {
       }
       const enabled = !analysisSelected
       const response = await api.selectAnalysisAddon(enabled)
-      setAnalysisSelected(response.analysisRequested)
-      setAnalysisStatus(response.analysisStatus ?? (response.analysisRequested ? 'PENDING_PAYMENT' : 'NOT_REQUESTED'))
-      if (response.analysisRequested) {
+      const featureEnabled = Boolean(response.analysisFeatureEnabled ?? analysisFeatureEnabled)
+      setAnalysisFeatureEnabled(featureEnabled)
+      const requested = featureEnabled && response.analysisRequested
+      setAnalysisSelected(requested)
+      setAnalysisStatus(response.analysisStatus ?? (requested ? 'PENDING_PAYMENT' : 'NOT_REQUESTED'))
+      if (requested) {
         setAnalysisStepKey('PENDING_PAYMENT')
         setAnalysisStepIndex(0)
         setAnalysisStepTotal(ANALYSIS_STEP_TOTAL_DEFAULT)
       }
       if (response.price) setServerPrice(response.price)
-      if (!response.analysisRequested) {
+      if (!requested) {
         setAnalysisResult(null)
         setAnalysisProcessId(null)
         setAnalysisModalOpen(false)
@@ -1101,11 +1212,13 @@ export default function SignPage() {
         } else if (currentState?.signatories?.[0]?.signatureLevel) {
           setDocumentSignatureLevel(normalizeSignatureLevel(currentState.signatories[0].signatureLevel))
         }
-        setAnalysisSelected(Boolean(currentState?.contractAnalysisRequested))
+        const featureEnabled = Boolean(currentState?.analysisFeatureEnabled)
+        setAnalysisFeatureEnabled(featureEnabled)
+        setAnalysisSelected(featureEnabled && Boolean(currentState?.contractAnalysisRequested))
         setAnalysisProcessId(currentState?.analysisProcessId ?? null)
-        setAnalysisStatus(currentState?.analysisStatus ?? (currentState?.contractAnalysisRequested ? 'PENDING_PAYMENT' : 'NOT_REQUESTED'))
+        setAnalysisStatus(currentState?.analysisStatus ?? (featureEnabled && currentState?.contractAnalysisRequested ? 'PENDING_PAYMENT' : 'NOT_REQUESTED'))
         setAnalysisError(currentState?.analysisError ?? null)
-        if (currentState?.contractAnalysisResult && typeof currentState.contractAnalysisResult === 'object') {
+        if (featureEnabled && currentState?.contractAnalysisResult && typeof currentState.contractAnalysisResult === 'object') {
           setAnalysisResult(currentState.contractAnalysisResult as Record<string, unknown>)
         } else {
           setAnalysisResult(null)
@@ -1121,12 +1234,14 @@ export default function SignPage() {
         if (cancelled) return
 
         if (payment.status === 'success') {
-          setAnalysisSelected(Boolean(payment.analysisRequested ?? currentState?.contractAnalysisRequested))
+          const paymentFeatureEnabled = Boolean(payment.analysisFeatureEnabled ?? featureEnabled)
+          setAnalysisFeatureEnabled(paymentFeatureEnabled)
+          setAnalysisSelected(paymentFeatureEnabled && Boolean(payment.analysisRequested ?? currentState?.contractAnalysisRequested))
           setAnalysisProcessId(payment.analyticProcessID ?? currentState?.analysisProcessId ?? null)
           setAnalysisStatus(payment.analysisStatus ?? currentState?.analysisStatus ?? 'PENDING_PAYMENT')
           setAnalysisError(payment.analysisError ?? currentState?.analysisError ?? null)
           applyAnalysisProgress(payment)
-          if (payment.analysis && typeof payment.analysis === 'object') {
+          if (paymentFeatureEnabled && payment.analysis && typeof payment.analysis === 'object') {
             setAnalysisResult(payment.analysis)
           }
           if (payment.invitations?.length) {
@@ -1140,12 +1255,14 @@ export default function SignPage() {
           } else {
             const result = await api.sendInvitations(locale)
             if (cancelled) return
-            setAnalysisSelected(Boolean(result.analysisRequested ?? analysisSelected))
+            const inviteFeatureEnabled = Boolean(result.analysisFeatureEnabled ?? paymentFeatureEnabled)
+            setAnalysisFeatureEnabled(inviteFeatureEnabled)
+            setAnalysisSelected(inviteFeatureEnabled && Boolean(result.analysisRequested ?? analysisSelected))
             setAnalysisProcessId(result.analyticProcessID ?? currentState?.analysisProcessId ?? null)
             if (result.analysisStatus) setAnalysisStatus(result.analysisStatus)
             if (result.analysisError) setAnalysisError(result.analysisError)
             applyAnalysisProgress(result)
-            if (result.analysis && typeof result.analysis === 'object') setAnalysisResult(result.analysis)
+            if (inviteFeatureEnabled && result.analysis && typeof result.analysis === 'object') setAnalysisResult(result.analysis)
             setSession(result)
             setStep('done')
           }
@@ -1173,7 +1290,7 @@ export default function SignPage() {
   }, [copy, file?.name])
 
   useEffect(() => {
-    if (step !== 'done' || !analysisSelected) {
+    if (step !== 'done' || !analysisSelectedEffective) {
       setAnalysisPolling(false)
       return
     }
@@ -1222,7 +1339,7 @@ export default function SignPage() {
       cancelled = true
       if (timer !== null) window.clearTimeout(timer)
     }
-  }, [analysisProcessId, analysisSelected, analyzerCopy.failed, locale, step])
+  }, [analysisProcessId, analysisSelectedEffective, analyzerCopy.failed, locale, step])
 
   async function handlePay() {
     setLoading(true)
@@ -1230,7 +1347,9 @@ export default function SignPage() {
     setAnalysisError(null)
     try {
       const payment = await api.processPayment(locale)
-      setAnalysisSelected(Boolean(payment.analysisRequested ?? analysisSelected))
+      const paymentFeatureEnabled = Boolean(payment.analysisFeatureEnabled ?? analysisFeatureEnabled)
+      setAnalysisFeatureEnabled(paymentFeatureEnabled)
+      setAnalysisSelected(paymentFeatureEnabled && Boolean(payment.analysisRequested ?? analysisSelected))
       setAnalysisProcessId(payment.analyticProcessID ?? null)
       if (payment.analysisStatus) {
         setAnalysisStatus(payment.analysisStatus)
@@ -1239,7 +1358,7 @@ export default function SignPage() {
         setAnalysisError(payment.analysisError)
       }
       applyAnalysisProgress(payment)
-      if (payment.analysis && typeof payment.analysis === 'object') {
+      if (paymentFeatureEnabled && payment.analysis && typeof payment.analysis === 'object') {
         setAnalysisResult(payment.analysis)
       }
       if (payment.status === 'success') {
@@ -1252,12 +1371,14 @@ export default function SignPage() {
           })
         } else {
           const result = await api.sendInvitations(locale)
-          setAnalysisSelected(Boolean(result.analysisRequested ?? analysisSelected))
+          const inviteFeatureEnabled = Boolean(result.analysisFeatureEnabled ?? paymentFeatureEnabled)
+          setAnalysisFeatureEnabled(inviteFeatureEnabled)
+          setAnalysisSelected(inviteFeatureEnabled && Boolean(result.analysisRequested ?? analysisSelected))
           setAnalysisProcessId(result.analyticProcessID ?? analysisProcessId)
           if (result.analysisStatus) setAnalysisStatus(result.analysisStatus)
           if (result.analysisError) setAnalysisError(result.analysisError)
           applyAnalysisProgress(result)
-          if (result.analysis && typeof result.analysis === 'object') setAnalysisResult(result.analysis)
+          if (inviteFeatureEnabled && result.analysis && typeof result.analysis === 'object') setAnalysisResult(result.analysis)
           setSession(result)
         }
         setStep('done')
@@ -1300,7 +1421,7 @@ export default function SignPage() {
   }
 
   return (
-    <main className="sign-page">
+    <main ref={pageRef} className="sign-page">
       <div className="container">
         <div className="sign-header">
           <h1>{copy.headerTitle}</h1>
@@ -1357,6 +1478,23 @@ export default function SignPage() {
                 </>
               )}
             </div>
+            <div className="step-actions">
+              <button className="btn btn-primary" disabled={!file || loading} onClick={handleUploadNext}>
+                {loading ? copy.upload.uploading : copy.upload.next}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === 'signatureLevel' && (
+          <div className="sign-step card">
+            <h2>{levelCopy.title}</h2>
+            <p className="step-desc">{levelCopy.desc}</p>
+            <div className="step-guide">
+              <p>{stepGuideCopy.signatureLevel.now}</p>
+              <p>{stepGuideCopy.signatureLevel.next}</p>
+            </div>
+
             <h3 className="document-type-title">{documentTypeCopy.title}</h3>
             <p className="step-desc">{documentTypeCopy.desc}</p>
             <label className="document-type-label" htmlFor="document-type-search">{documentTypeCopy.searchLabel}</label>
@@ -1376,85 +1514,35 @@ export default function SignPage() {
               autoComplete="off"
             />
 
-            <div className="document-type-results" role="listbox">
-              {documentTypeSuggestions.length === 0 && (
-                <div className="document-type-empty">{documentTypeCopy.noResult}</div>
-              )}
-              {documentTypeSuggestions.map((item) => (
-                <button
-                  key={item.id}
-                  className={`document-type-option ${selectedDocumentType?.id === item.id ? 'selected' : ''}`}
-                  aria-selected={selectedDocumentType?.id === item.id}
-                  type="button"
-                  onClick={() => handleDocumentTypeSelect(item.id)}
-                >
-                  <div className="document-type-option-top">
-                    <strong>{item.title}</strong>
-                    <span className="document-type-level">
-                      {documentTypeCopy.recommendedLabel}: {item.recommendedSignatureLevel}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
+            {showDocumentTypeSuggestions && (
+              <div className="document-type-results" role="listbox">
+                {documentTypeSuggestions.length === 0 && (
+                  <div className="document-type-empty">{documentTypeCopy.noResult}</div>
+                )}
+                {documentTypeSuggestions.map((item) => (
+                  <button
+                    key={item.id}
+                    className={`document-type-option ${selectedDocumentType?.id === item.id ? 'selected' : ''}`}
+                    aria-selected={selectedDocumentType?.id === item.id}
+                    type="button"
+                    onClick={() => handleDocumentTypeSelect(item.id)}
+                  >
+                    <div className="document-type-option-top">
+                      <strong>{item.title}</strong>
+                      <span className="document-type-level">
+                        {documentTypeCopy.recommendedLabel}: {item.recommendedSignatureLevel}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
 
             {selectedDocumentType && (
               <div className="document-type-selected">
                 <strong>{documentTypeCopy.selected}:</strong> {selectedDocumentType.title} ({recommendedSignatureLevel})
               </div>
             )}
-
-            <div className="analysis-upsell card">
-              <h4>{analyzerCopy.title}</h4>
-              <p>{analyzerCopy.hint}</p>
-              <p><strong>{analyzerCopy.includesTitle}:</strong> {analyzerCopy.includes}</p>
-              <div className="analysis-upsell-actions">
-                <button
-                  className="btn btn-outline"
-                  type="button"
-                  disabled={!file || analysisLoading}
-                  onClick={() => void handleToggleAnalysis()}
-                >
-                  {analysisLoading
-                    ? analyzerCopy.running
-                    : (analysisSelected ? analyzerCopy.buttonRemove : analyzerCopy.buttonAdd)}
-                </button>
-                {analysisResult && (
-                  <button
-                    className="btn btn-ghost"
-                    type="button"
-                    onClick={() => setAnalysisModalOpen(true)}
-                  >
-                    {analyzerCopy.openResult}
-                  </button>
-                )}
-              </div>
-              {analysisSelected && (
-                <div className="analysis-upsell-note">
-                  {analyzerCopy.included}
-                </div>
-              )}
-              {analysisSelected && (
-                <div className="analysis-upsell-note">{analyzerCopy.pendingAfterPayment}</div>
-              )}
-            </div>
-
-            <div className="step-actions">
-              <button className="btn btn-primary" disabled={!file || loading} onClick={handleUploadNext}>
-                {loading ? copy.upload.uploading : copy.upload.next}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 'signatureLevel' && (
-          <div className="sign-step card">
-            <h2>{levelCopy.title}</h2>
-            <p className="step-desc">{levelCopy.desc}</p>
-            <div className="step-guide">
-              <p>{stepGuideCopy.signatureLevel.now}</p>
-              <p>{stepGuideCopy.signatureLevel.next}</p>
-            </div>
 
             {selectedDocumentType && (
               <div className="signature-level-recommendation">
@@ -1503,7 +1591,7 @@ export default function SignPage() {
             </div>
 
             <div className="step-actions">
-              <button className="btn btn-ghost" onClick={() => setStep('upload')}>{levelCopy.back}</button>
+              <button className="btn btn-ghost" onClick={() => { setSignatoryValidationShown(false); setStep('upload') }}>{levelCopy.back}</button>
               <button className="btn btn-primary" onClick={() => setStep('signatories')}>
                 {levelCopy.next}
               </button>
@@ -1526,6 +1614,7 @@ export default function SignPage() {
                   <div className="signatory-fields">
                     <input
                       type="text"
+                      className={signatoryValidationShown && !s.firstName.trim() ? 'input-invalid' : ''}
                       placeholder={copy.signatories.firstName}
                       value={s.firstName}
                       onChange={(e) => updateSignatory(s.id, 'firstName', e.target.value)}
@@ -1533,6 +1622,7 @@ export default function SignPage() {
                     />
                     <input
                       type="text"
+                      className={signatoryValidationShown && !s.lastName.trim() ? 'input-invalid' : ''}
                       placeholder={copy.signatories.lastName}
                       value={s.lastName}
                       onChange={(e) => updateSignatory(s.id, 'lastName', e.target.value)}
@@ -1540,6 +1630,7 @@ export default function SignPage() {
                     />
                     <input
                       type="email"
+                      className={signatoryValidationShown && !s.email.trim() && !s.phone.trim() ? 'input-invalid' : ''}
                       placeholder={copy.signatories.email}
                       value={s.email}
                       onChange={(e) => updateSignatory(s.id, 'email', e.target.value)}
@@ -1547,6 +1638,7 @@ export default function SignPage() {
                     />
                     <input
                       type="tel"
+                      className={signatoryValidationShown && !s.email.trim() && !s.phone.trim() ? 'input-invalid' : ''}
                       placeholder={copy.signatories.phoneOptional}
                       value={s.phone}
                       onChange={(e) => updateSignatory(s.id, 'phone', e.target.value)}
@@ -1568,12 +1660,20 @@ export default function SignPage() {
             <button className="btn btn-ghost add-signatory" onClick={addSignatory}>
               {copy.signatories.add}
             </button>
+            {signatoryValidationShown && !isSignatoriesValid() && (
+              <div className="sign-error" role="alert">{copy.signatories.validationHint}</div>
+            )}
             <div className="step-actions">
               <button className="btn btn-ghost" onClick={() => setStep('signatureLevel')}>{copy.signatories.back}</button>
               <button
                 className="btn btn-primary"
-                disabled={!isSignatoriesValid() || loading}
-                onClick={handleSignatoriesNext}
+                disabled={loading}
+                onClick={() => {
+                  setSignatoryValidationShown(true)
+                  if (isSignatoriesValid()) {
+                    void handleSignatoriesNext()
+                  }
+                }}
               >
                 {loading ? copy.signatories.saving : copy.signatories.next}
               </button>
@@ -1591,29 +1691,26 @@ export default function SignPage() {
             </div>
             <div className="placement-layout">
               <div className="placement-workspace">
+                <div className="placement-auto card">
+                  <div className="placement-auto-head">
+                    <h3>{copy.placement.autoPlace}</h3>
+                    <button
+                      className="btn btn-outline"
+                      type="button"
+                      disabled={autoPlacing || loading || signatories.length === 0}
+                      onClick={() => void handleAutoPlace()}
+                    >
+                      {autoPlacing ? copy.placement.autoPlacing : copy.placement.autoPlace}
+                    </button>
+                  </div>
+                  <p className="placement-auto-hint">{copy.placement.autoPlaceHint}</p>
+                </div>
                 <PdfSignaturePlacer
                   file={file}
                   signatories={signatories}
                   placements={placements}
                   onChange={setPlacements}
                 />
-                <div className="placement-summary">
-                  <h3>{copy.placement.coordsTitle}</h3>
-                  {signatories.map((s, index) => {
-                    const placement = placements.find((pl) => pl.signatoryId === s.id)
-                    const label = signatoryLabel(s, index, locale)
-                    return (
-                      <div key={s.id} className="placement-row">
-                        <span className="placement-name">{label}</span>
-                        <span className="placement-values">
-                          {placement
-                            ? replaceCoords(copy.placement.pageCoords, placement.page, placement.x, placement.y)
-                            : copy.placement.notPlaced}
-                        </span>
-                      </div>
-                    )
-                  })}
-                </div>
               </div>
 
               <aside className="placement-price-panel card">
@@ -1625,7 +1722,7 @@ export default function SignPage() {
                     <span>{replacePlacement(copy.placement.placedLine, placedCount, placedPrice.perSignatureGross ?? placedPrice.perSignature)}</span>
                     <span>CHF {placedSignaturesSubtotal.toFixed(2)}</span>
                   </div>
-                  {analysisSelected && (
+                  {analysisSelectedEffective && (
                     <div className="price-row">
                       <span>{analyzerCopy.invoiceLine}</span>
                       <span>CHF {(placedPrice.analysisGross ?? 0).toFixed(2)}</span>
@@ -1688,12 +1785,48 @@ export default function SignPage() {
               <p>{stepGuideCopy.pricing.now}</p>
               <p>{stepGuideCopy.pricing.next}</p>
             </div>
+            {analysisFeatureEnabled && (
+              <div className="analysis-upsell card">
+                <h4>{analyzerCopy.title}</h4>
+                <p>{analyzerCopy.hint}</p>
+                <p><strong>{analyzerCopy.includesTitle}:</strong> {analyzerCopy.includes}</p>
+                <div className="analysis-upsell-actions">
+                  <button
+                    className="btn btn-outline"
+                    type="button"
+                    disabled={!file || analysisLoading}
+                    onClick={() => void handleToggleAnalysis()}
+                  >
+                    {analysisLoading
+                      ? analyzerCopy.running
+                      : (analysisSelectedEffective ? analyzerCopy.buttonRemove : analyzerCopy.buttonAdd)}
+                  </button>
+                  {analysisResult && (
+                    <button
+                      className="btn btn-ghost"
+                      type="button"
+                      onClick={() => setAnalysisModalOpen(true)}
+                    >
+                      {analyzerCopy.openResult}
+                    </button>
+                  )}
+                </div>
+                {analysisSelectedEffective && (
+                  <div className="analysis-upsell-note">
+                    {analyzerCopy.included}
+                  </div>
+                )}
+                {analysisSelectedEffective && (
+                  <div className="analysis-upsell-note">{analyzerCopy.pendingAfterPayment}</div>
+                )}
+              </div>
+            )}
             <div className="price-breakdown">
               <div className="price-row">
                 <span>{replacePlacement(copy.pricing.signaturesLine, price.count, price.perSignatureGross ?? price.perSignature)}</span>
                 <span>CHF {signaturesSubtotal.toFixed(2)}</span>
               </div>
-              {analysisSelected && (
+              {analysisSelectedEffective && (
                 <div className="price-row">
                   <span>{analyzerCopy.invoiceLine}</span>
                   <span>CHF {(price.analysisGross ?? 0).toFixed(2)}</span>
@@ -1722,7 +1855,7 @@ export default function SignPage() {
             <div className="price-doc">
               <span>{copy.pricing.level}: <strong>{documentSignatureLevel}</strong></span>
             </div>
-            {analysisSelected && (
+            {analysisSelectedEffective && (
               <div className="price-doc">
                 <span><strong>AI Analyzer:</strong> {analyzerCopy.includes}</span>
               </div>
@@ -1754,7 +1887,7 @@ export default function SignPage() {
               <span>{copy.payment.total}</span>
               <span className="payment-total">CHF {price.total.toFixed(2)}</span>
             </div>
-            {analysisSelected && (
+            {analysisSelectedEffective && (
               <div className="price-doc">
                 <span>{analyzerCopy.invoiceLine} · {analyzerCopy.includes}</span>
               </div>
@@ -1808,7 +1941,7 @@ export default function SignPage() {
                 </div>
               </div>
             )}
-            {analysisSelected && (
+            {analysisFeatureEnabled && analysisSelectedEffective && (
               <div className="done-process card">
                 <h3>{analyzerCopy.title}</h3>
                 <p>{analyzerCopy.includes}</p>
@@ -1884,7 +2017,7 @@ export default function SignPage() {
                 )}
                 {(analysisStatus === 'FAILED' || analysisError) && (
                   <div className="done-process-link">
-                    <span>{analyzerCopy.failed} {analysisError ? `(${analysisError})` : ''}</span>
+                    <span>{analyzerCopy.failed} {analysisErrorMessage ? `(${analysisErrorMessage})` : ''}</span>
                   </div>
                 )}
               </div>
@@ -1896,9 +2029,6 @@ export default function SignPage() {
                     <strong>{signatoryLabel(inv.signatory, index, locale)}</strong>
                     <span>{inv.signatory.email || inv.signatory.phone}</span>
                   </div>
-                  <a href={inv.inviteLink} className="invite-link" target="_blank" rel="noreferrer">
-                    {copy.done.mockLink}
-                  </a>
                 </div>
               ))}
             </div>
@@ -1935,7 +2065,7 @@ export default function SignPage() {
           </div>
         )}
 
-        {analysisModalOpen && analysisResult && (
+        {analysisFeatureEnabled && analysisModalOpen && analysisResult && (
           <div className="analysis-overlay" role="dialog" aria-modal="true" aria-label={analyzerCopy.resultTitle}>
             <div className="analysis-modal card">
               <h3>{analyzerCopy.resultTitle}</h3>

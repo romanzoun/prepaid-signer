@@ -151,8 +151,8 @@ public class SwisscomSignService implements SignInviteService {
                 log.info("Swisscom: invite URL generated for signatory={}", s.getId());
             }
 
-            // After successful Swisscom release/invitation flow, local source PDF is no longer needed.
-            deleteLocalPdfQuietly(pdfPath, processId, paymentRef);
+            // Keep uploaded PDF for follow-up features (e.g., AI contract analysis/report generation).
+            // Cleanup can be handled by a retention job instead of deleting immediately after invite creation.
             swisscomLog.info("SWISSCOM_TRACE event=flow_done paymentRef={} processId={} invitationCount={}", safeRef(paymentRef), processId, results.size());
             return new InviteDispatchResult(processId, results);
 
@@ -572,27 +572,6 @@ public class SwisscomSignService implements SignInviteService {
 
         // Return the expected canonical upload path to surface the real missing-file path in errors.
         return withSuffix;
-    }
-
-    private void deleteLocalPdfQuietly(Path pdfPath, String processId, String paymentRef) {
-        try {
-            boolean deleted = Files.deleteIfExists(pdfPath);
-            swisscomLog.info(
-                "SWISSCOM_TRACE event=pdf_cleanup paymentRef={} processId={} path={} deleted={}",
-                safeRef(paymentRef),
-                processId,
-                pdfPath,
-                deleted
-            );
-        } catch (IOException ex) {
-            swisscomLog.warn(
-                "SWISSCOM_TRACE event=pdf_cleanup_failed paymentRef={} processId={} path={} reason={}",
-                safeRef(paymentRef),
-                processId,
-                pdfPath,
-                ex.getMessage()
-            );
-        }
     }
 
     private boolean shouldSendNotifications(List<Signatory> signatories, InitiatorPayload initiator) {
